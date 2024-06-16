@@ -85,7 +85,8 @@
                 <input type="password" id="login-password" required>
                 <button type="submit">ログイン</button>
           </form>
-    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+    <head>
+            <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script>
         function onSignIn(googleUser) {
@@ -101,6 +102,7 @@
             window.location.href = "https://kyoutuuno-to.f5.si/%E3%83%9B%E3%83%BC%E3%83%A0";
         }
     </script>
+    </head>
     </div>
     <script>
         document.getElementById('login-form').addEventListener('submit', function(event) {
