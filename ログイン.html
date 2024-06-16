@@ -85,7 +85,7 @@
                 <input type="password" id="login-password" required>
                 <button type="submit">ログイン</button>
           </form>
- <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script>
         function onSignIn(googleUser) {
@@ -97,15 +97,10 @@
             
             var id_token = googleUser.getAuthResponse().id_token;
             console.log('ID Token: ' + id_token);
-            // You can now send this ID token to your server for verification
+            // Redirect to the specified URL after successful login
+            window.location.href = "https://kyoutuuno-to.f5.si/%E3%83%9B%E3%83%BC%E3%83%A0";
         }
     </script>
-<body>
-    <h2>Google Sign-In</h2>
-    <div class="g-signin2" data-onsuccess="onSignIn"></div>
-</body>
-
-        </div>
     </div>
     <script>
         document.getElementById('login-form').addEventListener('submit', function(event) {
