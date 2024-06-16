@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Login Example</title>
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+        function onSignIn(googleUser) {
+            var profile = googleUser.getBasicProfile();
+            console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+            console.log('Name: ' + profile.getName());
+            console.log('Image URL: ' + profile.getImageUrl());
+            console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+            
+            var id_token = googleUser.getAuthResponse().id_token;
+            console.log('ID Token: ' + id_token);
+            // Redirect to the specified URL after successful login
+            window.location.href = "https://kyoutuuno-to.f5.si/%E3%83%9B%E3%83%BC%E3%83%A0";
+        }
+    </script>
+</head>
+<body>
+    <h2>Google Sign-In</h2>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+</body>
+</html>
