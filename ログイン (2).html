@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アカウント制作・ログイン</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div id="signup-container" class="form-container" style="display:none;">
+            <h2>アカウント作成</h2>
+            <form id="signup-form">
+                <label for="signup-username">ユーザー名:</label>
+                <input type="text" id="signup-username" required>
+                <label for="signup-password">パスワード:</label>
+                <input type="password" id="signup-password" required>
+                <button type="submit">サインアップ</button>
+                <p><a href="#" id="show-login">ログインページに戻る</a></p>
+            </form>
+        </div>
+
+        <div id="login-container" class="form-container">
+            <h2>ログイン</h2>
+            <form id="login-form">
+                <label for="login-username">ユーザー名:</label>
+                <input type="text" id="login-username" required>
+                <label for="login-password">パスワード:</label>
+                <input type="password" id="login-password" required>
+                <button type="submit">ログイン</button>
+                <p><a href="#" id="show-signup">アカウント作成ページに移動</a></p>
+            </form>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
