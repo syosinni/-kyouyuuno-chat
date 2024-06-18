@@ -1,0 +1,74 @@
+<html>
+  <title>myPage</title>
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ナビゲーションバーのスタイル */
+        nav {
+            background-color: #333;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        nav ul li {
+            display: inline;
+        }
+
+        nav ul li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        nav ul li a:hover {
+            background-color: #111;
+        }
+
+        /* コンテンツセクションのスタイル */
+        div {
+            padding: 60px 20px;
+        }
+
+        /* 各セクションのスタイル */
+        section {
+            padding: 60px 20px;
+            margin-top: 50px; /* ナビゲーションバーの高さを避けるため */
+        }
+    </style>
+</head>
+<body>
+
+<!-- ナビゲーションバー -->
+<nav>
+    <ul>
+        <li><a href="#設定">個人設定</a></l>
+        <li><a href="#プロフィール">プロフイール</a></li>
+</li>
+    </ul>
+</nav>
+
+<!-- コンテンツセクション -->
+<section id="プロフィール">
+<h3>こんにちは「カンニングww」さん、ようこそチャットへ</h3>
+</section>
+<section id="個人設定">
+  <p>プロフィール設定をしましょう</p>
+</section>
+</html>
