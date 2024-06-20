@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+    <meta name="format-detection" content="email=no,telephone=no,address=no">
+
+    <title>ログイン</title>
+    <link rel="stylesheet" href=" />
+    <!-- この行を追加 -->
+    <link rel="shortcut　icon" href="https://github.com/syosinni/-kyouyuuno-chat/issues/1#issue-2359044131">
+</head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .home-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="login-container" class="form-container">
+            <h2>ログイン</h2>
+            <form id="login-form">
+                <label for="login-username">ユーザー名:</label>
+                <input type="text" id="login-username" required>
+                <label for="login-password">パスワード:</label>
+                <input type="password" id="login-password" required>
+                <button type="submit">ログイン</button>
+          </form>
+    <head>
+            <meta name="google-signin-client_id" content="YOUR_CLIENT_ID.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+        function onSignIn(googleUser) {
+            var profile = googleUser.getBasicProfile();
+            console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+            console.log('Name: ' + profile.getName());
+            console.log('Image URL: ' + profile.getImageUrl());
+            console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+            
+            var id_token = googleUser.getAuthResponse().id_token;
+            console.log('ID Token: ' + id_token);
+            // Redirect to the specified URL after successful login
+            window.location.href = "https://kyoutuuno-to.f5.si/%E3%83%9B%E3%83%BC%E3%83%A0";
+        }
+    </script>
+    </head>
+    </div>
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (username && password) {
+                fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message === 'ログイン成功。') {
+                        window.location.href = 'http://kyouyuuno-to.f5.si/ホーム';
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                alert('ユーザー名とパスワードを入力してください。');
+            }
+        });
+    </script>
+　　<a href"https://kyyutuuno-to.f5.si/%E3%83%9B%E3%83%BC%E3%83%A0">まだ機能ができていません（共有ノート）</a>
+<a href="https://kyouyuuno-to.f5.si/ロード">ホームに飛ぶ</a>
+        <a href="https://kyouyuuno-to.f5.si/Google">Googleでログイン</a>
+         <a href="https://forms.gle/EbiTUDfkZH1b5tM28">アカウント作成</a>
+        <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LPSKM6D35"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2LPSKM6D35');
+</script>
+
+
+
+</body>
+</html>
