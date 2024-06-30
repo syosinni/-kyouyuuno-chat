@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>今日の運勢</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #fortune {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+    </style>
+    <script type="text/javascript">
+        function getFortune() {
+            var fortunes = [
+                "今日はとても幸運です！",
+                "今日は少し注意が必要です。",
+                "今日は新しい挑戦に向いています。",
+                "今日はリラックスして過ごしましょう。",
+                "今日は素敵な出会いがあるかも。",
+                "今日は感謝の気持ちを忘れずに。",
+                "今日は自分の時間を大切にしましょう。"
+            ];
+            var randomIndex = Math.floor(Math.random() * fortunes.length);
+            document.getElementById('fortune').innerText = fortunes[randomIndex];
+        }
+    </script>
+</head>
+<body>
+
+<h1>今日の運勢</h1>
+<button onclick="getFortune()">占う</button>
+<div id="fortune"></div>
+
+</body>
+</html>
