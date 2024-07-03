@@ -1,1 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理王AI</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        h1 {
+            color: #343a40;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        #status.online {
+            background-color: #28a745;
+            color: #fff;
+        }
+        #status.offline {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>サーバー稼働状況</h1>
+    <button onclick="checkServerStatus()">チェック開始</button>
+    <div id="status">ステータス: 未確認</div>
+
+    <script>
+        async function checkServerStatus() {
+            const url = 'https://kyouyuuno-to.f5.si/%E3%83%9B%E3%83%BC%E3%83%A0';
+            try {
+                const response = await fetch(url, { method: 'HEAD' });
+                if (response.ok) {
+                    document.getElementById('status').innerText = 'ステータス: オンライン';
+                    document.getElementById('status').classList.remove('offline');
+                    document.getElementById('status').classList.add('online');
+                } else {
+                    throw new Error('Response not OK');
+                }
+            } catch (error) {
+                document.getElementById('status').innerText = 'ステータス: オフライン';
+                document.getElementById('status').classList.remove('online');
+                document.getElementById('status').classList.add('offline');
+            }
+        }
+    </script>
+</body>
+</html>
 
