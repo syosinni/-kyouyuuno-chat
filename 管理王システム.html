@@ -20,20 +20,6 @@
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0, 123, 255, 0.1);
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
         #status {
             margin-top: 20px;
             padding: 15px 30px;
@@ -55,7 +41,6 @@
 </head>
 <body>
     <h1>サーバー稼働状況</h1>
-    <button onclick="checkServerStatus()">チェック開始</button>
     <div id="status">ステータス: 未確認</div>
 
     <script>
@@ -76,7 +61,9 @@
                 document.getElementById('status').classList.add('offline');
             }
         }
+
+        setInterval(checkServerStatus, 10000); // 10000ミリ秒 = 10秒
+        window.onload = checkServerStatus; // ページロード時に一度チェックを実行
     </script>
 </body>
 </html>
-
