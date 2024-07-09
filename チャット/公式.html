@@ -1,168 +1,90 @@
-        <!DOCTYPE html>
-<html lang="ja">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>共有ノートチャット</title>
-<style>
-/* CSS */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-}
-
-.chat-container {
-    background-color: #fff;
-    width: 600px;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.chat-box {
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin-bottom: 10px;
-}
-
-.chat-message {
-    background-color: #f2f2f2;
-    padding: 8px 12px;
-    margin-bottom: 6px;
-    border-radius: 6px;
-    clear: both;
-}
-
-.chat-message.sent {
-    float: right;
-    background-color: #DCF8C6;
-}
-
-.chat-message.received {
-    float: left;
-    background-color: #EAEAEA;
-}
-
-input[type="text"] {
-    width: calc(100% - 70px);
-    padding: 8px;
-    margin-right: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-button {
-    padding: 8px 16px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共有ノート</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #chat-container {
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            max-width: 100%;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        #messages {
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .message {
+            padding: 5px 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        #message-input {
+            width: calc(100% - 50px);
+            padding: 10px;
+            margin-right: 10px;
+        }
+        #send-button {
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
-<div class="chat-container">
-    <div class="chat-box" id="chat-box">
-        <!-- チャットメッセージはここに追加されます -->
+    <div id="chat-container">
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Enter your message">
+        <button id="send-button">Send</button>
     </div>
-    <input type="text" id="user-name" placeholder="ユーザー名を入力してください...">
-    <input type="text" id="user-input" placeholder="メッセージを入力してください...">
-    <button onclick="sendMessage()">送信</button>
-</div>
 
-<script>
-// JavaScript
-function sendMessage() {
-    var userNameInput = document.getElementById("user-name");
-    var userInput = document.getElementById("user-input");
-    var userName = userNameInput.value.trim();
-    var message = userInput.value.trim();
+    <script>
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const messagesDiv = document.getElementById('messages');
 
-    if (userName === "" || message === "") {
-        return;
-    }
-
-    var newMessage = {
-        userName: userName,
-        message: message,
-        timestamp: new Date()
-    };
-
-    // メッセージをサーバーに送信
-    fetch('/messages', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newMessage)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Message sent:', data);
-        displayMessage(data); // サーバーから返されたメッセージを表示
-    })
-    .catch(error => {
-        console.error('Error sending message:', error);
-    });
-
-    userInput.value = "";
-    userInput.focus();
-    userNameInput.disabled = true; // ユーザー名の入力を無効化する
-}
-
-function displayMessage(message) {
-    var chatBox = document.getElementById("chat-box");
-    var newMessage = document.createElement("div");
-    newMessage.classList.add("chat-message");
-
-    if (message.userName !== getCurrentUserName()) {
-        newMessage.classList.add("received");
-    } else {
-        newMessage.classList.add("sent");
-    }
-
-    newMessage.innerHTML = `<strong>${message.userName}:</strong> ${message.message}`;
-    chatBox.appendChild(newMessage);
-
-    // メッセージ送信後にチャットボックスを下にスクロール
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function getCurrentUserName() {
-    return document.getElementById("user-name").value.trim();
-}
-
-// ページ読み込み時に過去のメッセージを取得
-window.onload = function() {
-    fetch('/messages')
-    .then(response => response.json())
-    .then(messages => {
-        messages.forEach(message => {
-            displayMessage(message);
+        sendButton.addEventListener('click', async () => {
+            const message = messageInput.value;
+            if (message) {
+                await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message })
+                });
+                messageInput.value = '';
+                loadMessages();
+            }
         });
-    })
-    .catch(error => {
-        console.error('Error fetching messages:', error);
-    });
-};
-</script>
+
+        async function loadMessages() {
+            const response = await fetch('/chat');
+            const messages = await response.json();
+            messagesDiv.innerHTML = '';
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.textContent = `${new Date(msg.timestamp).toLocaleTimeString()}: ${msg.message}`;
+                messagesDiv.appendChild(messageDiv);
+            });
+        }
+
+        loadMessages();
+        setInterval(loadMessages, 5000); // 5秒ごとにメッセージをリロード
+    </script>
 </body>
-    <!-- Copy and Paste Me -->
-<!-- Copy and Paste Me -->
-<div class="glitch-embed-wrap" style="height: 420px; width: 100%;"></div>
 </html>
