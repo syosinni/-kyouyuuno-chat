@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6年生1学期国語クイズ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .quiz-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .question {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .question p {
+            margin: 0;
+        }
+
+        label {
+            display: block;
+            margin: 5px 0;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>川とノリオクイズ</h1>
+        <form id="quiz-form">
+            <div class="question">
+                <p>1. 川とノリオが序盤でお母さんに怒られましたなにをして怒られましたかァ？</p>
+                <label><input type="radio" name="q1" value="a"> お母さんを川に流した</label>
+                <label><input type="radio" name="q1" value="b">川で遊んだ </label>
+                <label><input type="radio" name="q1" value="c"> 夏休みの宿題を流した</label>
+            </div>
+            <div class="question">
+                <p>2. この本で若い柳の色を何と言った？</p>
+                <label><input type="radio" name="q2" value="a"> 鋼色</label>
+                <label><input type="radio" name="q2" value="b"> 溝鼠色</label>
+                <label><input type="radio" name="q2" value="c"> 軍隊色</label>
+            </div>
+            <div class="question">
+                <p>3. ノリオのお父さんの死因は？</p>
+                <label><input type="radio" name="q3" value="a"> ショック死</label>
+                <label><input type="radio" name="q3" value="b"> 戦死</label>
+                <label><input type="radio" name="q3" value="c"> 天使</label>
+            </div>
+            <div class="question">
+                <p>4. ノリオのお母さんの死因は？</p>
+                <label><input type="radio" name="q4" value="a"> 天使</label>
+                <label><input type="radio" name="q4" value="b"> 爆死または燃死または放射線の大量に浴びたことによる死</label>
+                <label><input type="radio" name="q4" value="c"> 警視</label>
+            </div>
+            <div class="question">
+                <p>5. ノリオの両親が死んだあと育ててくれたのは？</p>
+                <label><input type="radio" name="q5" value="a"> おじいちゃん</label>
+                <label><input type="radio" name="q5" value="b"> いのしし（伊之助...）</label>
+                <label><input type="radio" name="q5" value="c"> ゴジラ</label>
+            </div>
+            <div class="question">
+                <p>6. 日本の国鳥は何ですか？</p>
+                <label><input type="radio" name="q6" value="a"> 鶴</label>
+                <label><input type="radio" name="q6" value="b"> 鷹</label>
+                <label><input type="radio" name="q6" value="c"> 雉</label>
+            </div>
+            <div class="question">
+                <p>7. 日本の人口は約何人ですか？</p>
+                <label><input type="radio" name="q7" value="a"> 1億人</label>
+                <label><input type="radio" name="q7" value="b"> 1億2千万人</label>
+                <label><input type="radio" name="q7" value="c"> 1億5千万人</label>
+            </div>
+            <div class="question">
+                <p>8. 日本の一番長い川は何ですか？</p>
+                <label><input type="radio" name="q8" value="a"> 利根川</label>
+                <label><input type="radio" name="q8" value="b"> 信濃川</label>
+                <label><input type="radio" name="q8" value="c"> 木曽川</label>
+            </div>
+            <div class="question">
+                <p>9. 日本で一番古い寺は何ですか？</p>
+                <label><input type="radio" name="q9" value="a"> 東大寺</label>
+                <label><input type="radio" name="q9" value="b"> 金閣寺</label>
+                <label><input type="radio" name="q9" value="c"> 法隆寺</label>
+            </div>
+            <div class="question">
+                <p>10. 日本で有名な漫画家は誰ですか？</p>
+                <label><input type="radio" name="q10" value="a"> 手塚治虫</label>
+                <label><input type="radio" name="q10" value="b"> 鳥山明</label>
+                <label><input type="radio" name="q10" value="c"> 尾田栄一郎</label>
+            </div>
+            <button type="button" onclick="checkAnswers()">回答を確認する</button>
+        </form>
+        <div id="result"></div>
+    </div>
+    <script>
+        function checkAnswers() {
+            const answers = {
+                q1: 'b',
+                q2: 'a',
+                q3: 'b',
+                q4: 'b',
+                q5: 'a',
+                q6: 'c',
+                q7: 'b',
+                q8: 'b',
+                q9: 'c',
+                q10: 'a'
+            };
+
+            let score = 0;
+            const form = document.getElementById('quiz-form');
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';  // Clear previous results
+
+            for (let question in answers) {
+                const userAnswer = form.elements[question].value;
+                const questionDiv = form.querySelector(`input[name="${question}"]`).closest('.question');
+                
+                if (userAnswer === answers[question]) {
+                    score++;
+                    questionDiv.classList.add('correct');
+                    questionDiv.classList.remove('incorrect');
+                } else {
+                    questionDiv.classList.add('incorrect');
+                    questionDiv.classList.remove('correct');
+                }
+            }
+
+            resultDiv.innerHTML = `あなたのスコアは ${score} / 10 です。`;
+        }
+    </script>
+</body>
+</html>
