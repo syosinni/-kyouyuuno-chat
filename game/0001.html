@@ -3,21 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>縦横スクロールゲーム</title>
+  <title>RPGゲーム</title>
   <style>
     body, html {
       margin: 0;
       padding: 0;
       overflow: hidden;
+      background-color: #333;
+      font-family: Arial, sans-serif;
     }
     canvas {
       display: block;
-      background: #000;
+      background: #eee;
+      border: 1px solid #000;
+    }
+    .ui {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #fff;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+  <div class="ui">
+    <p>HP: <span id="hp">100</span></p>
+    <p>敵を倒した数: <span id="kills">0</span></p>
+  </div>
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -26,29 +42,25 @@
 
     let player = {
       x: canvas.width / 2,
-      y: canvas.height - 100,
+      y: canvas.height / 2,
       width: 50,
       height: 50,
-      speed: 5
+      speed: 5,
+      hp: 100,
+      maxHp: 100
     };
 
     let keys = {};
-    let bullets = [];
     let enemies = [];
-    let score = 0;
+    let kills = 0;
 
     function drawPlayer() {
       ctx.fillStyle = '#00f';
       ctx.fillRect(player.x, player.y, player.width, player.height);
     }
 
-    function drawBullet(bullet) {
-      ctx.fillStyle = '#f00';
-      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-    }
-
     function drawEnemy(enemy) {
-      ctx.fillStyle = '#0f0';
+      ctx.fillStyle = '#f00';
       ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
     }
 
@@ -58,43 +70,23 @@
       if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
       if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += player.speed;
 
-      bullets.forEach((bullet, index) => {
-        bullet.y -= bullet.speed;
-        if (bullet.y < 0) bullets.splice(index, 1);
-      });
-
       enemies.forEach((enemy, index) => {
-        enemy.y += enemy.speed;
-        if (enemy.y > canvas.height) {
+        if (Math.abs(player.x - enemy.x) < player.width && Math.abs(player.y - enemy.y) < player.height) {
+          player.hp -= 10;
           enemies.splice(index, 1);
-          score -= 10;
-        }
-      });
-
-      bullets.forEach((bullet, bulletIndex) => {
-        enemies.forEach((enemy, enemyIndex) => {
-          if (
-            bullet.x < enemy.x + enemy.width &&
-            bullet.x + bullet.width > enemy.x &&
-            bullet.y < enemy.y + enemy.height &&
-            bullet.height + bullet.y > enemy.y
-          ) {
-            bullets.splice(bulletIndex, 1);
-            enemies.splice(enemyIndex, 1);
-            score += 10;
+          updateUI();
+          if (player.hp <= 0) {
+            alert("ゲームオーバー！ 倒した敵の数: " + kills);
+            document.location.reload();
           }
-        });
+        }
       });
     }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawPlayer();
-      bullets.forEach(drawBullet);
       enemies.forEach(drawEnemy);
-      ctx.fillStyle = '#fff';
-      ctx.font = '24px Arial';
-      ctx.fillText('Score: ' + score, 10, 30);
     }
 
     function gameLoop() {
@@ -105,15 +97,6 @@
 
     document.addEventListener('keydown', (e) => {
       keys[e.key] = true;
-      if (e.key === ' ') {
-        bullets.push({
-          x: player.x + player.width / 2 - 2.5,
-          y: player.y,
-          width: 5,
-          height: 10,
-          speed: 7
-        });
-      }
     });
 
     document.addEventListener('keyup', (e) => {
@@ -122,14 +105,34 @@
 
     function spawnEnemy() {
       enemies.push({
-        x: Math.random() * (canvas.width - 50),
-        y: 0,
-        width: 50,
-        height: 50,
-        speed: 2 + Math.random() * 3
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        width: 40,
+        height: 40
       });
-      setTimeout(spawnEnemy, 1000);
+      setTimeout(spawnEnemy, 2000);
     }
+
+    function updateUI() {
+      document.getElementById('hp').innerText = player.hp;
+      document.getElementById('kills').innerText = kills;
+    }
+
+    canvas.addEventListener('click', (e) => {
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      enemies.forEach((enemy, index) => {
+        if (
+          mouseX > enemy.x && mouseX < enemy.x + enemy.width &&
+          mouseY > enemy.y && mouseY < enemy.y + enemy.height
+        ) {
+          enemies.splice(index, 1);
+          kills++;
+          updateUI();
+        }
+      });
+    });
 
     gameLoop();
     spawnEnemy();
