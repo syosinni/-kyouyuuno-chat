@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Selection</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        #message {
+            font-size: 2rem;
+            color: #333;
+            display: none;
+        }
+        #language-selection {
+            display: none;
+            text-align: center;
+        }
+        #language-selection button {
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            margin: 10px;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        #language-selection button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+<div id="message">Hello New World</div>
+
+<div id="language-selection">
+    <button onclick="selectLanguage('jp')">日本語</button>
+    <button onclick="selectLanguage('eg')">English</button>
+</div>
+
+<script>
+    // Display "Hello New World" message for 3 seconds
+    document.getElementById('message').style.display = 'block';
+    setTimeout(() => {
+        document.getElementById('message').style.display = 'none';
+        document.getElementById('language-selection').style.display = 'block';
+    }, 3000);
+
+    // Function to handle language selection and redirection
+    function selectLanguage(language) {
+        if (language === 'jp') {
+            window.location.href = 'https://www.kyouyuuno-to.f5.si/共有ノート/shss/jp/ホーム';
+        } else if (language === 'eg') {
+            window.location.href = 'https://www.kyouyuuno-to.f5.si/共有ノート/shss/eg/home';
+        }
+    }
+</script>
+
+</body>
+</html>
