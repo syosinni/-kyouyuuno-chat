@@ -5,16 +5,16 @@ body {
 
 .side {
   background-color:#ff838b;
-  width:100px;
-  height:300px;
+  width:650px;
+  height:1000px;
   text-align:center;
   margin-left:10px;/*サイドバーとメインコンテンツの間に隙間                    をあけた*/
 } 
 
 .content {
   background-color:#b3d874;
-  width:250px;
-  height:300px;
+  width:px;
+  height:1000px;
   text-align:center;
 }
 
