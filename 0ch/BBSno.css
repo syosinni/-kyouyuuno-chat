@@ -4,7 +4,7 @@ body {
 }
 
 .side {
-  background-color:#ff838b;
+  background-color:##C0C0C0;
   width:100px;
   height:1000px;
   text-align:center;
@@ -12,8 +12,8 @@ body {
 } 
 
 .content {
-  background-color:#b3d874;
-  width:700px
+  background-color:#FFFFFF;
+  width:850px
   height:1000px;
   text-align:center;
 }
