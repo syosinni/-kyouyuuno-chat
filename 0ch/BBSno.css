@@ -5,7 +5,7 @@ body {
 
 .side {
   background-color:#ff838b;
-  width:200px;
+  width:100px;
   height:1000px;
   text-align:center;
   margin-left:10px;/*サイドバーとメインコンテンツの間に隙間                    をあけた*/
