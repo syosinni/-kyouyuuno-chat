@@ -96,7 +96,7 @@ $pdo = null;
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2チャンネル掲示板</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/0ch/css/0003.css">
 </head>
 
 <body>
