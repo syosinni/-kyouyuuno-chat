@@ -1,4 +1,56 @@
-<?php
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2チャンネル掲示板</title>
+    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/0ch/css/0003.css">
+</head>
+
+<body>
+    <h1 class="title">PHPで掲示板アプリ</h1>
+    <hr>
+    <div class="boardWrapper">
+        <!-- メッセージ送信成功時 -->
+        <?php if (!empty($success_message)) : ?>
+            <p class="success_message"><?php echo $success_message; ?></p>
+        <?php endif; ?>
+
+        <!-- バリデーションチェック時 -->
+        <?php if (!empty($error_message)) : ?>
+            <?php foreach ($error_message as $value) : ?>
+                <div class="error_message">※<?php echo $value; ?></div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+        <section>
+            <?php if (!empty($message_array)) : ?>
+                <?php foreach ($message_array as $value) : ?>
+                    <article>
+                        <div class="wrapper">
+                            <div class="nameArea">
+                                <span>名前：</span>
+                                <p class="username"><?php echo $value['username'] ?></p>
+                                <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
+                            </div>
+                            <p class="comment"><?php echo $value['comment']; ?></p>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </section>
+        <form method="POST" action="" class="formWrapper">
+            <div>
+                <input type="submit" value="書き込む" name="submitButton">
+                <label for="usernameLabel">名前：</label>
+                <input type="text" name="username">
+            </div>
+            <div>
+                <textarea name="comment" class="commentTextArea"></textarea>
+            </div>
+        </form>
+        <?php <?php
 date_default_timezone_set("Asia/Tokyo");
 
 //変数の初期化
@@ -86,60 +138,7 @@ $message_array = $pdo->query($sql);
 
 //DB接続を閉じる
 $pdo = null;
-?>
-
-<!DOCTYPE html>
-<html lang="ja">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2チャンネル掲示板</title>
-    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/0ch/css/0003.css">
-</head>
-
-<body>
-    <h1 class="title">PHPで掲示板アプリ</h1>
-    <hr>
-    <div class="boardWrapper">
-        <!-- メッセージ送信成功時 -->
-        <?php if (!empty($success_message)) : ?>
-            <p class="success_message"><?php echo $success_message; ?></p>
-        <?php endif; ?>
-
-        <!-- バリデーションチェック時 -->
-        <?php if (!empty($error_message)) : ?>
-            <?php foreach ($error_message as $value) : ?>
-                <div class="error_message">※<?php echo $value; ?></div>
-            <?php endforeach; ?>
-        <?php endif; ?>
-        <section>
-            <?php if (!empty($message_array)) : ?>
-                <?php foreach ($message_array as $value) : ?>
-                    <article>
-                        <div class="wrapper">
-                            <div class="nameArea">
-                                <span>名前：</span>
-                                <p class="username"><?php echo $value['username'] ?></p>
-                                <time>：<?php echo date('Y/m/d H:i', strtotime($value['post_date'])); ?></time>
-                            </div>
-                            <p class="comment"><?php echo $value['comment']; ?></p>
-                        </div>
-                    </article>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </section>
-        <form method="POST" action="" class="formWrapper">
-            <div>
-                <input type="submit" value="書き込む" name="submitButton">
-                <label for="usernameLabel">名前：</label>
-                <input type="text" name="username">
-            </div>
-            <div>
-                <textarea name="comment" class="commentTextArea"></textarea>
-            </div>
-        </form>
+?> ?>
     </div>
 
 </body>
