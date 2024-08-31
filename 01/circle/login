@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ログインフォーム</title>
+    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/01/circle/css/0001.css" />
+  </head>
+  <body>
+    <div id="login-box">
+      <div class="left-box">
+        <h1>ログイン</h1>
+        <input type="text" name="username" placeholder="ユーザー名" />
+        <input type="text" name="email" placeholder="メールアドレス" />
+        <input type="password" name="password" placeholder="パスワード" />
+
+        <input
+          type="password"
+          name="comfirmedPassword"
+          placeholder="確認用パスワード"
+        />
+
+        <input type="submit" name="login-button" value="ログイン" />
+      </div>
+
+      <div class="right-box">
+        <span class="loginwith">SNSでログイン</span>
+        <button class="sns facebook">FaceBookでログイン</button>
+        <button class="sns twitter">Twitterでログイン</button>
+        <button class="sns google">Googleでログイン</button>
+      </div>
+      <!-- <div class="or">または</div> -->
+    </div>
+    　
+  </body>
+</html>
