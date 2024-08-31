@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ログインフォーム</title>
     <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/01/circle/css/0001.css" />
+     <meta name="google-signin-client_id" content="695696491817-si2dhl6k94lrk7tilr62ucuk7k0305v1.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
   </head>
   <body>
     <div id="login-box">
@@ -28,7 +30,43 @@
         <span class="loginwith">SNSでログイン</span>
         <button class="sns facebook">FaceBookでログイン</button>
         <button class="sns twitter">Twitterでログイン</button>
-        <button class="sns google">Googleでログイン</button>
+         <script>
+        function onSignIn(googleUser) {
+            var profile = googleUser.getBasicProfile();
+            console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+            console.log('Name: ' + profile.getName());
+            console.log('Image URL: ' + profile.getImageUrl());
+            console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+            
+            var id_token = googleUser.getAuthResponse().id_token;
+            console.log('ID Token: ' + id_token);
+            // Redirect to the specified URL after successful login
+            window.location.href = "https://kyouyuuno-to.f5.si/%E3%83%9B%E3%83%BC%E3%83%A0";
+        }
+    </script>
+</head>
+<body>
+    <h2>Google Sign-In</h2>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+</body>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LPSKM6D35"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2LPSKM6D35');
+</script>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LPSKM6D35"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2LPSKM6D35');
+</script>
       </div>
       <!-- <div class="or">または</div> -->
     </div>
