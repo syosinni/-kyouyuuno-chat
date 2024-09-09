@@ -1,0 +1,92 @@
+  <!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* スタイルのリセット */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        /* ハンバーガーメニューのスタイル */
+        .menu-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .menu-btn span {
+            display: block;
+            width: 30px;
+            height: 3px;
+            background: #333;
+            margin: 6px 0;
+            transition: 0.3s;
+        }
+
+        /* サイドバーのスタイル */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px; /* サイドバーが隠れている状態 */
+            width: 250px;
+            height: 100%;
+            background: #333;
+            color: white;
+            transition: 0.3s;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .sidebar.show {
+            left: 0; /* サイドバーが表示される状態 */
+        }
+
+        /* メインコンテンツのスタイル */
+        .content {
+            margin-left: 250px; /* サイドバーの幅を考慮 */
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ハンバーガーメニュー -->
+    <div class="menu-btn" onclick="toggleSidebar()">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- サイドバー -->
+    <div class="sidebar" id="sidebar">
+        <a href="#">リンク1</a>
+        <a href="#">リンク2</a>
+        <a href="#">リンク3</a>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <div class="content">
+        <h1>メインコンテンツ</h1>
+        <p>サイドバーの内容がここに表示されます。</p>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('show');
+        }
+    </script>
+</body>
+</html>
