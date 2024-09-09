@@ -85,11 +85,10 @@
 <nav>
     <ul>
         <li><a href="#home">ホーム</a></li>
-        <li><a href="#services">サービス一覧</a></li>
         <li><a href="https://01/circle/in">チャットを開始</a></li>
         <li><a href="#お問い合わせ">お問い合わせ</a></li>
         <li><a href="#puran">プラン</a></li>
-       <li><a href="https://kyouyuuno-to.f5.si/news/kySNS/home">ニュース</a></li>
+       <li><a href="#news">ニュース</a></li>
 </li>
     </ul>
 </nav>
@@ -103,6 +102,93 @@
         <h2>アカウントなしでも作れる、入れる　グループチャット機能‼　アカウントを作らないとできないが色んな人と話せる公開モード</h2>
         <h1>ーグループチャット機能についてー</h1>
         <p>共有ノートでは子供も使える安全なSNSを目指しておりグループチャットでは、指定した人だけをいれることが出来ます。<br>指定には2種類あり、リンクで人を招待するのと <a href="https://01/circle/in">このページ</a> で合言葉で入る方法があります<br>
-        その他にも ・スタンプ ・画像投稿　・アンケート　・クイズ　など様々な機能があります。<br>なお料金は基本無料ですが、その他の機能もほしい方は<a href="#puran">ここ</a>を押してプランを変更して下さい。</p>
+        その他にも ・スタンプ ・画像投稿　・アンケート　・クイズ　など様々な機能があります。<br>なお料金は基本無料ですが、その他の機能もほしい方は下記をご覧ください</p>
     </body>
+</section>
+<section id="puran">
+<p>ベーシックプラン：無料（広告あり）</p>
+<p>スタンダードプラン:1ヵ月500円（広告少なめ）（機能はベーシックとプラスでスタンプ買い放題,課題,クイズが追加）</p>
+<p>プレミアムプラン：1ヵ月1000円(広告なし)(全機能)</p>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        select, input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input[type="submit"] {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #218838;
+        }
+
+        .current-plan {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>プラン変更</h1>
+
+        <div class="current-plan">
+            現在のプラン: <strong>スタンダードプラン</strong>
+        </div>
+
+        <form action="/change_plan" method="POST">
+            <label for="plan">新しいプランを選択してください:</label>
+            <select name="plan" id="plan" required>
+                <option value="" disabled selected>プランを選択</option>
+                <option value="basic">ベーシックプラン</option>
+                <option value="standard">スタンダードプラン</option>
+                <option value="premium">プレミアムプラン</option>
+            </select>
+
+            <input type="submit" value="プラン変更">
+        </form>
+    </div>
 </section>
