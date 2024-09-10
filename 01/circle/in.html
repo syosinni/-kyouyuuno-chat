@@ -38,6 +38,7 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            margin-top: 10px;
         }
         button:hover {
             background-color: #0056b3;
@@ -57,26 +58,31 @@
     <br />
     <button onclick="checkPassword()">接続</button>
     <p id="errorMessage" class="error-message"></p>
+
+    <!-- 新しい部屋を作るボタン -->
+    <button onclick="createNewRoom()">新しい部屋を作る</button>
 </div>
 
 <script>
     function checkPassword() {
-        const correctPassword = "ky-2525";
+        const correctPassword = "おしゃれ";
         const userPassword = document.getElementById("passwordInput").value;
         const errorMessage = document.getElementById("errorMessage");
 
         if (userPassword === correctPassword) {
             // 合言葉が正しい場合、新しいページにリダイレクト
-            window.location.href = "https://kyouyuuno-to.f5.si/01/circle/room/seimei";
+            window.location.href = "https://kyouyuuno-to.f5.si/01/circle/room/seimei;
         } else {
             // 間違った合言葉の場合、エラーメッセージを表示
             errorMessage.textContent = "合言葉が違います。もう一度お試しください。";
         }
     }
+
+    function createNewRoom() {
+        // 「新しい部屋を作る」ボタンが押されたときの処理
+        window.location.href = "https://kyouyuuno-to.f5.si/01/circle/room/0002";
+    }
 </script>
 
 </body>
-    <body>
-        <button onclick="window.location.href='https://kyouyuuno-to.f5.si/01/circle/room/0002';">新しい部屋を作る</button>
-    </body>
 </html>
