@@ -1,8 +1,31 @@
-<html>
-  <head>
-    <title>清明サークル</title>
-  </head>
-  <body>
-    
-  </body>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ハンバーガーメニュー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <button class="hamburger" id="hamburger">
+      ☰
+    </button>
+  </header>
+
+  <div class="sidebar" id="sidebar">
+    <button class="close-btn" id="closeBtn">&times;</button>
+    <nav>
+      <ul>
+        <li><a href="#">ホーム</a></li>
+        <li><a href="#">サービス</a></li>
+        <li><a href="#">お問い合わせ</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+
+  <script src="script.js"></script>
+</body>
 </html>
