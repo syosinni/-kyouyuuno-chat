@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポイントシステム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .points {
+            font-size: 24px;
+            color: green;
+        }
+        .message {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ようこそ！</h1>
+    <div class="points">あなたのポイント: <span id="pointDisplay">0</span></div>
+    <div class="message" id="message">アプリを開くたびにポイントが貯まります！</div>
+
+    <script>
+        // ローカルストレージから現在のポイントを取得
+        let points = localStorage.getItem('points') ? parseInt(localStorage.getItem('points')) : 0;
+
+        // ポイントを1増やす
+        points += 1;
+
+        // 更新したポイントをローカルストレージに保存
+        localStorage.setItem('points', points);
+
+        // ポイントを画面に表示
+        document.getElementById('pointDisplay').textContent = points;
+    </script>
+</body>
+</html>
