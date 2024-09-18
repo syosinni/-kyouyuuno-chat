@@ -9,16 +9,24 @@ body {
     height: 100vh;
 }
 
-#chatWindow {
-    width: 300px;
-    height: 400px;
+.chat-container {
+    width: 320px;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
     border: 2px solid #4CAF50;
     border-radius: 10px;
     background-color: white;
-    overflow-y: auto;
-    padding: 10px;
-    margin-bottom: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+#chatWindow {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    border-bottom: 1px solid #ddd;
+    background-color: #fafafa;
 }
 
 #chatWindow p {
@@ -30,16 +38,18 @@ body {
 
 form {
     display: flex;
+    padding: 10px;
+    background-color: #fff;
 }
 
 #chatInput {
-    width: 250px;
+    flex: 1;
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-right: 10px;
     font-size: 16px;
+    margin-right: 10px;
 }
 
 button {
@@ -59,4 +69,6 @@ button:hover {
 #errorMessage {
     color: red;
     font-weight: bold;
+    text-align: center;
+    margin-top: 10px;
 }
