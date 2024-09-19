@@ -10,16 +10,24 @@ body {
 }
 
 .chat-container {
-    width: 400px; /* 横幅を広げる */
-    height: 600px; /* 高さを増やす */
-    display: flex;
-    flex-direction: column;
-    border: 2px solid #4CAF50;
-    border-radius: 10px;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
+    width: 600px;  /* 横幅を大きく */
+    height: 700px; /* 縦幅を大きく */
 }
+
+#chatWindow p {
+    padding: 8px;
+    border-radius: 5px;
+    margin: 5px 0;
+    word-wrap: break-word;
+    max-width: 90%; /* メッセージ幅の制限 */
+}
+
+#colorInput {
+    margin-bottom: 10px;
+    padding: 5px;
+    border-radius: 5px;
+}
+
 
 #chatWindow {
     flex: 1;
