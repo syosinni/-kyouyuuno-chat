@@ -30,11 +30,14 @@ function loadMessages() {
 }
 
 // メッセージを表示する関数
-function displayMessage(username, message) {
+function displayMessage(username, message, color) {
     const newMessage = document.createElement('p');
     newMessage.innerHTML = `<strong>${username}:</strong> ${message}`;
+    newMessage.style.color = color; // 選択された色を適用
     chatWindow.appendChild(newMessage);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
 }
+
 
 // チャット送信時の処理
 chatForm.addEventListener('submit', function(event) {
