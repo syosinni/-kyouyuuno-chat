@@ -1,21 +1,23 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-     <meta charset="UTF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>オシャレなチャット</title>
+    <title>サークルChat</title>
     <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/01/circle/css/seimei.chat.css">
 </head>
 <body>
     <div class="chat-container">
         <div id="chatWindow"></div>
         <form id="chatForm">
-            <input type="text" id="chatInput" placeholder="メッセージを入力...">
+            <input type="text" id="usernameInput" placeholder="ユーザー名を入力" required>
+            <input type="text" id="chatInput" placeholder="メッセージを入力..." required>
             <button type="submit">送信</button>
         </form>
     </div>
 
     <p id="errorMessage"></p>
+
     <script src="https://kyouyuuno-to.f5.si/01/circle/js/simei.chatt.js"></script>
 </body>
 </html>
