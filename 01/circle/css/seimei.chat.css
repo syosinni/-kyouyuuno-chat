@@ -40,16 +40,16 @@ form {
     display: flex;
     padding: 10px;
     background-color: #fff;
+    flex-direction: column;
 }
 
-#chatInput {
-    flex: 1;
+#usernameInput, #chatInput {
     padding: 10px;
     border-radius: 5px;
     border: 1px solid #ccc;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
     font-size: 16px;
-    margin-right: 10px;
+    margin-bottom: 10px;
 }
 
 button {
@@ -60,6 +60,7 @@ button {
     padding: 10px;
     cursor: pointer;
     font-size: 16px;
+    align-self: flex-end;
 }
 
 button:hover {
