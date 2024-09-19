@@ -1,89 +1,18 @@
-body {
-    font-family: 'Arial', sans-serif;
-    background-color: #f0f0f0;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
 .chat-container {
-    width: 800px;  /* 横幅をさらに広げる */
-    height: 800px; /* 縦幅も大きくする */
-    display: flex;
-    flex-direction: column;
-    border: 2px solid #4CAF50;
-    border-radius: 10px;
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-}
-
-#chatWindow {
-    flex: 1;
-    padding: 20px;  /* 内側に余白を広げる */
-    overflow-y: auto;
-    border-bottom: 1px solid #ddd;
-    background-color: #fafafa;
+    width: 600px;  /* 横幅を大きく */
+    height: 700px; /* 縦幅を大きく */
 }
 
 #chatWindow p {
-    padding: 15px;  /* コメントの内側に余白を追加 */
+    padding: 8px;
     border-radius: 5px;
-    background-color: #e0e0e0;
-    margin: 10px 0;  /* 各メッセージ間に余白を追加 */
+    margin: 5px 0;
     word-wrap: break-word;
-    max-width: 95%;  /* コメントの幅を90%から95%に広げる */
-    font-size: 20px; /* コメントのテキストサイズを大きく */
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    padding: 20px;  /* フォーム部分に余白を追加 */
-    background-color: #fff;
-}
-
-#usernameInput, #chatInput {
-    padding: 15px;  /* 入力フィールドの内側の余白を広げる */
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-    font-size: 18px; /* 入力フィールドの文字サイズを大きく */
-    margin-bottom: 10px;
-    width: 100%;
-    box-sizing: border-box;
+    max-width: 90%; /* メッセージ幅の制限 */
 }
 
 #colorInput {
     margin-bottom: 10px;
-    padding: 10px;
+    padding: 5px;
     border-radius: 5px;
-    font-size: 18px; /* 色選択ボタンの文字サイズも大きく */
-    width: 100%;
-}
-
-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 15px;
-    cursor: pointer;
-    font-size: 18px;  /* ボタンの文字サイズを大きく */
-    align-self: flex-end;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-#errorMessage {
-    color: red;
-    font-weight: bold;
-    text-align: center;
-    margin-top: 10px;
-    font-size: 18px;  /* エラーメッセージの文字サイズも大きく */
 }
