@@ -89,6 +89,7 @@
         <li><a href="#お問い合わせ">お問い合わせ</a></li>
         <li><a href="#puran">プラン</a></li>
        <li><a href="#news">ニュース</a></li>
+        <li><a href="come">入場者数</li>
 </li>
     </ul>
 </nav>
@@ -202,3 +203,42 @@
     <h1>ーニュースー</h1>
     <h3>webページが出来ました‼ 2024/9/9</h3>
     <p>保健室の中でこのサイトが爆誕しましたー。ちなみに管理者はいま、教科書破かれて悲しくなって保健室にいますが<br>いずれはあんないじめもあったな〜とお酒のつまみになるといいなとおもいます。</p>
+</section>
+    <sectio id="come">
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .count {
+            font-size: 24px;
+            color: blue;
+        }
+        .message {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>ようこそ！</h1>
+    <div class="count">入場回数: <span id="participationCount">0</span></div>
+    <div class="message" id="message">いままでの参加者数です</div>
+
+    <script>
+        // ローカルストレージから現在の参加数を取得
+        let participationCount = localStorage.getItem('participationCount') ? parseInt(localStorage.getItem('participationCount')) : 0;
+
+        // アプリを開くたびに参加数を1増やす
+        participationCount += 1;
+
+        // 更新した参加数をローカルストレージに保存
+        localStorage.setItem('participationCount', participationCount);
+
+        // 参加数を画面に表示
+        document.getElementById('participationCount').textContent = participationCount;
+    </script>
+</body>
+    </sectio>
+    
