@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake Blue Screen</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0000AA;
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 18px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 80%;
+        }
+        .error-code {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p class="error-code">:(</p>
+        <p>Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</p>
+        <p>0% complete</p>
+        <p>For more information about this issue and possible fixes, visit https://www.windows.com/stopcode</p>
+        <p>If you call a support person, give them this info:</p>
+        <p>Stop code: SYSTEM_SERVICE_EXCEPTION</p>
+    </div>
+
+    <script>
+        // Fake progress effect
+        let percentage = 0;
+        let progress = setInterval(function() {
+            percentage++;
+            document.body.querySelector('p:nth-child(3)').textContent = percentage + "% complete";
+            if (percentage >= 100) {
+                clearInterval(progress);
+                document.body.querySelector('p:nth-child(2)').textContent = "Your PC will restart now.";
+            }
+        }, 100);
+    </script>
+</body>
+</html>
