@@ -32,12 +32,12 @@ function runVirusEffect(effectArea) {
         win.appendChild(header);
         win.appendChild(body);
         effectArea.appendChild(win);
-    }, 300); // 0.3秒ごとにウィンドウ生成
+    }, 200); // 0.3秒ごとにウィンドウ生成
 
     // ウィンドウを20秒間表示
     setTimeout(function() {
         clearInterval(windowInterval); // ウィンドウ生成を停止
-    }, 20000);
+    }, 10000);
 }
 
 // ウイルスエフェクトの停止
@@ -60,7 +60,7 @@ function triggerBlueScreenWithSurprise() {
     document.body.style.backgroundColor = 'white';
     setTimeout(function() {
         document.body.style.backgroundColor = 'black';
-    }, 100); // 0.1秒間のフラッシュ
+    }, 400); // 0.1秒間のフラッシュ
 
     // 5秒後にブルースクリーンを終了し、ニャンキャットの動画を再生
     setTimeout(function() {
@@ -106,5 +106,5 @@ document.getElementById('startBtn').addEventListener('click', function() {
         // ウイルスエフェクト停止とサプライズ表示
         endVirusEffect(effectArea);
         triggerBlueScreenWithSurprise();
-    }, 20000); // 20秒後にブルースクリーン
+    }, 22000); // 20秒後にブルースクリーン
 });
