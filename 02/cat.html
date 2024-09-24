@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ウイルス風シミュレーション</title>
-    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/02/css/cat.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="startScreen">
-        <h1>やあ違反をしたようだねようこそ！</h1>
-        <p>「まあ見つけられただけ評価してやろうサプライズだ」※これは完全に無害です。</p>
-        <button id="startBtn">サプライズを開始する</button>
+        <h1>ウイルス風シミュレーションへようこそ！</h1>
+        <p>※これは完全に無害なビジュアルエフェクトのシミュレーションです。</p>
+        <button id="startBtn">体験を開始する</button>
     </div>
 
     <div id="effectArea" class="hidden"></div>
@@ -18,7 +18,16 @@
     <!-- MP4動画の要素 -->
     <video id="nyanCatVideo" class="hidden" src="https://kyouyuuno-to.f5.si/02/Nyan%20Cat!%20[Official].mp4"></video>
 
+    <!-- ブルースクリーン風の要素 -->
+    <div id="blueScreen" class="hidden">
+        <p>お使いのPCに重大なエラーが発生しました</p>
+        <p>システムは再起動されています...</p>
+    </div>
+
     <div id="thankYouMessage" class="hidden">Thank you forever</div>
+
+    <!-- サプライズ音声 -->
+    <audio id="screamSound" src="https://kyouyuuno-to.f5.si/02/Windowsエラー音集.mp3"></audio>
 
     <script src="https://kyouyuuno-to.f5.si/02/js/cat.js"></script>
 </body>
