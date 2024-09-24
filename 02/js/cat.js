@@ -1,8 +1,40 @@
 document.getElementById('startBtn').addEventListener('click', function() {
+    let startScreen = document.getElementById('startScreen');
     let effectArea = document.getElementById('effectArea');
-    this.disabled = true; // ボタンを無効化して開始
 
-    // エラー風のテキストエフェクト
+    // ボタンと説明を消して全画面モードにする
+    startScreen.classList.add('hidden');
+    effectArea.classList.remove('hidden');
+
+    // ウイルス風エフェクト開始
+    startFullScreen();
+    runVirusEffect(effectArea);
+
+    // 20秒後に猫の動画を表示する
+    setTimeout(function() {
+        // ウイルスエフェクト終了して猫動画表示
+        endVirusEffect(effectArea);
+        playNyanCatVideo();
+    }, 20000); // 20秒後に猫動画
+});
+
+// 全画面モードにする関数
+function startFullScreen() {
+    if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+    }
+}
+
+// 全画面を解除する関数
+function exitFullScreen() {
+    if (document.exitFullscreen) {
+        document.exitFullscreen();
+    }
+}
+
+// ウイルス風のエフェクト実行
+function runVirusEffect(effectArea) {
+    // エラー風テキスト生成
     for (let i = 0; i < 30; i++) {
         let glitchText = document.createElement('div');
         glitchText.className = 'glitch';
@@ -18,7 +50,7 @@ document.getElementById('startBtn').addEventListener('click', function() {
         effectArea.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
     }, 300);
 
-    // Windows風ウィンドウを表示するエフェクト
+    // Windows風ウィンドウ生成エフェクト
     let windowInterval = setInterval(function() {
         let win = document.createElement('div');
         win.className = 'window';
@@ -36,33 +68,34 @@ document.getElementById('startBtn').addEventListener('click', function() {
         win.appendChild(header);
         win.appendChild(body);
         effectArea.appendChild(win);
-    }, 500); // 0.5秒ごとにウィンドウを生成
+    }, 500); // 0.5秒ごとにウィンドウ生成
 
-    // 20秒後に猫を表示し、音楽を再生 + 最終メッセージ
+    // 20秒後にエフェクト停止
     setTimeout(function() {
-        // ウィンドウ生成と色変化を止める
         clearInterval(windowInterval);
         clearInterval(colorInterval);
+    }, 20000);
+}
 
-        // 背景を虹色にするエフェクト
-        let rainbowColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#8B00FF'];
-        let rainbowIndex = 0;
-        setInterval(function() {
-            effectArea.style.backgroundColor = rainbowColors[rainbowIndex];
-            rainbowIndex = (rainbowIndex + 1) % rainbowColors.length;
-        }, 500);
+// ウイルスエフェクト終了処理
+function endVirusEffect(effectArea) {
+    effectArea.innerHTML = ''; // 画面のクリア
+    effectArea.style.backgroundColor = 'black';
+}
 
-        // 猫の要素を表示
-        let catContainer = document.getElementById('catContainer');
-        catContainer.classList.remove('hidden');
+// ニャンキャットの動画を再生する関数
+function playNyanCatVideo() {
+    let nyanCatVideo = document.getElementById('nyanCatVideo');
+    nyanCatVideo.classList.remove('hidden');
+    nyanCatVideo.play();
 
-        // ニャンキャット音楽を再生
-        let nyanCatAudio = document.getElementById('nyanCatAudio');
-        nyanCatAudio.play();
+    // 動画終了時に全画面解除して「Thank you forever」表示
+    nyanCatVideo.onended = function() {
+        nyanCatVideo.classList.add('hidden');
+        exitFullScreen();
 
-        // "Thank you forever" メッセージを表示
+        // Thank you foreverを表示
         let thankYouMessage = document.getElementById('thankYouMessage');
         thankYouMessage.classList.remove('hidden');
-
-    }, 20000); // 20秒後に猫が登場
-});
+    };
+}
