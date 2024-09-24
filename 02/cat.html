@@ -7,17 +7,16 @@
     <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/02/css/cat.css">
 </head>
 <body>
-    <h1>ウイルス風シミュレーションへようこそ！</h1>
-    <p>※これは完全に無害なビジュアルエフェクトのシミュレーションです。</p>
-    <button id="startBtn">開始する</button>
-
-    <div id="effectArea"></div>
-
-    <!-- 猫GIFとオーディオファイル -->
-    <div id="catContainer" class="hidden">
-        <img id="nyanCat" src="https://kyouyuuno-to.f5.si/02/Nyan%20Cat!%20[Official].gif" alt="ニャンキャット">
-        <audio id="nyanCatAudio" src="https://kyouyuuno-to.f5.si/02/Nyan%20Cat!%20[Official].mp3" loop></audio>
+    <div id="startScreen">
+        <h1>やあ違反をしたようだねようこそ！</h1>
+        <p>「まあ見つけられただけ評価してやろうサプライズだ」※これは完全に無害です。</p>
+        <button id="startBtn">サプライズを開始する</button>
     </div>
+
+    <div id="effectArea" class="hidden"></div>
+
+    <!-- MP4動画の要素 -->
+    <video id="nyanCatVideo" class="hidden" src="https://kyouyuuno-to.f5.si/02/Nyan%20Cat!%20[Official].mp4"></video>
 
     <div id="thankYouMessage" class="hidden">Thank you forever</div>
 
