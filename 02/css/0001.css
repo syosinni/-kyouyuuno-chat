@@ -1,0 +1,17 @@
+.button12 {
+  background-color: #fff;
+  border: solid 2px #191970;
+  color: #191970;
+  border-radius: 20px;
+  padding: 10px 30px;
+  text-decoration: none;
+  font-size: 1em;
+  box-shadow: 0 5px 0 #191970;
+  display: inline-block;
+  transition: .3s;
+}
+.button12:hover {
+  color: #191970;
+  transform: translateY(5px);
+  box-shadow: 0 0 0 #191970;
+}
