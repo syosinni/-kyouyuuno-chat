@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECページ</title>
-    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/02/css/0002.css"> <!-- CSSファイルのリンク -->
+    <title>ECサイト - ポイント管理付き</title>
+    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/02/css/0002.css">
 </head>
 <body>
     <header>
-        <h1>オンラインショップ</h1>
+        <h1>ポイント管理付きオンラインショップ</h1>
         <nav>
             <ul>
                 <li><a href="#products">商品一覧</a></li>
                 <li><a href="#cart">カート</a></li>
-                 <li><a hre="points">自分のポイント</li>
+                <li><a href="#points">ポイント</a></li>
                 <li><a href="#contact">お問い合わせ</a></li>
             </ul>
         </nav>
@@ -25,22 +25,16 @@
             <div class="product">
                 <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG-SI0jIgHDeOygrUTP6aL0xg6pDOwWkQiSGe5qfjRefRTRd43bCAJY_qjpJQtsi69PtZH4ooGQ_88SahXSdBEmI6r0kQFtagP47QTAzkBLtYA2h50hjA09og19FfdABjNHZXubz7rgYErwG2CHNh5iAioC42m62__UwsadoeEVNVN6Y4wsJ4niAmto0o-j1mpqJHC9PIEINYm9cwvaRB9Der30lGs74p9eFCfHGI4dQlToeIqmNfGrYxkb4jd9P6YMz8WlVMHeHMDq2mzTz5zyqwTekfLM4vjtyfnjcuixy1PN-klt4ghmiWAJV0LEdX-SCB-F5PdVm9BBdSVKnteifII4GQ_cbvWJMTkrpVteMkOA6oPbQ0Szrx9vfsrp9LQlQ85o82FS56WJ1o3KhV1AAeY_yZOaJhBVojgqI4J03mHrhN6GhNi61sT7RshRwtBHEELeoMqqhDYytHYwRvQoTdC9QpOZ9E-Gw3nPuGoAPCY-dzYUCj6fabkgWsO0q1tnzNo8lJhv3QIeBu03d_uneY-tgFKV3DyFJyooA3g04fneiqVhCY9xzjNAExjji7oLr6spPMiwpcNaFgUMuvxaj9TSAaRSEYCcAnUic5swmnEvuFNLm4_VTYv7A0qq0pSlx_A8na-vuOeGfwUv76MkE=/school_housouiin_girl.png?errorImage=false" alt="商品1">
                 <h3>放送音楽</h3>
-                <p>価格: 600P</p>
+                <p>価格: 500P</p>
                 <button onclick="addToCart('商品1', 1000)">カートに追加</button>
             </div>
             <div class="product">
-                <img src="" alt="商品2">
-                <h3>図書室マンガ貸出</h3>
-                <p>価格: 550P</p>
+                <img src="product2.jpg" alt="商品2">
+                <h3>マンガ貸出</h3>
+                <p>価格: 450P</p>
                 <button onclick="addToCart('商品2', 2000)">カートに追加</button>
             </div>
-             <div class="product">
-                <img src="" alt="商品2">
-                <h3>試験中</h3>
-                <p>価格: 0P</p>
-                <button onclick="addToCart('商品3', 0)">カートに追加</button>
-            </div>
-            <!-- 他の商品も同様に追加 -->
+            <!-- 他の商品を追加 -->
         </section>
 
         <section id="cart">
@@ -50,43 +44,44 @@
             </div>
             <button onclick="checkout()">チェックアウト</button>
         </section>
-         <section id="points">
+
+        <section id="points">
             <h2>ポイント確認</h2>
             <p>現在のポイント: <span id="points-balance">0</span> ポイント</p>
         </section>
 
-        <section id="contact>
-    <h2>お問い合わせ</h2>
-    <p>アンケートにご協力ください。</p>
-    <form id="survey-form">
-        <label for="name">お名前:</label>
-        <input type="text" id="name" name="name" placeholder="お名前を入力" required>
+        <section id="contact">
+            <h2>お問い合わせ</h2>
+            <form id="survey-form">
+                <label for="name">お名前:</label>
+                <input type="text" id="name" name="name" placeholder="お名前を入力" required>
 
-        <label for="email">メールアドレス:</label>
-        <input type="email" id="email" name="email" placeholder="メールアドレスを入力" required>
+                <label for="email">メールアドレス:</label>
+                <input type="email" id="email" name="email" placeholder="メールアドレスを入力" required>
 
-        <label for="rating">当サイトの満足度を教えてください:</label>
-        <select id="rating" name="rating" required>
-            <option value="">選択してください</option>
-            <option value="5">非常に満足</option>
-            <option value="4">満足</option>
-            <option value="3">普通</option>
-            <option value="2">やや不満</option>
-            <option value="1">非常に不満</option>
-        </select>
+                <label for="rating">満足度:</label>
+                <select id="rating" name="rating" required>
+                    <option value="">選択してください</option>
+                    <option value="5">非常に満足</option>
+                    <option value="4">満足</option>
+                    <option value="3">普通</option>
+                    <option value="2">やや不満</option>
+                    <option value="1">非常に不満</option>
+                </select>
 
-        <label for="feedback">ご意見・ご感想:</label>
-        <textarea id="feedback" name="feedback" rows="4" placeholder="ご意見やご感想をお聞かせください"></textarea>
+                <label for="feedback">ご意見・ご感想:</label>
+                <textarea id="feedback" name="feedback" rows="4"></textarea>
 
-        <button type="submit">送信</button>
-    </form>
-</section>
+                <button type="submit">送信</button>
+            </form>
+        </section>
     </main>
 
     <footer>
-        <p>&copy; 2024 kyouyuuno-to</p>
+        <p>&copy; 2024 共有ノート©</p>
     </footer>
 
-    <script src="https://kyouyuuno-to.f5.si/02/js/0002.js"></script> <!-- JavaScriptファイルのリンク -->
+    <script src="https://kyouyuuno-to.f5.si/02/js/0002.js"></script>
 </body>
 </html>
+
