@@ -8,7 +8,7 @@ body {
 
 header {
     background: #35424a;
-    color: #ffffff;
+    color: white;
     padding: 10px 0;
     text-align: center;
 }
@@ -24,7 +24,7 @@ nav ul li {
 }
 
 nav a {
-    color: #ffffff;
+    color: white;
     text-decoration: none;
 }
 
@@ -33,9 +33,8 @@ h2 {
 }
 
 .product {
-    background: #ffffff;
-    border: 1px solid #dddddd;
-    border-radius: 5px;
+    background: #fff;
+    border: 1px solid #ddd;
     margin: 15px;
     padding: 10px;
     display: inline-block;
@@ -50,7 +49,7 @@ h2 {
 
 button {
     background: #35424a;
-    color: #ffffff;
+    color: white;
     border: none;
     padding: 10px;
     cursor: pointer;
@@ -65,7 +64,7 @@ footer {
     text-align: center;
     padding: 10px;
     background: #35424a;
-    color: #ffffff;
+    color: white;
     position: relative;
     bottom: 0;
     width: 100%;
