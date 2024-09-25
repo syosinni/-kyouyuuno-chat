@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ECページ</title>
+    <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/02/css/0002.css"> <!-- CSSファイルのリンク -->
+</head>
+<body>
+    <header>
+        <h1>オンラインショップ</h1>
+        <nav>
+            <ul>
+                <li><a href="#products">商品一覧</a></li>
+                <li><a href="#cart">カート</a></li>
+                <li><a href="#contact">お問い合わせ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="products">
+            <h2>商品一覧</h2>
+            <div class="product">
+                <img src="https://msp.c.yimg.jp/images/v2/FUTi93tXq405grZVGgDqG-SI0jIgHDeOygrUTP6aL0xg6pDOwWkQiSGe5qfjRefRTRd43bCAJY_qjpJQtsi69PtZH4ooGQ_88SahXSdBEmI6r0kQFtagP47QTAzkBLtYA2h50hjA09og19FfdABjNHZXubz7rgYErwG2CHNh5iAioC42m62__UwsadoeEVNVN6Y4wsJ4niAmto0o-j1mpqJHC9PIEINYm9cwvaRB9Der30lGs74p9eFCfHGI4dQlToeIqmNfGrYxkb4jd9P6YMz8WlVMHeHMDq2mzTz5zyqwTekfLM4vjtyfnjcuixy1PN-klt4ghmiWAJV0LEdX-SCB-F5PdVm9BBdSVKnteifII4GQ_cbvWJMTkrpVteMkOA6oPbQ0Szrx9vfsrp9LQlQ85o82FS56WJ1o3KhV1AAeY_yZOaJhBVojgqI4J03mHrhN6GhNi61sT7RshRwtBHEELeoMqqhDYytHYwRvQoTdC9QpOZ9E-Gw3nPuGoAPCY-dzYUCj6fabkgWsO0q1tnzNo8lJhv3QIeBu03d_uneY-tgFKV3DyFJyooA3g04fneiqVhCY9xzjNAExjji7oLr6spPMiwpcNaFgUMuvxaj9TSAaRSEYCcAnUic5swmnEvuFNLm4_VTYv7A0qq0pSlx_A8na-vuOeGfwUv76MkE=/school_housouiin_girl.png?errorImage=false" alt="商品1">
+                <h3>商品1</h3>
+                <p>価格: ¥1,000</p>
+                <button onclick="addToCart('商品1', 1000)">カートに追加</button>
+            </div>
+            <div class="product">
+                <img src="" alt="商品2">
+                <h3>商品2</h3>
+                <p>価格: ¥2,000</p>
+                <button onclick="addToCart('商品2', 2000)">カートに追加</button>
+            </div>
+            <!-- 他の商品も同様に追加 -->
+        </section>
+
+        <section id="cart">
+            <h2>カート</h2>
+            <div id="cart-items">
+                <p>カートは空です。</p>
+            </div>
+            <button onclick="checkout()">チェックアウト</button>
+        </section>
+
+        <section id="contact">
+            <h2>お問い合わせ</h2>
+            <p>お問い合わせフォームを準備中です。</p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 kyouyuuno-to</p>
+    </footer>
+
+    <script src="https://kyouyuuno-to.f5.si/02/js/0002.js"></script> <!-- JavaScriptファイルのリンク -->
+</body>
+</html>
