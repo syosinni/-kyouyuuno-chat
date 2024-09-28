@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブな世界地図</title>
+    <style>
+        /* SVGのスタイル設定 */
+        svg {
+            width: 100%;
+            height: auto;
+        }
+        .selected {
+            fill: red; /* 選択した国の色 */
+        }
+    </style>
+</head>
+<body>
+
+<h1>クリックして領土を選択</h1>
+
+<!-- 世界地図のSVG -->
+<svg id="world-map" xmlns="https://kyouyuuno-to.f5.si/png/web-wmap-s3-a2.gif.svg" viewBox="0 0 1000 500">
+    <!-- 国の形状はパスとして定義されています（簡略化した例） -->
+    <path id="country1" d="M100,200 L150,150 L200,200 Z" fill="lightgray" stroke="black" />
+    <path id="country2" d="M300,250 L350,200 L400,250 Z" fill="lightgray" stroke="black" />
+    <!-- 実際のSVGにはすべての国が含まれる -->
+</svg>
+
+<script>
+    // クリックイベントのリスナーを追加
+    document.querySelectorAll('path').forEach(function(country) {
+        country.addEventListener('click', function() {
+            // 選択された国の色を変更
+            country.classList.toggle('selected');
+        });
+    });
+</script>
+
+</body>
+</html>
