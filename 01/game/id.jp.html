@@ -3,37 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>インタラクティブな世界地図</title>
+    <title>世界地図のズーム機能</title>
     <style>
-        /* SVGのスタイル設定 */
+        /* 地図表示エリア */
+        #map-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        /* SVG地図のサイズを自動調整 */
         svg {
             width: 100%;
             height: auto;
         }
-        .selected {
-            fill: red; /* 選択した国の色 */
+
+        /* ズームボタンのスタイル */
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<h1>クリックして領土を選択</h1>
+<div id="map-container">
+    <!-- 世界地図のSVG（簡略化したものを例として使用） -->
+    <svg id="world-map" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500">
+        <path d="M100,200 L150,150 L200,200 Z" fill="lightgray" stroke="black"/>
+        <path d="M300,250 L350,200 L400,250 Z" fill="lightgray" stroke="black"/>
+        <!-- 実際にはもっと多くのパスが含まれる -->
+    </svg>
 
-<!-- 世界地図のSVG -->
-<svg id="world-map" xmlns="https://kyouyuuno-to.f5.si/png/web-wmap-s3-a2.gif.svg" viewBox="0 0 1000 500">
-    <!-- 国の形状はパスとして定義されています（簡略化した例） -->
-    <path id="country1" d="M100,200 L150,150 L200,200 Z" fill="lightgray" stroke="black" />
-    <path id="country2" d="M300,250 L350,200 L400,250 Z" fill="lightgray" stroke="black" />
-    <!-- 実際のSVGにはすべての国が含まれる -->
-</svg>
+    <!-- ズームボタン -->
+    <div id="controls">
+        <button id="zoom-in">＋</button>
+        <button id="zoom-out">−</button>
+    </div>
+</div>
 
 <script>
-    // クリックイベントのリスナーを追加
-    document.querySelectorAll('path').forEach(function(country) {
-        country.addEventListener('click', function() {
-            // 選択された国の色を変更
-            country.classList.toggle('selected');
-        });
+    const svgElement = document.getElementById('world-map');
+    let currentScale = 1.0;  // 初期スケール
+    const scaleStep = 0.1;   // スケールの増減幅
+
+    // ズームインボタンの機能
+    document.getElementById('zoom-in').addEventListener('click', () => {
+        currentScale += scaleStep;
+        svgElement.style.transform = `scale(${currentScale})`;
+    });
+
+    // ズームアウトボタンの機能
+    document.getElementById('zoom-out').addEventListener('click', () => {
+        if (currentScale > scaleStep) {
+            currentScale -= scaleStep;
+            svgElement.style.transform = `scale(${currentScale})`;
+        }
     });
 </script>
 
