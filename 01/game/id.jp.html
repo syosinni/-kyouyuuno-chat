@@ -3,32 +3,74 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ズーム可能な世界地図</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <title>世界地図 - ピンチズーム対応</title>
   <style>
-    #map {
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       height: 100vh;
+      background-color: #f0f0f0;
+    }
+    #mapContainer {
+      overflow: hidden;
+      touch-action: none;
+      background-color: #fff;
+      border: 2px solid #ccc;
+    }
+    #mapImage {
+      display: block;
       width: 100%;
+      height: auto;
+      transform-origin: center center;
     }
   </style>
 </head>
 <body>
 
-<div id="map"></div>
+<div id="mapContainer">
+  <img id="mapImage" src="https://kyouyuuno-to.f5.si/png/web-wmap-s3-a2.gif.png" alt="世界地図">
+</div>
 
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
 <script>
-  // 地図を初期化して設定
-  var map = L.map('map').setView([51.505, -0.09], 2); // 緯度、経度、ズームレベル
+  // 地図の要素を取得
+  var mapImage = document.getElementById('mapImage');
+  var mapContainer = document.getElementById('mapContainer');
 
-  // OpenStreetMapのタイルレイヤーを追加
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(map);
+  // 初期スケール
+  var scale = 1;
+  var currentX = 0;
+  var currentY = 0;
 
-  // ズームレベルの制限を設定（最小=1, 最大=18）
-  map.setMinZoom(1);
-  map.setMaxZoom(18);
+  // Hammer.jsでピンチズームとパンをサポート
+  var hammer = new Hammer(mapContainer);
+  hammer.get('pinch').set({ enable: true });
+  hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+
+  // ピンチ（ズーム）イベント
+  hammer.on('pinch', function(ev) {
+    scale = Math.max(0.5, Math.min(scale * ev.scale, 4));  // ズームレベルを0.5〜4に制限
+    mapImage.style.transform = `scale(${scale}) translate(${currentX}px, ${currentY}px)`;
+  });
+
+  // パン（移動）イベント
+  hammer.on('panmove', function(ev) {
+    currentX = ev.deltaX;
+    currentY = ev.deltaY;
+    mapImage.style.transform = `scale(${scale}) translate(${currentX}px, ${currentY}px)`;
+  });
+
+  // ピンチ終了時、ズームをリセット
+  hammer.on('pinchend panend', function() {
+    currentX = currentX / scale;
+    currentY = currentY / scale;
+  });
+
+  // コンテナのサイズ設定
+  mapContainer.style.width = '100%';
+  mapContainer.style.height = '100vh';
 </script>
 
 </body>
