@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>世界地図 - ピンチズーム対応</title>
+  <title>世界地図 - ピンチズーム対応（速度調整）</title>
   <style>
     body {
       margin: 0;
@@ -44,6 +44,10 @@
   var currentX = 0;
   var currentY = 0;
 
+  // 速度調整用の係数
+  var zoomSpeedFactor = 0.05; // ピンチズームの速度を低下
+  var panSpeedFactor = 0.2;   // パン（移動）の速度を低下
+
   // Hammer.jsでピンチズームとパンをサポート
   var hammer = new Hammer(mapContainer);
   hammer.get('pinch').set({ enable: true });
@@ -51,14 +55,15 @@
 
   // ピンチ（ズーム）イベント
   hammer.on('pinch', function(ev) {
-    scale = Math.max(0.5, Math.min(scale * ev.scale, 4));  // ズームレベルを0.5〜4に制限
+    var newScale = scale + (ev.scale - 1) * zoomSpeedFactor;  // スケール変化を低下
+    scale = Math.max(0.5, Math.min(newScale, 4));  // ズームレベルを0.5〜4に制限
     mapImage.style.transform = `scale(${scale}) translate(${currentX}px, ${currentY}px)`;
   });
 
   // パン（移動）イベント
   hammer.on('panmove', function(ev) {
-    currentX = ev.deltaX;
-    currentY = ev.deltaY;
+    currentX = ev.deltaX * panSpeedFactor;  // 移動速度を低下
+    currentY = ev.deltaY * panSpeedFactor;
     mapImage.style.transform = `scale(${scale}) translate(${currentX}px, ${currentY}px)`;
   });
 
