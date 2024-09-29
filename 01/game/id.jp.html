@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
   <title>通信次元</title>
-  
   <style>
     body {
       margin: 0;
@@ -14,69 +16,128 @@
       height: 100vh;
       background-color: #f0f0f0;
     }
-    #mapContainer {
-      overflow: hidden;
-      touch-action: none;
-      background-color: #fff;
-      border: 2px solid #ccc;
+    canvas {
+      border: 1px solid #000;
     }
-    #mapImage {
-      display: block;
-      width: 100%;
-      height: auto;
-      transform-origin: center center;
+    #applyModal {
+      display: none;
+      position: fixed;
+      z-index: 2;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background-color: white;
+      padding: 20px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+    .modal-content {
+      text-align: center;
+    }
+    .close {
+      cursor: pointer;
+      font-size: 20px;
+      color: #f00;
     }
   </style>
 </head>
 <body>
 
-<div id="mapContainer">
-  <img id="mapImage" src="https://kyouyuuno-to.f5.si/png/web-wmap-s3-a2.gif.png" alt="世界地図">
+<!-- 地図を描画するCanvas -->
+<canvas id="mapCanvas" width="800" height="600"></canvas>
+
+<!-- 申請モーダルウィンドウ -->
+<div id="applyModal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>地域を申請</h2>
+    <form id="applyForm">
+      <label for="regionName">地域名:</label>
+      <input type="text" id="regionName" name="regionName" required><br><br>
+      <button type="submit">申請</button>
+    </form>
+  </div>
 </div>
 
-<script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
 <script>
-  // 地図の要素を取得
-  var mapImage = document.getElementById('mapImage');
-  var mapContainer = document.getElementById('mapContainer');
+  // 地図の画像ソース
+  var mapSrc = 'https://kyouyuuno-to.f5.si/png/web-wmap-s3-a2.gif.png';
 
-  // 初期スケール
-  var scale = 1;
-  var currentX = 0;
-  var currentY = 0;
+  // Canvas 要素とコンテキスト
+  var canvas = document.getElementById('mapCanvas');
+  var ctx = canvas.getContext('2d');
 
-  // 速度調整用の係数
-  var zoomSpeedFactor = 0.1; // ピンチズームの速度を少し上げる
-  var panSpeedFactor = 0.4;  // パン（移動）の速度を少し上げる
+  // 地図画像を読み込んで描画
+  var mapImage = new Image();
+  mapImage.src = mapSrc;
+  mapImage.onload = function() {
+    ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height);
+  };
 
-  // Hammer.jsでピンチズームとパンをサポート
-  var hammer = new Hammer(mapContainer);
-  hammer.get('pinch').set({ enable: true });
-  hammer.get('pan').set({ direction: Hammer.DIRECTION_ALL });
+  // モーダル関連
+  var modal = document.getElementById('applyModal');
+  var closeModal = document.querySelector('.close');
+  var applyForm = document.getElementById('applyForm');
+  var selectedRegion = null;
 
-  // ピンチ（ズーム）イベント
-  hammer.on('pinch', function(ev) {
-    var newScale = scale + (ev.scale - 1) * zoomSpeedFactor;  // スケール変化を少し早く
-    scale = Math.max(0.5, Math.min(newScale, 4));  // ズームレベルを0.5〜4に制限
-    mapImage.style.transform = `scale(${scale}) translate(${currentX}px, ${currentY}px)`;
+  // モーダルを閉じる処理
+  closeModal.addEventListener('click', function() {
+    modal.style.display = 'none';
   });
 
-  // パン（移動）イベント
-  hammer.on('panmove', function(ev) {
-    currentX = ev.deltaX * panSpeedFactor;  // 移動速度を少し早く
-    currentY = ev.deltaY * panSpeedFactor;
-    mapImage.style.transform = `scale(${scale}) translate(${currentX}px, ${currentY}px)`;
+  // クリックされた場所を取得し、その地域を特定
+  canvas.addEventListener('click', function(event) {
+    var rect = canvas.getBoundingClientRect();
+    var x = event.clientX - rect.left;
+    var y = event.clientY - rect.top;
+    
+    // 仮の領域特定（簡易的に座標で領域を決定）
+    selectedRegion = getRegionFromCoordinates(x, y);
+
+    if (selectedRegion) {
+      // 地域が特定された場合にモーダルを表示
+      modal.style.display = 'block';
+    }
   });
 
-  // ピンチ終了時、ズームをリセット
-  hammer.on('pinchend panend', function() {
-    currentX = currentX / scale;
-    currentY = currentY / scale;
+  // 領域を特定する関数（この例では簡単に座標範囲で領域を特定）
+  function getRegionFromCoordinates(x, y) {
+    if (x > 100 && x < 300 && y > 100 && y < 300) {
+      return "地域A";
+    } else if (x > 400 && x < 600 && y > 200 && y < 400) {
+      return "地域B";
+    }
+    return null;
+  }
+
+  // フォーム送信処理（申請されたら領域に色を塗る）
+  applyForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    var regionName = document.getElementById('regionName').value;
+    
+    if (selectedRegion) {
+      // 領域に色を塗る
+      fillRegionWithColor(selectedRegion, 'rgba(255, 0, 0, 0.5)');
+      
+      // モーダルを閉じる
+      modal.style.display = 'none';
+    }
   });
 
-  // コンテナのサイズ設定
-  mapContainer.style.width = '100%';
-  mapContainer.style.height = '100vh';
+  // 領域に色を塗る関数
+  function fillRegionWithColor(region, color) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(mapImage, 0, 0, canvas.width, canvas.height); // 地図を再描画
+    
+    ctx.fillStyle = color;
+
+    // 簡単に領域に応じて四角形を描画
+    if (region === "地域A") {
+      ctx.fillRect(100, 100, 200, 200);
+    } else if (region === "地域B") {
+      ctx.fillRect(400, 200, 200, 200);
+    }
+  }
 </script>
 
 </body>
