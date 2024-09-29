@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Strategy Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #game {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 50px;
+        }
+
+        #map {
+            border: 1px solid black;
+            padding: 20px;
+        }
+
+        #stats {
+            border: 1px solid black;
+            padding: 20px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Strategy Game</h1>
+    <div id="game">
+        <div id="map">
+            <button id="territory1" onclick="conquerTerritory(1)">Territory 1</button>
+            <button id="territory2" onclick="conquerTerritory(2)">Territory 2</button>
+            <button id="territory3" onclick="conquerTerritory(3)">Territory 3</button>
+        </div>
+        <div id="stats">
+            <p>Player's Resources: <span id="resources">100</span></p>
+            <p>Player's Army: <span id="army">50</span></p>
+        </div>
+    </div>
+
+    <script>
+        let playerResources = 100;
+        let playerArmy = 50;
+
+        function updateStats() {
+            document.getElementById("resources").textContent = playerResources;
+            document.getElementById("army").textContent = playerArmy;
+        }
+
+        function conquerTerritory(territoryNumber) {
+            const cost = 30;
+            const armyLoss = 10;
+
+            if (playerResources >= cost && playerArmy > armyLoss) {
+                playerResources -= cost;
+                playerArmy -= armyLoss;
+                alert(`You conquered Territory ${territoryNumber}!`);
+                document.getElementById(`territory${territoryNumber}`).disabled = true;
+            } else {
+                alert("Not enough resources or army to conquer this territory.");
+            }
+            updateStats();
+        }
+
+        // Initialize stats on page load
+        updateStats();
+    </script>
+</body>
+</html>
