@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通信次元</title>
+    <title>国クリックで色を変更</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
-            height: 100vh;
+            height: 90vh;
             width: 100vw;
+        }
+
+        #message {
+            text-align: center;
+            font-size: 20px;
+            color: red;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="message"></div> <!-- メッセージ表示用 -->
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -25,6 +33,33 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
+
+        // メッセージを表示する関数
+        function showMessage(message) {
+            document.getElementById("message").innerText = message;
+        }
+
+        // 1日1回の制限をチェックする関数
+        function canChangeColor() {
+            // ローカルストレージから最後に色を変えた日時を取得
+            var lastChange = localStorage.getItem('lastChangeDate');
+            if (lastChange) {
+                var lastDate = new Date(lastChange);
+                var today = new Date();
+
+                // 最後に色を変えたのが今日かどうかをチェック
+                if (lastDate.toDateString() === today.toDateString()) {
+                    return false; // 今日はもう色を変えた
+                }
+            }
+            return true; // まだ色を変えていない
+        }
+
+        // 今日の変更を保存する関数
+        function saveChangeDate() {
+            var now = new Date();
+            localStorage.setItem('lastChangeDate', now.toISOString()); // 現在の日時を保存
+        }
 
         // 国のGeoJSONデータを読み込む (例: 世界全体のデータ)
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
@@ -42,14 +77,23 @@
                     },
                     onEachFeature: function (feature, layer) {
                         layer.on('click', function (e) {
-                            // クリックされた国の色を赤に変更
-                            layer.setStyle({
-                                fillColor: 'red',
-                                fillOpacity: 0.7
-                            });
+                            if (canChangeColor()) {
+                                // クリックされた国の色を赤に変更
+                                layer.setStyle({
+                                    fillColor: 'red',
+                                    fillOpacity: 0.7
+                                });
 
-                            // 国名をコンソールに表示
-                            console.log(feature.properties.name);
+                                // 今日の変更を保存
+                                saveChangeDate();
+
+                                // メッセージをクリア
+                                showMessage("");
+
+                            } else {
+                                // 1日1回の制限メッセージを表示
+                                showMessage("申し訳ありませんが1日1回しか出来ません");
+                            }
                         });
                     }
                 }).addTo(map);
