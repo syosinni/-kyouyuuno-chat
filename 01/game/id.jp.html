@@ -90,23 +90,23 @@
             document.getElementById("message").innerText = message;
         }
 
-        // 1日1回の制限をチェックする関数
-        function canChangeColor() {
-            var lastChange = localStorage.getItem('lastChangeDate');
+        // 1日1回の「申請」制限をチェックする関数
+        function canApply() {
+            var lastChange = localStorage.getItem('lastApplyDate');
             if (lastChange) {
                 var lastDate = new Date(lastChange);
                 var today = new Date();
                 if (lastDate.toDateString() === today.toDateString()) {
-                    return false; // 今日はすでに色を変更した
+                    return false; // 今日はすでに申請した
                 }
             }
             return true;
         }
 
-        // 今日の変更を保存する関数
-        function saveChangeDate() {
+        // 今日の「申請」変更を保存する関数
+        function saveApplyDate() {
             var now = new Date();
-            localStorage.setItem('lastChangeDate', now.toISOString()); // 現在の日時を保存
+            localStorage.setItem('lastApplyDate', now.toISOString()); // 現在の日時を保存
         }
 
         // 国ごとの色の状態を保存・取得する関数
@@ -141,30 +141,35 @@
                         var countryName = feature.properties.name;
 
                         layer.on('click', function (e) {
-                            if (canChangeColor()) {
-                                // 「外交」か「申請」を選ぶモーダルを開く
-                                openModal(function(selection) {
-                                    // 選択に応じてメッセージを表示
-                                    showMessage(`「${selection}」が選択されました。`);
+                            // 「外交」か「申請」を選ぶモーダルを開く
+                            openModal(function(selection) {
+                                if (selection === '申請') {
+                                    // 申請は1日1回まで
+                                    if (canApply()) {
+                                        // 「申請」が選ばれた場合、国の色を赤に変更
+                                        layer.setStyle({
+                                            fillColor: 'red',
+                                            fillOpacity: 0.7
+                                        });
 
-                                    // クリックされた国の色を赤に変更
-                                    layer.setStyle({
-                                        fillColor: 'red',
-                                        fillOpacity: 0.7
-                                    });
+                                        // 今日の「申請」変更を保存
+                                        saveApplyDate();
 
-                                    // 今日の変更を保存
-                                    saveChangeDate();
+                                        // 国の色の状態を保存
+                                        countryColors[countryName] = 'red';
+                                        saveCountryColors(countryColors);
 
-                                    // 国の色の状態を保存
-                                    countryColors[countryName] = 'red';
-                                    saveCountryColors(countryColors);
-                                });
-
-                            } else {
-                                // 1日1回の制限メッセージを表示
-                                showMessage("申し訳ありませんが1日1回しか出来ません");
-                            }
+                                        // メッセージをクリア
+                                        showMessage("");
+                                    } else {
+                                        // 1日1回の制限メッセージを表示
+                                        showMessage("申し訳ありませんが、申請は1日1回しか出来ません");
+                                    }
+                                } else if (selection === '外交') {
+                                    // 「外交」が選ばれた場合は制限なしでメッセージを表示
+                                    showMessage(`「外交」が選択されました。`);
+                                }
+                            });
                         });
                     }
                 }).addTo(map);
