@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通信次元（仮2）</title>
+    <title>通信次元（仮3）</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
@@ -109,27 +109,37 @@
             localStorage.setItem('lastApplyDate', now.toISOString()); // 現在の日時を保存
         }
 
-        // 国ごとの色の状態を保存・取得する関数
-        function getCountryColors() {
-            var savedColors = localStorage.getItem('countryColors');
-            return savedColors ? JSON.parse(savedColors) : {};
+        // 国ごとの色と名前の状態を保存・取得する関数
+        function getCountryData() {
+            var savedData = localStorage.getItem('countryData');
+            return savedData ? JSON.parse(savedData) : {};
         }
 
-        function saveCountryColors(countryColors) {
-            localStorage.setItem('countryColors', JSON.stringify(countryColors));
+        function saveCountryData(countryData) {
+            localStorage.setItem('countryData', JSON.stringify(countryData));
+        }
+
+        // 国名を設定する関数
+        function setCountryName(countryName, callback) {
+            var newName = prompt(`新しい国名を入力してください（${countryName}）:`);
+            if (newName) {
+                callback(newName);
+            } else {
+                callback(countryName); // 名前が入力されなければ、元の名前を保持
+            }
         }
 
         // 国のGeoJSONデータを読み込む
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(response => response.json())
             .then(data => {
-                var countryColors = getCountryColors(); // 保存された色の状態を取得
+                var countryData = getCountryData(); // 保存された国のデータを取得
 
                 // GeoJSONデータを地図に追加し、各国にクリックイベントを設定
                 L.geoJSON(data, {
                     style: function (feature) {
                         var countryName = feature.properties.name;
-                        var fillColor = countryColors[countryName] || 'green'; // 保存された色があれば適用、なければ緑
+                        var fillColor = countryData[countryName]?.color || 'green'; // 保存された色があれば適用、なければ緑
                         return {
                             color: 'blue',  // 国境線の色
                             fillColor: fillColor, // 国の色
@@ -156,8 +166,11 @@
                                         saveApplyDate();
 
                                         // 国の色の状態を保存
-                                        countryColors[countryName] = 'red';
-                                        saveCountryColors(countryColors);
+                                        countryData[countryName] = {
+                                            ...countryData[countryName],
+                                            color: 'red'
+                                        };
+                                        saveCountryData(countryData);
 
                                         // メッセージをクリア
                                         showMessage("");
@@ -166,8 +179,18 @@
                                         showMessage("申し訳ありませんが、申請は1日1回しか出来ません");
                                     }
                                 } else if (selection === '外交') {
-                                    // 「外交」が選ばれた場合は制限なしでメッセージを表示
-                                    showMessage(`「外交」が選択されました。`);
+                                    // 「外交」が選ばれた場合、国名を設定
+                                    setCountryName(countryName, function(newName) {
+                                        // 国名を保存
+                                        countryData[countryName] = {
+                                            ...countryData[countryName],
+                                            name: newName
+                                        };
+                                        saveCountryData(countryData);
+
+                                        // 国名を表示
+                                        showMessage(`「外交」成功！ 新しい国名は「${newName}」です。`);
+                                    });
                                 }
                             });
                         });
