@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通信次元</title>
+    <title>地図クリックで国の色を変更</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
             height: 100vh;
-        }
-        /* 選択された国のスタイル */
-        .selected-country {
-            fill: red !important;
+            width: 100vw;
         }
     </style>
 </head>
@@ -19,17 +16,19 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-geoman-free/dist/leaflet-geoman.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-geoman-free/dist/leaflet-geoman.css" />
 
     <script>
         // 地図の初期化
-        var map = L.map('map').setView([20, 0], 2);
+        var map = L.map('map').setView([20, 0], 2); // 地図を中心に設定
 
-        // OpenStreetMapタイルを設定
+        // OpenStreetMapのタイルレイヤーを追加
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // GeoJSONデータを読み込む（例として簡略化したものを記載）
+        // GeoJSONデータを取得 (ロシアとアメリカのサンプル)
         var countries = {
             "type": "FeatureCollection",
             "features": [
@@ -38,7 +37,7 @@
                     "properties": { "name": "Russia" },
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[[100.0, 60.0], [140.0, 60.0], [140.0, 70.0], [100.0, 70.0], [100.0, 60.0]]]
+                        "coordinates": [[[37.6173, 55.7558], [50, 55], [50, 60], [40, 60], [37.6173, 55.7558]]] // 簡略化されたロシアの座標
                     }
                 },
                 {
@@ -46,41 +45,47 @@
                     "properties": { "name": "United States" },
                     "geometry": {
                         "type": "Polygon",
-                        "coordinates": [[[-130.0, 30.0], [-60.0, 30.0], [-60.0, 50.0], [-130.0, 50.0], [-130.0, 30.0]]]
+                        "coordinates": [[[-100.0, 40.0], [-110.0, 35.0], [-100.0, 30.0], [-90.0, 35.0], [-100.0, 40.0]]] // 簡略化されたアメリカの座標
                     }
                 }
-                // 他の国も追加できます
             ]
         };
 
-        // 選択された国のスタイルを変更する関数
+        // 選択された国のスタイルを定義
+        function style(feature) {
+            return {
+                fillColor: 'green', // デフォルトの国の色
+                weight: 2,
+                opacity: 1,
+                color: 'blue', // 国境の色
+                fillOpacity: 0.5
+            };
+        }
+
+        // クリックされた国の色を変更する関数
         function highlightCountry(e) {
             var layer = e.target;
 
-            // スタイルを変更
+            // クリックされた国のスタイルを変更
             layer.setStyle({
                 fillColor: 'red',
                 fillOpacity: 0.7
             });
         }
 
-        // GeoJSONを地図に追加して、クリックイベントを設定
-        L.geoJSON(countries, {
-            style: function (feature) {
-                return {
-                    color: 'blue', // 国境の色
-                    fillColor: 'green', // 国の初期色
-                    weight: 2,
-                    fillOpacity: 0.5
-                };
-            },
+        // GeoJSONを地図に追加して、国クリックイベントを設定
+        var geojson = L.geoJSON(countries, {
+            style: style,
             onEachFeature: function (feature, layer) {
-                // 各国にクリックイベントを設定
-                layer.on({
-                    click: highlightCountry
-                });
+                layer.on('click', highlightCountry); // 各国クリックで色変更
             }
         }).addTo(map);
+
+        // 地図がクリックされた時に、ズームまたは他のインタラクションを処理できるように
+        map.on('click', function() {
+            console.log("地図がクリックされました");
+        });
+
     </script>
 </body>
 </html>
