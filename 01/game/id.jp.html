@@ -9,7 +9,8 @@
         #map {
             height: 100vh;
         }
-        .country-selected {
+        /* 選択された国のスタイル */
+        .selected-country {
             fill: red !important;
         }
     </style>
@@ -18,36 +19,66 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-svg-shapes"></script> <!-- SVG国境のためのライブラリ-->
+
     <script>
         // 地図の初期化
-        var map = L.map('map').setView([20, 0], 2); // 地球全体を表示
+        var map = L.map('map').setView([20, 0], 2);
 
-        // タイルレイヤーを追加
+        // OpenStreetMapタイルを設定
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // サンプルの国境データを追加（GeoJSONなどが一般的）
-        var countries = [
-            { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]] }, "properties": { "name": "Country A" } },
-            { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[30, 10], [40, 10], [40, 20], [30, 20], [30, 10]]] }, "properties": { "name": "Country B" } }
-        ];
-
-        // 各国境を表示し、クリックで色を変更する
-        L.geoJSON(countries, {
-            onEachFeature: function (feature, layer) {
-                layer.on('click', function (e) {
-                    // 選択された国の色を変える
-                    if (!layer.options.className) {
-                        layer.setStyle({ fillColor: 'red', fillOpacity: 1 });
-                    } else {
-                        layer.setStyle({ fillColor: 'blue', fillOpacity: 1 });
+        // GeoJSONデータを読み込む（例として簡略化したものを記載）
+        var countries = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": { "name": "Russia" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[100.0, 60.0], [140.0, 60.0], [140.0, 70.0], [100.0, 70.0], [100.0, 60.0]]]
                     }
-                });
-            },
+                },
+                {
+                    "type": "Feature",
+                    "properties": { "name": "United States" },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[[-130.0, 30.0], [-60.0, 30.0], [-60.0, 50.0], [-130.0, 50.0], [-130.0, 30.0]]]
+                    }
+                }
+                // 他の国も追加できます
+            ]
+        };
+
+        // 選択された国のスタイルを変更する関数
+        function highlightCountry(e) {
+            var layer = e.target;
+
+            // スタイルを変更
+            layer.setStyle({
+                fillColor: 'red',
+                fillOpacity: 0.7
+            });
+        }
+
+        // GeoJSONを地図に追加して、クリックイベントを設定
+        L.geoJSON(countries, {
             style: function (feature) {
-                return { color: '#000', weight: 2, fillOpacity: 0.5 };
+                return {
+                    color: 'blue', // 国境の色
+                    fillColor: 'green', // 国の初期色
+                    weight: 2,
+                    fillOpacity: 0.5
+                };
+            },
+            onEachFeature: function (feature, layer) {
+                // 各国にクリックイベントを設定
+                layer.on({
+                    click: highlightCountry
+                });
             }
         }).addTo(map);
     </script>
