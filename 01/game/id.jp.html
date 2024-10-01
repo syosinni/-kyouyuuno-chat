@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>国クリックで色を変更</title>
+    <title>通信次元（仮）</title>
+     <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
@@ -61,21 +64,37 @@
             localStorage.setItem('lastChangeDate', now.toISOString()); // 現在の日時を保存
         }
 
+        // 国ごとの色の状態を保存・取得する関数
+        function getCountryColors() {
+            var savedColors = localStorage.getItem('countryColors');
+            return savedColors ? JSON.parse(savedColors) : {};
+        }
+
+        function saveCountryColors(countryColors) {
+            localStorage.setItem('countryColors', JSON.stringify(countryColors));
+        }
+
         // 国のGeoJSONデータを読み込む (例: 世界全体のデータ)
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(response => response.json())
             .then(data => {
+                var countryColors = getCountryColors(); // 保存された色の状態を取得
+
                 // GeoJSONデータを地図に追加し、各国にクリックイベントを設定
                 L.geoJSON(data, {
                     style: function (feature) {
+                        var countryName = feature.properties.name;
+                        var fillColor = countryColors[countryName] || 'green'; // 保存された色があれば適用、なければ緑
                         return {
                             color: 'blue',  // 国境線の色
-                            fillColor: 'green', // 国の初期色
+                            fillColor: fillColor, // 国の色
                             weight: 1,
                             fillOpacity: 0.5
                         };
                     },
                     onEachFeature: function (feature, layer) {
+                        var countryName = feature.properties.name;
+
                         layer.on('click', function (e) {
                             if (canChangeColor()) {
                                 // クリックされた国の色を赤に変更
@@ -86,6 +105,10 @@
 
                                 // 今日の変更を保存
                                 saveChangeDate();
+
+                                // 国の色の状態を保存
+                                countryColors[countryName] = 'red';
+                                saveCountryColors(countryColors);
 
                                 // メッセージをクリア
                                 showMessage("");
