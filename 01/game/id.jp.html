@@ -3,24 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通信次元（仮）</title>
-     <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
-<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
-<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+    <title>通信次元（仮2）</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <body>
-         <div class="sidebar" id="sidebar">
-    <button class="close-btn" id="closeBtn">&times;</button>
-    <nav>
-  <link rel="stylesheet" href="https://kyouyuuno-to.f5.si/01/circle/css/seimei.css">
-      <ul>
-        <li><a href="#home">ホーム</a></li>
-        <li><a href="#001">外交</a></li>
-      </ul>
-    </nav>
-  </div>
-         <script src="https://kyouyuuno-to.f5.si/01/circle/js/seimei.js"></script>
-    </body>
     <style>
         #map {
             height: 90vh;
@@ -33,11 +17,45 @@
             color: red;
             margin-top: 10px;
         }
+
+        /* モーダルのスタイル */
+        #modal {
+            display: none; /* デフォルトでは非表示 */
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #modal-content button {
+            margin: 10px;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div id="message"></div> <!-- メッセージ表示用 -->
+
+    <!-- モーダルのHTML -->
+    <div id="modal">
+        <div id="modal-content">
+            <p>「外交」か「申請」を選んでください:</p>
+            <button id="diplomacy-button">外交</button>
+            <button id="apply-button">申請</button>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -50,6 +68,23 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
+        // モーダルを開く関数
+        function openModal(callback) {
+            var modal = document.getElementById("modal");
+            modal.style.display = "flex"; // モーダルを表示
+
+            // 各ボタンにクリックイベントを設定
+            document.getElementById("diplomacy-button").onclick = function() {
+                modal.style.display = "none"; // モーダルを閉じる
+                callback('外交');
+            };
+
+            document.getElementById("apply-button").onclick = function() {
+                modal.style.display = "none"; // モーダルを閉じる
+                callback('申請');
+            };
+        }
+
         // メッセージを表示する関数
         function showMessage(message) {
             document.getElementById("message").innerText = message;
@@ -57,18 +92,15 @@
 
         // 1日1回の制限をチェックする関数
         function canChangeColor() {
-            // ローカルストレージから最後に色を変えた日時を取得
             var lastChange = localStorage.getItem('lastChangeDate');
             if (lastChange) {
                 var lastDate = new Date(lastChange);
                 var today = new Date();
-
-                // 最後に色を変えたのが今日かどうかをチェック
                 if (lastDate.toDateString() === today.toDateString()) {
-                    return false; // 今日はもう色を変えた
+                    return false; // 今日はすでに色を変更した
                 }
             }
-            return true; // まだ色を変えていない
+            return true;
         }
 
         // 今日の変更を保存する関数
@@ -87,7 +119,7 @@
             localStorage.setItem('countryColors', JSON.stringify(countryColors));
         }
 
-        // 国のGeoJSONデータを読み込む (例: 世界全体のデータ)
+        // 国のGeoJSONデータを読み込む
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(response => response.json())
             .then(data => {
@@ -110,21 +142,24 @@
 
                         layer.on('click', function (e) {
                             if (canChangeColor()) {
-                                // クリックされた国の色を赤に変更
-                                layer.setStyle({
-                                    fillColor: 'red',
-                                    fillOpacity: 0.7
+                                // 「外交」か「申請」を選ぶモーダルを開く
+                                openModal(function(selection) {
+                                    // 選択に応じてメッセージを表示
+                                    showMessage(`「${selection}」が選択されました。`);
+
+                                    // クリックされた国の色を赤に変更
+                                    layer.setStyle({
+                                        fillColor: 'red',
+                                        fillOpacity: 0.7
+                                    });
+
+                                    // 今日の変更を保存
+                                    saveChangeDate();
+
+                                    // 国の色の状態を保存
+                                    countryColors[countryName] = 'red';
+                                    saveCountryColors(countryColors);
                                 });
-
-                                // 今日の変更を保存
-                                saveChangeDate();
-
-                                // 国の色の状態を保存
-                                countryColors[countryName] = 'red';
-                                saveCountryColors(countryColors);
-
-                                // メッセージをクリア
-                                showMessage("");
 
                             } else {
                                 // 1日1回の制限メッセージを表示
