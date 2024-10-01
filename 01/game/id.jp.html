@@ -1,129 +1,55 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SVG世界地図で地域申請</title>
-  <style>
-    body {
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f0f0f0;
-    }
-
-    /* 地図が画面全体に収まるようにする */
-    svg {
-      width: 100%;
-      height: auto;
-      max-width: 1200px; /* 地図の最大幅を設定 */
-      border: 1px solid #ccc;
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      background-color: white;
-      padding: 20px;
-      border: 2px solid #ccc;
-      border-radius: 10px;
-    }
-
-    .modal-content {
-      text-align: center;
-    }
-
-    .close {
-      cursor: pointer;
-      font-size: 20px;
-      color: #f00;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通信次元</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100vh;
+        }
+        .country-selected {
+            fill: red !important;
+        }
+    </style>
 </head>
 <body>
+    <div id="map"></div>
 
-<!-- SVG世界地図 -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2000 1001" preserveAspectRatio="xMidYMid meet">
-  <!-- 各国のパスをここに入れる（簡略化したサンプルを表示しています） -->
-  <g>
-    <!-- アメリカ -->
-    <path id="usa" d="M232 338l6 1 7-1 3 2-1 3-10 1-7-3-2-2 4-2z" fill="#ccc" stroke="#000" stroke-width="1" />
-    <!-- 日本 -->
-    <path id="japan" d="M1287 573l4-1 2 3-1 3-3 1-2-4 0-2z" fill="#ccc" stroke="#000" stroke-width="1" />
-    <!-- フランス -->
-    <path id="france" d="M904 402l4 1 3 2-2 2-4 1-4-3 1-3z" fill="#ccc" stroke="#000" stroke-width="1" />
-    <!-- ブラジル -->
-    <path id="brazil" d="M790 730l7 2 2 4-2 3-6 2-5-2 0-4 4-5z" fill="#ccc" stroke="#000" stroke-width="1" />
-    <!-- 世界中の他の国もここに追加可能 -->
-  </g>
-</svg>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-svg-shapes"></script> <!-- SVG国境のためのライブラリ-->
+    <script>
+        // 地図の初期化
+        var map = L.map('map').setView([20, 0], 2); // 地球全体を表示
 
-<!-- 申請モーダルウィンドウ -->
-<div id="applyModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>地域を申請</h2>
-    <form id="applyForm">
-      <label for="regionName">地域名:</label>
-      <input type="text" id="regionName" name="regionName" required><br><br>
-      <button type="submit">申請</button>
-    </form>
-  </div>
-</div>
+        // タイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-<script>
-  // SVG地図内のすべての国にクリックイベントを設定
-  var regions = document.querySelectorAll("svg path");
-  var selectedRegion = null;
+        // サンプルの国境データを追加（GeoJSONなどが一般的）
+        var countries = [
+            { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]] }, "properties": { "name": "Country A" } },
+            { "type": "Feature", "geometry": { "type": "Polygon", "coordinates": [[[30, 10], [40, 10], [40, 20], [30, 20], [30, 10]]] }, "properties": { "name": "Country B" } }
+        ];
 
-  // モーダル関連
-  var modal = document.getElementById('applyModal');
-  var closeModal = document.querySelector('.close');
-  var applyForm = document.getElementById('applyForm');
-
-  // 地域がクリックされたとき
-  regions.forEach(function(region) {
-    region.addEventListener('click', function() {
-      selectedRegion = this; // クリックされた地域を記憶
-      var regionId = this.id; // 地域のID（例：usa, japanなど）
-
-      // 地域のIDを使ってフォームに地域名を設定
-      document.getElementById('regionName').value = regionId;
-
-      // モーダルを表示
-      modal.style.display = 'block';
-    });
-  });
-
-  // モーダルを閉じる処理
-  closeModal.addEventListener('click', function() {
-    modal.style.display = 'none';
-  });
-
-  // モーダルの外側をクリックしたときに閉じる処理
-  window.addEventListener('click', function(event) {
-    if (event.target === modal) {
-      modal.style.display = 'none';
-    }
-  });
-
-  // フォーム送信処理
-  applyForm.addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    // 選択された地域の色を変更
-    if (selectedRegion) {
-      selectedRegion.style.fill = 'rgba(255, 0, 0, 0.5)'; // 赤色に変更
-      modal.style.display = 'none'; // モーダルを閉じる
-    }
-  });
-</script>
-
+        // 各国境を表示し、クリックで色を変更する
+        L.geoJSON(countries, {
+            onEachFeature: function (feature, layer) {
+                layer.on('click', function (e) {
+                    // 選択された国の色を変える
+                    if (!layer.options.className) {
+                        layer.setStyle({ fillColor: 'red', fillOpacity: 1 });
+                    } else {
+                        layer.setStyle({ fillColor: 'blue', fillOpacity: 1 });
+                    }
+                });
+            },
+            style: function (feature) {
+                return { color: '#000', weight: 2, fillOpacity: 0.5 };
+            }
+        }).addTo(map);
+    </script>
 </body>
 </html>
