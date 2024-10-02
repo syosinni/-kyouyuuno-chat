@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>通信次元（仮3）</title>
+    <title>通信次元（仮2）</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
@@ -51,9 +51,9 @@
     <!-- モーダルのHTML -->
     <div id="modal">
         <div id="modal-content">
-            <p>「外交」か「申請」を選んでください:</p>
-            <button id="diplomacy-button">外交</button>
-            <button id="apply-button">申請</button>
+            <p id="modal-text">国名を変更しますか？</p>
+            <button id="change-name-button">国名を変更する</button>
+            <button id="keep-name-button">そのまま</button>
         </div>
     </div>
 
@@ -69,19 +69,22 @@
         }).addTo(map);
 
         // モーダルを開く関数
-        function openModal(callback) {
+        function openModal(message, onChange, onKeep) {
             var modal = document.getElementById("modal");
+            var modalText = document.getElementById("modal-text");
+            modalText.innerText = message;
             modal.style.display = "flex"; // モーダルを表示
 
-            // 各ボタンにクリックイベントを設定
-            document.getElementById("diplomacy-button").onclick = function() {
+            // 「変更」ボタン
+            document.getElementById("change-name-button").onclick = function() {
                 modal.style.display = "none"; // モーダルを閉じる
-                callback('外交');
+                onChange();
             };
 
-            document.getElementById("apply-button").onclick = function() {
+            // 「そのまま」ボタン
+            document.getElementById("keep-name-button").onclick = function() {
                 modal.style.display = "none"; // モーダルを閉じる
-                callback('申請');
+                onKeep();
             };
         }
 
@@ -152,34 +155,9 @@
 
                         layer.on('click', function (e) {
                             // 「外交」か「申請」を選ぶモーダルを開く
-                            openModal(function(selection) {
-                                if (selection === '申請') {
-                                    // 申請は1日1回まで
-                                    if (canApply()) {
-                                        // 「申請」が選ばれた場合、国の色を赤に変更
-                                        layer.setStyle({
-                                            fillColor: 'red',
-                                            fillOpacity: 0.7
-                                        });
-
-                                        // 今日の「申請」変更を保存
-                                        saveApplyDate();
-
-                                        // 国の色の状態を保存
-                                        countryData[countryName] = {
-                                            ...countryData[countryName],
-                                            color: 'red'
-                                        };
-                                        saveCountryData(countryData);
-
-                                        // メッセージをクリア
-                                        showMessage("");
-                                    } else {
-                                        // 1日1回の制限メッセージを表示
-                                        showMessage("申し訳ありませんが、申請は1日1回しか出来ません");
-                                    }
-                                } else if (selection === '外交') {
-                                    // 「外交」が選ばれた場合、国名を設定
+                            openModal(`現在の国名は「${countryName}」です。`, function() {
+                                // 変更を希望した場合、申請済みか確認
+                                if (countryData[countryName]?.applied) {
                                     setCountryName(countryName, function(newName) {
                                         // 国名を保存
                                         countryData[countryName] = {
@@ -189,9 +167,15 @@
                                         saveCountryData(countryData);
 
                                         // 国名を表示
-                                        showMessage(`「外交」成功！ 新しい国名は「${newName}」です。`);
+                                        showMessage(`国名が「${newName}」に変更されました。`);
                                     });
+                                } else {
+                                    // 申請されていない場合、変更不可のメッセージを表示
+                                    showMessage("この国名は変更できません。申請されていません。");
                                 }
+                            }, function() {
+                                // そのままの場合
+                                showMessage(`国名は「${countryName}」のままです。`);
                             });
                         });
                     }
@@ -200,6 +184,6 @@
     </script>
 </body>
     <body>
-        <p>ver 0.3.1</p>
+        <p>ver 0.3.3</p>
     </body>
 </html>
