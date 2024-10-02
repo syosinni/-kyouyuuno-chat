@@ -89,7 +89,7 @@
         // コマンドバーの実装
         document.getElementById("command-submit").onclick = function() {
             var command = document.getElementById("command-input").value;
-            if (command.startsWith("[war ")) {
+            if (command.startsWith("war")) {
                 var tag = command.match(/"([^"]+)"/);
                 if (tag) {
                     // URLに移動
