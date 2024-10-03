@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Level System</title>
+</head>
+<body>
+    <h1>Discord Level System</h1>
+    <div id="output"></div>
+
+    <script>
+        // ユーザーのアクティビティデータ（ログインや投稿の回数）
+        let userActivity = {
+            userId: "123456789",  // ユーザーID（仮）
+            loginDays: 0,
+            messages: 0,
+            joinDate: new Date(),  // 参加日
+            currentDate: new Date()
+        };
+
+        // Webhook URL
+        const webhookUrl = "https://discord.com/api/webhooks/1291209117918298122/323KDFBR7eqt2fBeabNaBqQHU3vHC47ngNBC_OiQlgdEu6KI2-xBQhpQigRPWC1KTyl1";
+
+        // 条件をチェックする関数
+        function checkConditions() {
+            let message = '';
+
+            // 条件1: 4日連続でログイン
+            if (userActivity.loginDays >= 4) {
+                message += `@everyday: 4日連続でログイン！\n`;
+                sendWebhook("Level Up: Everyday!", "おめでとう！4日間連続ログインしました！");
+            }
+
+            // 条件2: 20回以上の投稿
+            if (userActivity.messages >= 20) {
+                message += `@good talker: 20回以上投稿！\n`;
+                sendWebhook("Level Up: Good Talker!", "20回以上の投稿を達成しました！");
+            }
+
+            // 条件3: 参加から30日経過
+            const daysSinceJoin = Math.floor((userActivity.currentDate - userActivity.joinDate) / (1000 * 60 * 60 * 24));
+            if (daysSinceJoin >= 30) {
+                message += `@long service: 30日以上サーバーに参加！\n`;
+                sendWebhook("Level Up: Long Service!", "サーバーに30日以上参加しています！");
+            }
+
+            document.getElementById('output').innerText = message;
+        }
+
+        // Webhookにデータを送信する関数
+        function sendWebhook(title, content) {
+            const payload = {
+                username: "Level System",
+                embeds: [{
+                    title: title,
+                    description: content,
+                    color: 3066993  // 緑のメッセージ
+                }]
+            };
+
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => console.log("Webhook sent successfully:", data))
+            .catch(error => console.error("Error sending webhook:", error));
+        }
+
+        // デモのために手動でアクティビティデータを更新
+        function simulateActivity() {
+            userActivity.loginDays += 1;
+            userActivity.messages += 5;
+            userActivity.currentDate = new Date(userActivity.currentDate.getTime() + (24 * 60 * 60 * 1000));  // 1日加算
+            checkConditions();
+        }
+
+        // 3回のシミュレーション
+        simulateActivity();  // 1日目
+        simulateActivity();  // 2日目
+        simulateActivity();  // 3日目
+    </script>
+</body>
+</html>
