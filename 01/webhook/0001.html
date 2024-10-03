@@ -3,60 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Discord Webhook Level System</title>
-</head>
-<body>
-    <h1>Discord Level System</h1>
-    <div id="output"></div>
-
+    <title>Discord Leveling System</title>
     <script>
-        // ユーザーのアクティビティデータ（ログインや投稿の回数）
-        let userActivity = {
-            userId: "123456789",  // ユーザーID（仮）
-            loginDays: 0,
-            messages: 0,
-            joinDate: new Date(),  // 参加日
-            currentDate: new Date()
-        };
-
         // Webhook URL
         const webhookUrl = "https://discord.com/api/webhooks/1291209117918298122/323KDFBR7eqt2fBeabNaBqQHU3vHC47ngNBC_OiQlgdEu6KI2-xBQhpQigRPWC1KTyl1";
 
-        // 条件をチェックする関数
-        function checkConditions() {
-            let message = '';
+        // ユーザーのアクティビティを追跡するためのデータ
+        const users = {
+            "user1": { name: "User1", loginStreak: 3, messages: 19, joinDate: new Date('2023-09-01') },
+            "user2": { name: "User2", loginStreak: 5, messages: 20, joinDate: new Date('2023-08-15') },
+        };
 
-            // 条件1: 4日連続でログイン
-            if (userActivity.loginDays >= 4) {
-                message += `@everyday: 4日連続でログイン！\n`;
-                sendWebhook("Level Up: Everyday!", "おめでとう！4日間連続ログインしました！");
-            }
+        // ログインをシミュレート
+        function simulateLogin(userId) {
+            const user = users[userId];
+            const today = new Date();
+            
+            // ログイン連続日数の更新
+            user.loginStreak += 1;
 
-            // 条件2: 20回以上の投稿
-            if (userActivity.messages >= 20) {
-                message += `@good talker: 20回以上投稿！\n`;
-                sendWebhook("Level Up: Good Talker!", "20回以上の投稿を達成しました！");
-            }
-
-            // 条件3: 参加から30日経過
-            const daysSinceJoin = Math.floor((userActivity.currentDate - userActivity.joinDate) / (1000 * 60 * 60 * 24));
-            if (daysSinceJoin >= 30) {
-                message += `@long service: 30日以上サーバーに参加！\n`;
-                sendWebhook("Level Up: Long Service!", "サーバーに30日以上参加しています！");
-            }
-
-            document.getElementById('output').innerText = message;
+            // レベルチェック
+            checkLevelUp(userId);
         }
 
-        // Webhookにデータを送信する関数
-        function sendWebhook(title, content) {
+        // メッセージ投稿をシミュレート
+        function simulateMessage(userId) {
+            const user = users[userId];
+
+            // メッセージ数のカウント
+            user.messages += 1;
+
+            // レベルチェック
+            checkLevelUp(userId);
+        }
+
+        // レベルアップの条件をチェックする
+        function checkLevelUp(userId) {
+            const user = users[userId];
+            const today = new Date();
+            let levelUpMessage = '';
+
+            // 条件1: 4日連続ログイン
+            if (user.loginStreak >= 4) {
+                levelUpMessage = `${user.name} has reached the "everyday" level!`;
+            }
+
+            // 条件2: 20回の投稿
+            if (user.messages >= 20) {
+                levelUpMessage = `${user.name} is now a good talker!`;
+            }
+
+            // 条件3: 参加して30日経過
+            const daysSinceJoin = Math.floor((today - user.joinDate) / (1000 * 60 * 60 * 24));
+            if (daysSinceJoin >= 30) {
+                levelUpMessage = `${user.name} has earned the "long service" level!`;
+            }
+
+            // レベルアップがあればWebhookで通知
+            if (levelUpMessage !== '') {
+                sendWebhookMessage(levelUpMessage);
+            }
+        }
+
+        // WebhookでDiscordにメッセージを送信
+        function sendWebhookMessage(message) {
             const payload = {
-                username: "Level System",
-                embeds: [{
-                    title: title,
-                    description: content,
-                    color: 3066993  // 緑のメッセージ
-                }]
+                content: message
             };
 
             fetch(webhookUrl, {
@@ -66,23 +78,28 @@
                 },
                 body: JSON.stringify(payload)
             })
-            .then(response => response.json())
-            .then(data => console.log("Webhook sent successfully:", data))
-            .catch(error => console.error("Error sending webhook:", error));
+            .then(response => {
+                if (response.ok) {
+                    console.log("Webhook message sent successfully.");
+                } else {
+                    console.error("Failed to send webhook message.");
+                }
+            })
+            .catch(error => {
+                console.error("Error sending webhook message:", error);
+            });
         }
 
-        // デモのために手動でアクティビティデータを更新
-        function simulateActivity() {
-            userActivity.loginDays += 1;
-            userActivity.messages += 5;
-            userActivity.currentDate = new Date(userActivity.currentDate.getTime() + (24 * 60 * 60 * 1000));  // 1日加算
-            checkConditions();
-        }
-
-        // 3回のシミュレーション
-        simulateActivity();  // 1日目
-        simulateActivity();  // 2日目
-        simulateActivity();  // 3日目
+        // テスト用：ログインとメッセージをシミュレート
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById("loginBtn").addEventListener("click", () => simulateLogin("user1"));
+            document.getElementById("messageBtn").addEventListener("click", () => simulateMessage("user1"));
+        });
     </script>
+</head>
+<body>
+    <h1>Discord Leveling System</h1>
+    <button id="loginBtn">Simulate Login</button>
+    <button id="messageBtn">Simulate Message</button>
 </body>
 </html>
