@@ -1,77 +1,74 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Strategy Game</title>
-    <style>
+<html>
+    <head>
+        <meta charset="utf-8">
+       <title>国際連盟</title>
+        <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+        <img src="https://cdn1.img.sputniknews.jp/img/07e6/09/15/13030148_0:0:3070:1728_1920x0_80_0_0_e4ec08aecb1f2a67f3c300516e360a64.jpg" alt="ヘッダー"title="ヘッダー" width="1000" height="550">
+<style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 0;
+            padding: 0;
         }
 
-        #game {
+        /* ナビゲーションバーのスタイル */
+        nav {
+            background-color: #333;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: space-around;
-            margin-top: 50px;
         }
 
-        #map {
-            border: 1px solid black;
-            padding: 20px;
+        nav ul li {
+            display: inline;
         }
 
-        #stats {
-            border: 1px solid black;
-            padding: 20px;
+        nav ul li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
         }
 
-        button {
-            margin: 10px;
-            padding: 10px;
+        nav ul li a:hover {
+            background-color: #111;
+        }
+
+        /* コンテンツセクションのスタイル */
+        div {
+            padding: 60px 20px;
+        }
+
+        /* 各セクションのスタイル */
+        section {
+            padding: 60px 20px;
+            margin-top: 50px; /* ナビゲーションバーの高さを避けるため */
         }
     </style>
 </head>
 <body>
-    <h1>Simple Strategy Game</h1>
-    <div id="game">
-        <div id="map">
-            <button id="territory1" onclick="conquerTerritory(1)">Territory 1</button>
-            <button id="territory2" onclick="conquerTerritory(2)">Territory 2</button>
-            <button id="territory3" onclick="conquerTerritory(3)">Territory 3</button>
-        </div>
-        <div id="stats">
-            <p>Player's Resources: <span id="resources">100</span></p>
-            <p>Player's Army: <span id="army">50</span></p>
-        </div>
-    </div>
 
-    <script>
-        let playerResources = 100;
-        let playerArmy = 50;
-
-        function updateStats() {
-            document.getElementById("resources").textContent = playerResources;
-            document.getElementById("army").textContent = playerArmy;
-        }
-
-        function conquerTerritory(territoryNumber) {
-            const cost = 30;
-            const armyLoss = 10;
-
-            if (playerResources >= cost && playerArmy > armyLoss) {
-                playerResources -= cost;
-                playerArmy -= armyLoss;
-                alert(`You conquered Territory ${territoryNumber}!`);
-                document.getElementById(`territory${territoryNumber}`).disabled = true;
-            } else {
-                alert("Not enough resources or army to conquer this territory.");
-            }
-            updateStats();
-        }
-
-        // Initialize stats on page load
-        updateStats();
-    </script>
+<!-- ナビゲーションバー -->
+<nav>
+    <ul>
+        <li><img src="https://kyouyuuno-to.f5.si/png/%E8%A6%8B%E5%87%BA%E3%81%97%E3%82%92%E8%BF%BD%E5%8A%A0.png" alt="ヘッダー"title="ヘッダー" width="158" height="48"></li>
+        <li><a href="#home">ホーム</a></li>
+</li>
+    </ul>
+</nav>
 </body>
+
 </html>
