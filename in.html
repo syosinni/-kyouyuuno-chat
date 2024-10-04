@@ -1,0 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ガチキング</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f8ff;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>合言葉を入力してください</h1>
+    <input type="text" id="passwordInput" placeholder="合言葉を入力" />
+    <br />
+    <button onclick="checkPassword()">接続</button>
+    <p id="errorMessage" class="error-message"></p>
+</div>
+
+<script>
+    function checkPassword() {
+        const correctPassword = "2525";
+        const userPassword = document.getElementById("passwordInput").value;
+        const errorMessage = document.getElementById("errorMessage");
+
+        if (userPassword === correctPassword) {
+            // 合言葉が正しい場合、新しいページにリダイレクト
+            window.location.href = "https://c.kuku.lu/nbx4ndjv;
+        } else {
+            // 間違った合言葉の場合、エラーメッセージを表示
+            errorMessage.textContent = "合言葉が違います。一回出直せ。";
+        }
+    }
+</script>
+
+</body>
+</html>
