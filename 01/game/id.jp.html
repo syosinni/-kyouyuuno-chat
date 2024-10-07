@@ -97,7 +97,7 @@
         // アカウント関連データを取得する関数
         function getUserData(username) {
             var userData = localStorage.getItem(`user_${username}`);
-            return userData ? JSON.parse(userData) : { applyCount: 0, countries: {}, lastApplyDate: null };
+            return userData ? JSON.parse(userData) : { applyCount: 0, countries: {}, color: getRandomColor(), lastApplyDate: null };
         }
 
         // ランダムな色を生成する関数
@@ -232,7 +232,7 @@
                     var user = userKey.replace('user_', '');
                     var userData = getUserData(user);
                     Object.keys(userData.countries).forEach(country => {
-                        countryColors[country] = userData.countries[country].color;
+                        countryColors[country] = userData.color;
                     });
                 });
 
@@ -261,10 +261,10 @@
                                 if (selection === '申請') {
                                     var userData = getUserData(currentUser);
                                     if (canApplyToday(userData) && canApplyToCountry(countryName)) {
-                                        // ランダムな色で国の色を変更
-                                        var randomColor = getRandomColor();
+                                        // 同じアカウントの共通色で国の色を変更
+                                        var accountColor = userData.color;
                                         layer.setStyle({
-                                            fillColor: randomColor,
+                                            fillColor: accountColor,
                                             fillOpacity: 0.7
                                         });
 
@@ -275,7 +275,7 @@
 
                                         // 国のデータを保存
                                         saveCountryData(countryName, {
-                                            color: randomColor,
+                                            color: accountColor,
                                             isOwned: true
                                         });
 
