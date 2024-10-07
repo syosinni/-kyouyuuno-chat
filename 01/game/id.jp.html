@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
     <title>通信次元（仮4）</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
@@ -85,8 +88,8 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
-        // アカウント関連
-        var currentUser = null;
+        // ログイン情報を保存するために、現在のユーザーとログイン状態をローカルストレージに保存
+        var currentUser = localStorage.getItem('currentUser') || null;
 
         // アカウント関連データを保存する関数
         function saveUserData(username, data) {
@@ -99,26 +102,50 @@
             return userData ? JSON.parse(userData) : { applyCount: 0, countries: {} };
         }
 
+        // ランダムな色を生成する関数
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // ユーザーがログインしているか確認し、UIを更新
+        function updateLoginState() {
+            if (currentUser) {
+                document.getElementById("username-input").style.display = "none";
+                document.getElementById("login-button").style.display = "none";
+                document.getElementById("logout-button").style.display = "inline";
+                showMessage(`ようこそ、${currentUser}さん！`);
+            } else {
+                document.getElementById("username-input").style.display = "inline";
+                document.getElementById("login-button").style.display = "inline";
+                document.getElementById("logout-button").style.display = "none";
+                showMessage("ログインしてください。");
+            }
+        }
+
         // ユーザーログイン処理
         document.getElementById("login-button").onclick = function() {
             var username = document.getElementById("username-input").value.trim();
             if (username) {
                 currentUser = username;
-                document.getElementById("username-input").style.display = "none";
-                document.getElementById("login-button").style.display = "none";
-                document.getElementById("logout-button").style.display = "inline";
-                showMessage(`ようこそ、${currentUser}さん！`);
+                localStorage.setItem('currentUser', currentUser); // ログイン情報をローカルストレージに保存
+                updateLoginState();
             }
         };
 
         // ユーザーログアウト処理
         document.getElementById("logout-button").onclick = function() {
             currentUser = null;
-            document.getElementById("username-input").style.display = "inline";
-            document.getElementById("login-button").style.display = "inline";
-            document.getElementById("logout-button").style.display = "none";
-            showMessage("ログアウトしました。");
+            localStorage.removeItem('currentUser'); // ログアウト時にローカルストレージからユーザー情報を削除
+            updateLoginState();
         };
+
+        // 初期化時にログイン状態を確認
+        updateLoginState();
 
         // コマンドバーの実装
         document.getElementById("command-submit").onclick = function() {
@@ -171,9 +198,13 @@
 
         // 申請ができるか確認する関数
         function canApplyToCountry(countryName) {
-            if (isCountryOwned(countryName)) {
-                showMessage(`${countryName}はすでに申請されています。`);
-                return false;
+            var allUsers = Object.keys(localStorage).filter(key => key.startsWith('user_'));
+            for (var i = 0; i < allUsers.length; i++) {
+                var userData = getUserData(allUsers[i].replace('user_', ''));
+                if (userData.countries[countryName]?.isOwned) {
+                    showMessage(`${countryName}はすでに申請されています。`);
+                    return false;
+                }
             }
             return true;
         }
@@ -196,13 +227,23 @@
         fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
             .then(response => response.json())
             .then(data => {
-                var countryData = getCountryData(); // 保存された国のデータを取得
+                // 各国のデータをローカルから取得し、色を設定
+                var allUsers = Object.keys(localStorage).filter(key => key.startsWith('user_'));
+                var countryColors = {}; // 全ての国の色を保持するオブジェクト
+
+                allUsers.forEach(userKey => {
+                    var user = userKey.replace('user_', '');
+                    var userData = getUserData(user);
+                    Object.keys(userData.countries).forEach(country => {
+                        countryColors[country] = userData.countries[country].color;
+                    });
+                });
 
                 // GeoJSONデータを地図に追加し、各国にクリックイベントを設定
                 L.geoJSON(data, {
                     style: function (feature) {
                         var countryName = feature.properties.name;
-                        var fillColor = countryData[countryName]?.color || 'green'; // 保存された色があれば適用、なければ緑
+                        var fillColor = countryColors[countryName] || 'green'; // 保存された色があれば適用、なければ緑
                         return {
                             color: 'blue',  // 国境線の色
                             fillColor: fillColor, // 国の色
@@ -222,25 +263,26 @@
                             openModal(function(selection) {
                                 if (selection === '申請') {
                                     if (canApplyToCountry(countryName)) {
-                                        // 「申請」が選ばれた場合、国の色を赤に変更
+                                        // ランダムな色で国の色を変更
+                                        var randomColor = getRandomColor();
                                         layer.setStyle({
-                                            fillColor: 'red',
+                                            fillColor: randomColor,
                                             fillOpacity: 0.7
                                         });
 
                                         // 国のデータを保存
                                         saveCountryData(countryName, {
-                                            color: 'red',
+                                            color: randomColor,
                                             isOwned: true
                                         });
 
-                                        showMessage(`申請が完了しました！ ${countryName}の色が赤に変わりました。`);
+                                        showMessage(`申請が完了しました！ ${countryName}の色が変更されました。`);
                                     }
                                 } else if (selection === '外交') {
                                     if (isCountryOwned(countryName)) {
                                         setCountryName(countryName, function(newName) {
                                             saveCountryData(countryName, {
-                                                color: 'red',
+                                                color: countryColors[countryName],
                                                 isOwned: true,
                                                 name: newName
                                             });
@@ -267,4 +309,14 @@
         }
     </script>
 </body>
+<body><p>ver 0.5.7</p></body>
+ <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LPSKM6D35"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2LPSKM6D35');
+</script>
 </html>
