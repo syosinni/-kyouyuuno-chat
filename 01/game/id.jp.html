@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
-            height: 85vh;
+            height: 75vh;
             width: 100vw;
         }
 
@@ -20,6 +20,12 @@
 
         /* コマンドバーのスタイル */
         #command-bar {
+            text-align: center;
+            margin: 10px;
+        }
+
+        /* ユーザーバー */
+        #user-bar {
             text-align: center;
             margin: 10px;
         }
@@ -51,6 +57,13 @@
     </style>
 </head>
 <body>
+    <!-- ユーザー登録・ログインバー -->
+    <div id="user-bar">
+        <input type="text" id="username-input" placeholder="ユーザー名">
+        <button id="login-button">ログイン</button>
+        <button id="logout-button" style="display: none;">ログアウト</button>
+    </div>
+
     <!-- コマンドバー -->
     <div id="command-bar">
         <input type="text" id="command-input" placeholder='[war "国の3文字タグ"]'>
@@ -72,24 +85,45 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
-        // 初期申請可能回数（初回は2回まで申請可能）
-        var initialApplyLimit = 2;
+        // アカウント関連
+        var currentUser = null;
 
-        // 現在の申請数を確認
-        function getApplyCount() {
-            return Number(localStorage.getItem('applyCount')) || 0;
+        // アカウント関連データを保存する関数
+        function saveUserData(username, data) {
+            localStorage.setItem(`user_${username}`, JSON.stringify(data));
         }
 
-        // 申請数を増やす
-        function incrementApplyCount() {
-            var count = getApplyCount();
-            localStorage.setItem('applyCount', count + 1);
+        // アカウント関連データを取得する関数
+        function getUserData(username) {
+            var userData = localStorage.getItem(`user_${username}`);
+            return userData ? JSON.parse(userData) : { applyCount: 0, countries: {} };
         }
+
+        // ユーザーログイン処理
+        document.getElementById("login-button").onclick = function() {
+            var username = document.getElementById("username-input").value.trim();
+            if (username) {
+                currentUser = username;
+                document.getElementById("username-input").style.display = "none";
+                document.getElementById("login-button").style.display = "none";
+                document.getElementById("logout-button").style.display = "inline";
+                showMessage(`ようこそ、${currentUser}さん！`);
+            }
+        };
+
+        // ユーザーログアウト処理
+        document.getElementById("logout-button").onclick = function() {
+            currentUser = null;
+            document.getElementById("username-input").style.display = "inline";
+            document.getElementById("login-button").style.display = "inline";
+            document.getElementById("logout-button").style.display = "none";
+            showMessage("ログアウトしました。");
+        };
 
         // コマンドバーの実装
         document.getElementById("command-submit").onclick = function() {
             var command = document.getElementById("command-input").value;
-            if (command.startsWith("war")) {
+            if (command.startsWith("[war ")) {
                 var tag = command.match(/"([^"]+)"/);
                 if (tag) {
                     // URLに移動
@@ -128,43 +162,34 @@
             document.getElementById("message").innerText = message;
         }
 
-        // 1日1回の「申請」制限をチェックする関数
-        function canApply() {
-            var lastChange = localStorage.getItem('lastApplyDate');
-            if (lastChange) {
-                var lastDate = new Date(lastChange);
-                var today = new Date();
-                if (lastDate.toDateString() === today.toDateString()) {
-                    return false; // 今日はすでに申請した
-                }
+        // すでに申請された場所か確認する関数
+        function isCountryOwned(countryName) {
+            if (!currentUser) return false;
+            var userData = getUserData(currentUser);
+            return userData.countries[countryName]?.isOwned;
+        }
+
+        // 申請ができるか確認する関数
+        function canApplyToCountry(countryName) {
+            if (isCountryOwned(countryName)) {
+                showMessage(`${countryName}はすでに申請されています。`);
+                return false;
             }
             return true;
         }
 
-        // 今日の「申請」変更を保存する関数
-        function saveApplyDate() {
-            var now = new Date();
-            localStorage.setItem('lastApplyDate', now.toISOString()); // 現在の日時を保存
-        }
-
         // 国ごとのデータを取得する関数
         function getCountryData() {
-            var savedData = localStorage.getItem('countryData');
-            return savedData ? JSON.parse(savedData) : {};
+            if (!currentUser) return {};
+            var userData = getUserData(currentUser);
+            return userData.countries || {};
         }
 
-        function saveCountryData(countryData) {
-            localStorage.setItem('countryData', JSON.stringify(countryData));
-        }
-
-        // 国名を設定する関数
-        function setCountryName(countryName, callback) {
-            var newName = prompt(`新しい国名を入力してください（${countryName}）:`);
-            if (newName) {
-                callback(newName);
-            } else {
-                callback(countryName); // 名前が入力されなければ、元の名前を保持
-            }
+        function saveCountryData(countryName, data) {
+            if (!currentUser) return;
+            var userData = getUserData(currentUser);
+            userData.countries[countryName] = data;
+            saveUserData(currentUser, userData);
         }
 
         // 国のGeoJSONデータを読み込む
@@ -189,43 +214,40 @@
                         var countryName = feature.properties.name;
 
                         layer.on('click', function (e) {
-                            // 「外交」か「申請」を選ぶモーダルを開く
+                            if (!currentUser) {
+                                showMessage("まずログインしてください。");
+                                return;
+                            }
+
                             openModal(function(selection) {
                                 if (selection === '申請') {
-                                    // 申請は1日1回までだが、初回は2回まで許可
-                                    if (getApplyCount() < initialApplyLimit || canApply()) {
+                                    if (canApplyToCountry(countryName)) {
                                         // 「申請」が選ばれた場合、国の色を赤に変更
                                         layer.setStyle({
                                             fillColor: 'red',
                                             fillOpacity: 0.7
                                         });
 
-                                        // 申請数をカウント
-                                        incrementApplyCount();
-                                        saveApplyDate();
-
                                         // 国のデータを保存
-                                        countryData[countryName] = {
-                                            ...countryData[countryName],
+                                        saveCountryData(countryName, {
                                             color: 'red',
                                             isOwned: true
-                                        };
-                                        saveCountryData(countryData);
+                                        });
 
                                         showMessage(`申請が完了しました！ ${countryName}の色が赤に変わりました。`);
-                                    } else {
-                                        showMessage("申し訳ありませんが、申請は1日1回しかできません。");
                                     }
                                 } else if (selection === '外交') {
-                                    // 外交の場合、申請された場所のみ名前を変更できる
-                                    if (countryData[countryName]?.isOwned) {
-                                        setCountryName(countryData[countryName]?.name || countryName, function(newName) {
-                                            countryData[countryName].name = newName;
-                                            saveCountryData(countryData);
+                                    if (isCountryOwned(countryName)) {
+                                        setCountryName(countryName, function(newName) {
+                                            saveCountryData(countryName, {
+                                                color: 'red',
+                                                isOwned: true,
+                                                name: newName
+                                            });
                                             showMessage(`外交成功！ ${countryName}の新しい名前は「${newName}」です。`);
                                         });
                                     } else {
-                                        showMessage(`この場所(${countryName})はあなたのものではありません。`);
+                                        showMessage(`${countryName}はあなたの所有ではありません。`);
                                     }
                                 }
                             });
@@ -233,9 +255,16 @@
                     }
                 }).addTo(map);
             });
+
+        // 国名を設定する関数
+        function setCountryName(countryName, callback) {
+            var newName = prompt(`新しい国名を入力してください（${countryName}）:`);
+            if (newName) {
+                callback(newName);
+            } else {
+                callback(countryName); // 名前が入力されなければ、元の名前を保持
+            }
+        }
     </script>
 </body>
-    <body>
-        <p>ver 0.4.2</p>
-    </body>
 </html>
