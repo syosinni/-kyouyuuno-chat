@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
-<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
-<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
-    <title>通信次元（仮4）</title>
+    <title>通信次元（仮5）</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon"> <link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152"> <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
     <style>
         #map {
             height: 75vh;
@@ -99,7 +97,7 @@
         // アカウント関連データを取得する関数
         function getUserData(username) {
             var userData = localStorage.getItem(`user_${username}`);
-            return userData ? JSON.parse(userData) : { applyCount: 0, countries: {} };
+            return userData ? JSON.parse(userData) : { applyCount: 0, countries: {}, lastApplyDate: null };
         }
 
         // ランダムな色を生成する関数
@@ -189,11 +187,10 @@
             document.getElementById("message").innerText = message;
         }
 
-        // すでに申請された場所か確認する関数
-        function isCountryOwned(countryName) {
-            if (!currentUser) return false;
-            var userData = getUserData(currentUser);
-            return userData.countries[countryName]?.isOwned;
+        // 今日が申請可能か確認する関数
+        function canApplyToday(userData) {
+            var today = new Date().toDateString();
+            return (userData.applyCount < 2 && !userData.lastApplyDate) || (userData.lastApplyDate !== today);
         }
 
         // 申請ができるか確認する関数
@@ -262,13 +259,19 @@
 
                             openModal(function(selection) {
                                 if (selection === '申請') {
-                                    if (canApplyToCountry(countryName)) {
+                                    var userData = getUserData(currentUser);
+                                    if (canApplyToday(userData) && canApplyToCountry(countryName)) {
                                         // ランダムな色で国の色を変更
                                         var randomColor = getRandomColor();
                                         layer.setStyle({
                                             fillColor: randomColor,
                                             fillOpacity: 0.7
                                         });
+
+                                        // 申請情報を更新
+                                        userData.applyCount += 1;
+                                        userData.lastApplyDate = new Date().toDateString();
+                                        saveUserData(currentUser, userData);
 
                                         // 国のデータを保存
                                         saveCountryData(countryName, {
@@ -277,6 +280,8 @@
                                         });
 
                                         showMessage(`申請が完了しました！ ${countryName}の色が変更されました。`);
+                                    } else {
+                                        showMessage("一日1回しか申請できません。");
                                     }
                                 } else if (selection === '外交') {
                                     if (isCountryOwned(countryName)) {
