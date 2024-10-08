@@ -1,0 +1,41 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #000;
+    margin: 0;
+}
+
+.train-board {
+    background-color: #111;
+    border: 5px solid #555;
+    padding: 20px;
+    text-align: center;
+    color: #00FF00;
+    font-family: 'Courier New', Courier, monospace;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.7);
+    max-width: 400px;
+    border-radius: 10px;
+}
+
+.title {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.day {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-decoration: underline;
+}
+
+.schedule {
+    text-align: left;
+}
+
+.period {
+    font-size: 1.5rem;
+    margin: 10px 0;
+}
