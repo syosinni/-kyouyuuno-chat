@@ -1,1 +1,39 @@
-<!DOCTYPE html><html lang="ja"><head> <meta charset="UTF-8"> <meta name="ROBOTS" content="NOINDEX, NOFOLLOW" /> <title>アカウント作成</title> <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon"><link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152"><link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64"></head><body> <h2>アカウント作成</h2> <?php if ($_SERVER["REQUEST_METHOD"] == "POST") { // データベース接続情報 $servername = "localhost"; $username = "root"; $password = ""; $dbname = "user_accounts"; // フォームから送信されたデータを取得 $user = $_POST['username']; $email = $_POST['email']; $pass = $_POST['password']; // パスワードをハッシュ化 $hashed_password = password_hash($pass, PASSWORD_DEFAULT); // データベースに接続 $conn = new mysqli($servername, $username, $password, $dbname); // 接続を確認 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); } // SQLクエリを準備して実行 $sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)"; $stmt = $conn->prepare($sql); $stmt->bind_param("sss", $user, $email, $hashed_password); if ($stmt->execute()) { echo "<p>Account successfully created!</p>"; } else { echo "<p>Error: " . $stmt->error . "</p>"; } // 接続を閉じる $stmt->close(); $conn->close(); } ?> <!-- ユーザーが情報を入力するフォーム --> <form action="register.php" method="post"> <label for="username">Username:</label> <input type="text" id="username" name="username" required><br><br> <label for="email">Email:</label> <input type="email" id="email" name="email" required><br><br> <label for="password">Password:</label> <input type="password" id="password" name="password" required><br><br> <button type="submit">Register</button> </form></body></html>
+<?php
+// データベース接続情報
+$servername = "localhost";
+$username = "root";
+$password = "";
+$dbname = "user_accounts";
+
+// フォームから送信されたデータを取得
+$user = $_POST['username'];
+$email = $_POST['email'];
+$pass = $_POST['password'];
+
+// パスワードをハッシュ化
+$hashed_password = password_hash($pass, PASSWORD_DEFAULT);
+
+// データベースに接続
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// 接続を確認
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// SQLクエリを準備して実行
+$sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("sss", $user, $email, $hashed_password);
+
+if ($stmt->execute()) {
+    echo "Account successfully created!";
+} else {
+    echo "Error: " . $sql . "<br>" . $conn->error;
+}
+
+// 接続を閉じる
+$stmt->close();
+$conn->close();
+?>
