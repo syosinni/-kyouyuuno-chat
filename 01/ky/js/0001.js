@@ -7,12 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
   ball.addEventListener('animationend', function(e) {
     if (e.animationName === 'glow') {
       whiteBg.style.opacity = 1;
-
-      // 1秒後にコンテンツを表示する
-      setTimeout(function() {
-        content.style.display = 'block';
-        whiteBg.style.opacity = 0;  // 白い背景を消す
-      }, 1000);
     }
   });
 });
