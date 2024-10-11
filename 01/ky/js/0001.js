@@ -8,9 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.animationName === 'glow') {
       whiteBg.style.opacity = 1;
 
-      // 1秒後にコンテンツを表示する
-      setTimeout(function() {
-        content.style.display = 'flex'; // 文字列を含むテキストボックスを表示
     }
   });
 });
