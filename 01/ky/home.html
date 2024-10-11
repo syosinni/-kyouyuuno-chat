@@ -19,9 +19,102 @@
 
 <!-- サイトのコンテンツ -->.
 <div id="content" style="display:none;">
+  <style>
+    .txt {
+    display: flex;
+    overflow: hidden;
+}
+
+.txt p {
+    color: cadetblue;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: .06em;
+    margin: 0;
+
+    /* ここからアニメーション関係 */
+    transform: translateY(2em);
+    animation: textanimation 1s forwards;
+}
+/* 1文字目 */
+.txt p:nth-child(1) {
+    animation-delay: 0.2s
+}
+/* 2文字目 */
+.txt p:nth-child(2) {
+    animation-delay: 0.4s
+}
+/* 3文字目 */
+.txt p:nth-child(3) {
+    animation-delay: 0.6s
+}
+/* 4文字目 */
+.txt p:nth-child(4) {
+    animation-delay: 0.8s
+}
+/* 5文字目 */
+.txt p:nth-child(5) {
+    animation-delay: 1s
+}
+/* 6文字目 */
+.txt p:nth-child(6) {
+    animation-delay: 1.2s
+}
+/* 7文字目 */
+.txt p:nth-child(7) {
+    animation-delay: 1.4s
+}
+/* 8文字目 */
+.txt p:nth-child(8) {
+    animation-delay: 1.6s
+}
+/* 9文字目 */
+.txt p:nth-child(9) {
+    animation-delay: 1.8s
+}
+/* 10文字目 */
+.txt p:nth-child(10) {
+    animation-delay: 2s
+}
+/* 11文字目 */
+.txt p:nth-child(11) {
+    animation-delay: 2.2s
+}
+/* 12文字目 */
+.txt p:nth-child(12) {
+    animation-delay: 2.4s
+}
+
+
+@keyframes textanimation {
+    0% {
+        transform: translateY(2em);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+  </style>
+  <body>
+  <div class="txt">
+        <p>共</p>
+        <p>有</p>
+        <p>ノ</p>
+        <p>ー</p>
+        <p>ト</p>
+</div><!-- /.txt -->
 </div>
-
-
+</body>
 <script src="https://kyouyuuno-to.f5.si/01/ky/js/0001.js"></script>
 </body>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2LPSKM6D35"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-2LPSKM6D35');
+</script>
 </html>
