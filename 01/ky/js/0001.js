@@ -11,8 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
       // 1秒後にコンテンツを表示する
       setTimeout(function() {
         content.style.display = 'flex'; // 文字列を含むテキストボックスを表示
-        whiteBg.style.opacity = 0;  // 白い背景を消す
-      }, 1000);
     }
   });
 });
