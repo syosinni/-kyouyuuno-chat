@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>共有ノートホーム</title>
+      <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+  <meta name="robots" content="noindex" />
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ナビゲーションバーのスタイル */
+        nav {
+            background-color: #333;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        nav ul li {
+            display: inline;
+        }
+
+        nav ul li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        nav ul li a:hover {
+            background-color: #111;
+        }
+
+        /* コンテンツセクションのスタイル */
+        div {
+            padding: 60px 20px;
+        }
+
+        /* 各セクションのスタイル */
+        section {
+            padding: 60px 20px;
+            margin-top: 50px; /* ナビゲーションバーの高さを避けるため */
+        }
+    </style>
+</head>
+<body>
+
+<!-- ナビゲーションバー -->
+<nav>
+    <ul>
+        <li><form action="http://www.google.co.jp/search" method="get"><input type="search" name="search" placeholder="キーワードを入力”><input type="submit" name="submit" value="検索”></form></li>
+        <li><a href="#home">ホーム</a></li>
+      <li></li>
+</li>
+    </ul>
+</nav>
+</body>
+  <head>
+    <style>
+        #output {
+            font-size: 24px;
+            font-family: Arial, sans-serif;
+            white-space: pre-wrap; /* 改行を保持する */
+        }
+    </style>
+</head>
+<body>
+<section id="home">
+
+<div id="output"></div>
+
+<script>
+    const text = "共有ノートにようこそ";
+    const outputElement = document.getElementById('output');
+    let index = 0;
+
+    function showNextChar() {
+        if (index < text.length) {
+            outputElement.textContent += text[index];
+            index++;
+            setTimeout(showNextChar, 200); // 0.2秒ごとに次の文字を表示
+        }
+    }
+
+    showNextChar();
+</script>
+</section>
+
+</body>
+</html>
