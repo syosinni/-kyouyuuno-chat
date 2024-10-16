@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>サーバーチェック</title>
+</head>
+<body>
+    <center>
+        <h2>テスト</h2>
+        <input type="text" id="url" placeholder="URLを入力してください">
+        <button onclick="checkServer()">チェック</button>
+        <p id="status"></p>
+        <iframe id="checkFrame" style="display:none;"></iframe>
+        <p>※このコードはサーバが存在しているか確認しているだけなので、サーバが落ちていてもサーバからの応答があれば全部200で返します（CORSなどは例外）</p>
+    </center>
+    <script>
+        function checkServer() {
+            const urlInput = document.getElementById('url').value;
+            const statusElement = document.getElementById('status');
+            const iframe = document.getElementById('checkFrame');
+
+            if (!urlInput) {
+                alert('Error: URLが入力されていません');
+                return;
+            }
+
+            iframe.onload = function() {
+                statusElement.textContent = '指定したURLのステータス: 200 OK';
+            };
+
+            iframe.onerror = function() {
+                statusElement.textContent = '指定したURLのステータス: URLが見つかりません';
+            };
+
+            iframe.src = urlInput;
+        }
+    </script>
+</body>
+</html>
