@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYPOINT</title>
+    <style>
+        /* 基本設定 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        /* ナビゲーションバー */
+        header {
+            background-color: #333;
+            padding: 20px 0;
+            color: #fff;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin: 0 20px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: #00aced;
+        }
+
+        /* 各セクション */
+        .section {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .home-section {
+            background: url('https://via.placeholder.com/1500x600') no-repeat center center/cover;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .home-section h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .cta-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #00aced;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background-color: #0084a1;
+        }
+
+        /* 特徴セクション */
+        .feature-cards {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 30%;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        /* アニメーション */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: fadeInUp 1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>共有ノートPOINT</h1>
+            <ul>
+                <li><a href="#home">ホーム</a></li>
+                <li><a href="#features">特徴</a></li>
+                <li><a href="#how-it-works">使い方</a></li>
+                <li><a href="#contact">お問い合わせ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="section home-section">
+        <div class="container">
+            <h2>ようこそ、共有ノートポイントへ！</h2>
+            <p>ポイントを貯めて、様々な物と交換しよう。</p>
+            <button class="cta-button">今すぐ始める</button>
+        </div>
+    </section>
+
+    <section id="features" class="section features-section">
+        <div class="container">
+            <h2>特徴</h2>
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <h3>毎日の登校がポイ活に‼️</h3>
+                    <p>学校に行くのが楽しみになります。</p>
+                </div>
+                <div class="feature-card">
+                    <h3>多様な交換物品</h3>
+                    <p>ポイントで様々な商品やサービスを手に入れよう。</p>
+                </div>
+                <div class="feature-card">
+                    <h3>毎日のボーナス</h3>
+                    <p>毎日遅刻せずに登校してボーナスポイントをゲット。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="section how-it-works-section">
+        <div class="container">
+            <h2>使い方</h2>
+            <p>以下のステップでポイントを貯めよう。</p>
+            <ul>
+                <li>ミッションをクリア</li>
+                <li>ポイントを貯める</li>
+                <li>物などと交換する</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        <div id="contact" class="container">
+            <h2>お問い合わせ</h2>
+            <p>ご質問がある場合は、こちらからお問い合わせください。</p>
+        </div>
+    </footer>
+
+    <script>
+        // スクロール時に要素をフェードイン
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('.section');
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                if (sectionTop < windowHeight - 100) {
+                    section.classList.add('visible');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
