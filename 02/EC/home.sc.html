@@ -180,7 +180,6 @@
             </ul>
         </div>
     </section>
-
     <footer>
         <div id="contact" class="container">
             <h2>お問い合わせ</h2>
@@ -211,14 +210,14 @@
 
   gtag('config', 'G-2LPSKM6D35');
 </script>
- <style>
+    <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #f4f4f4;
         }
         canvas {
-            display: block;
+            display: none; /* 初期状態で非表示 */
             margin: 20px auto;
             background-color: #87CEEB;
             border: 2px solid #000;
@@ -230,16 +229,17 @@
     </style>
 </head>
 <body>
-    <h1>オフラインの為、お待ち下さい</h1>
+    <h1>ジャンプゲーム</h1>
     <p id="status">オンラインです</p>
     <canvas id="gameCanvas" width="800" height="200"></canvas>
-    <p>スコア: <span id="score">0</span>秒</p>
+    <p id="scoreDisplay">スコア: <span id="score">0</span>秒</p>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const canvas = document.getElementById('gameCanvas');
             const ctx = canvas.getContext('2d');
             const scoreDisplay = document.getElementById('score');
             const statusDisplay = document.getElementById('status');
+            const scoreContainer = document.getElementById('scoreDisplay');
             
             let isOffline = false;
             let score = 0;
@@ -247,9 +247,9 @@
             let player = { x: 50, y: 150, width: 20, height: 20, dy: 0, isJumping: false };
             let obstacles = [];
             let gameRunning = true;
-            const gravity = 0.6;
-            let speed = 3;
-            let obstacleFrequency = 120;
+            const gravity = 0.5;  // ジャンプの落下速度
+            let speed = 2;  // ゲームの速度を遅く設定
+            let obstacleFrequency = 150;  // 障害物の出現頻度を遅くする
             let frameCount = 0;
 
             // オフラインかどうかをチェックする
@@ -258,10 +258,14 @@
                     isOffline = true;
                     statusDisplay.textContent = "オフラインです";
                     statusDisplay.style.color = "red";
+                    canvas.style.display = "block";  // オフライン時にキャンバスを表示
+                    scoreContainer.style.display = "block";  // スコアも表示
                 } else {
                     isOffline = false;
                     statusDisplay.textContent = "オンラインです";
                     statusDisplay.style.color = "green";
+                    canvas.style.display = "none";  // オンライン時はキャンバスを非表示
+                    scoreContainer.style.display = "none";  // スコアも非表示
                 }
             }
 
