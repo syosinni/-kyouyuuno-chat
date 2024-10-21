@@ -135,6 +135,7 @@
             <ul>
                 <li><a href="#home">ホーム</a></li>
                 <li><a href="#features">特徴</a></li>
+                <li><a href="#0001">マイページ</a></li>
                 <li><a href="#how-it-works">使い方</a></li>
             </ul>
         </nav>
@@ -166,6 +167,44 @@
                 </div>
             </div>
         </div>
+    </section>
+    <section id="0001">
+     <style>
+        /* ボタンのスタイル */
+        .fancy-button {
+            background-color: #ff6f61;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 30px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ホバー時のエフェクト */
+        .fancy-button:hover {
+            background-color: #ff4e42;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+<body>
+
+    <!-- ボタン -->
+    <button class="fancy-button" onclick="navigateToPage()">Go to Another Page</button>
+
+    <script>
+        // ページ遷移するためのJavaScript
+        function navigateToPage() {
+            window.location.href = "https://www.example.com";  // 別のページのURLをここに記入
+        }
+    </script>
+
+</body>
     </section>
 
     <section id="how-it-works" class="section how-it-works-section">
