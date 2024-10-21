@@ -136,7 +136,6 @@
                 <li><a href="#home">ホーム</a></li>
                 <li><a href="#features">特徴</a></li>
                 <li><a href="#how-it-works">使い方</a></li>
-                <li><a href="#contact">お問い合わせ</a></li>
             </ul>
         </nav>
     </header>
@@ -182,8 +181,57 @@
     </section>
     <footer>
         <div id="contact" class="container">
-            <h2>お問い合わせ</h2>
-            <p>ご質問がある場合は、共有ノート管理委員または先生にお問い合わせください。</p>
+         <style>
+             * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+}
+
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.footer-link {
+    color: #ffd700;
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+}
+
+         </style>
+            <body>
+                 <p>&copy; 2024 共有ノート管理委員会</p>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSfAUpV2xjAdwaE6B-k4sKRHkw9neG47YWpRYqER4vHR5QOg7Q/viewform?usp=sf_link" class="footer-link">アンケートにご協力ください</a>
+            </body>
         </div>
     </footer>
 
