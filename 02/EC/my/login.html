@@ -4,6 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ログインページ</title>
+        <script>
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+</script>
+<script>
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+    }
+    if (e.key === 'F12') {
+        e.preventDefault();
+    }
+});
+</script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,34 +65,41 @@
         }
     </style>
 </head>
-<body>
+<h2>ログイン</h2>
+<form id="loginForm">
+        <label for="username">ユーザー名:</label>
+        <input type="text" id="username" name="username" required><br><br>
 
-<div class="login-container">
-    <h2>ログイン</h2>
-    <form id="loginForm">
-        <input type="text" id="username" placeholder="ユーザー名" required>
-        <input type="password" id="password" placeholder="パスワード" required>
-        <button type="submit" class="btn-login">ログイン</button>
-        <p class="error-message" id="errorMessage">何かしらが間違っています</p>
+        <label for="password">パスワード:</label>
+        <input type="password" id="password" name="password" required><br><br>
+
+        <button type="submit">ログイン</button>
     </form>
-</div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-<script>
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
-        event.preventDefault(); // フォームの自動送信を防止
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
 
-        // シンプルなフロントエンドでの検証（通常はバックエンドで行うべき）
-        if (username === atob("c3lvc2lubmk=") && password === atob("MDAwMQ==")) {
-            // 正しい場合、指定のURLへリダイレクト
-            window.location.href = "https://kyouyuuno-to.f5.si/02/EC/my/syosinni";
-        } else {
-            // 間違っている場合、エラーメッセージを表示
-            document.getElementById("errorMessage").style.display = "block";
-        }
-    });
-</script>
+            // 30人分のユーザー名とパスワード
+            var users = {
+                "syosinni": "564731",
+                "カンニングｗｗ":"20120511",
+                "まつざわ":"KLY042",
+                "まつざわ.2":"わんこそば",
+                "さらだ猫":"xxxx",
+                "田中太郎":"xxxx",
+            };
 
+            // パスワードが正しいか確認
+            if (users[username] && users[username] === password) {
+                // 正しい場合は指定のURLに移動
+                window.location.href = `https://kyouyuuno-to.f5.si/02/EC/my/${username}`;
+            } else {
+                alert('ユーザー名またはパスワードが間違っています');
+            }
+        });
+    </script>
 </body>
 </html>
