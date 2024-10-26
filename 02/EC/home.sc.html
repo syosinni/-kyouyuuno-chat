@@ -160,6 +160,15 @@
         <div class="container">
             <h2>ようこそ、共有ノートポイントへ！</h2>
             <p>ポイントを貯めて、授業態度を確認しよう</p>
+            <body>
+              <button class="cta-button" onclick="navigateToPage()">今すぐ始める</button>             
+            <script>
+             // ページ遷移するためのJavaScript
+               function navigateToPage() {
+               window.location.href = "https://kyouyuuno-to.f5.si/02/EC/my/login";  // 別のページのURLをここに記入
+               }
+             </script>
+            </body>
         </div>
     </section>
 
@@ -183,40 +192,6 @@
         </div>
     </section>
     <section id="0001">
-     <style>
-        /* ボタンのスタイル */
-        .fancy-button {
-            background-color: #ff6f61;
-            border: none;
-            border-radius: 50px;
-            padding: 15px 30px;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        /* ホバー時のエフェクト */
-        .fancy-button:hover {
-            background-color: #ff4e42;
-            transform: translateY(-5px);
-            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.2);
-        }
-    </style>
-<body>
-
-    <!-- ボタン -->
-    <button class="fancy-button" onclick="navigateToPage()">マイページに移動</button>
-
-    <script>
-        // ページ遷移するためのJavaScript
-        function navigateToPage() {
-            window.location.href = "https://kyouyuuno-to.f5.si/02/EC/my/login";  // 別のページのURLをここに記入
-        }
-    </script>
 
 </body>
     </section>
