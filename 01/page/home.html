@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+<meta charset="UTF-8">
+<title>共有ノートPages</title>
+ <script>
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+</script>
+<script>
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+    }
+    if (e.key === 'F12') {
+        e.preventDefault();
+    }
+});
+</script>
+    <style>
+        /* 基本設定 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        /* ナビゲーションバー */
+        header {
+            background-color: #333;
+            padding: 20px 0;
+            color: #fff;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin: 0 20px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: #00aced;
+        }
+
+        /* 各セクション */
+        .section {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .home-section {
+            background: url('https://kyouyuuno-to.f5.si/png/abc.png') no-repeat center center/cover;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .home-section h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .cta-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            color: #fff;
+            background-color: #00aced;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .cta-button:hover {
+            background-color: #0084a1;
+        }
+
+        /* 特徴セクション */
+        .feature-cards {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 30%;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        /* アニメーション */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: fadeInUp 1s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <h1>共有ノートPOINT</h1>
+            <ul>
+                <li><a href="#home">ホーム</a></li>
+                <li><a href="#features">特徴</a></li>
+                <li><a href="#0001">マイページ</a></li>
+                <li><a href="#how-it-works">使い方</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section id="home" class="section home-section">
+        <div class="container">
+            <h2>ようこそ、共有ノートPagesへ！</h2>
+            <p>みんなでサイトを作ろう!!</p>
+            <body>
+              <button class="cta-button" onclick="navigateToPage()">今すぐ始める</button>             
+            <script>
+             // ページ遷移するためのJavaScript
+               function navigateToPage() {
+               window.location.href = "";  // 別のページのURLをここに記入
+               }
+             </script>
+            </body>
+        </div>
+    </section>
+      <section id="features" class="section features-section">
+        <div class="container">
+            <h2>特徴</h2>
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <h3>サイトを構築しよう</h3>
+                    <p>直感的な手順でサイトを構築しよう</p>
+                </div>
+                <div class="feature-card">
+                    <h3>サイトをみんなに見せよう</h3>
+                    <p>共有するのは嬉しいですよ‼️</p>
+                </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+<footer>
+        <div id="contact" class="container">
+         <style>
+             * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    flex: 1;
+}
+
+footer {
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+
+.footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.footer-link {
+    color: #ffd700;
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+}
+
+         </style>
+            <body>
+                 <p>&copy; 2024 共有ノート管理委員会</p>
+            <a href="" class="footer-link">アンケートにご協力ください</a>
+            <a href="https://forms.gle/EnpxNtTZGLRbkySu5" class="footer-link">アカウント作成</a>
+            </body>
+        </div>
+    </footer>
+
+</html>
