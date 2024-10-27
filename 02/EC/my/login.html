@@ -105,4 +105,37 @@
         });
     </script>
 </body>
+ <style>
+        /* 広告バナーのスタイル */
+        .ad-banner {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            width: 100px; /* 必要に応じてサイズ調整 */
+            height: auto;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000; /* 他の要素より前面に表示 */
+        }
+
+        .ad-banner img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ホバー効果 */
+        .ad-banner:hover {
+            box-shadow: -4px 4px 10px rgba(0, 0, 0, 0.5);
+            opacity: 0.9;
+        }
+    </style>
+<body>
+
+    <!-- 広告バナー -->
+    <a href="https://kyouyuuno-to.f5.si/02/home.se" target="_blank" class="ad-banner">
+        <img src="https://kyouyuuno-to.f5.si/png/0001.png" alt="広告バナー">
+    </a>
 </html>
