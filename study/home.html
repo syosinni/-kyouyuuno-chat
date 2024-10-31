@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Studyノート</title>
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: #333;
+  color: #fff;
+  padding: 10px 0;
+  overflow: hidden;
+  z-index: 1000;
+}
+
+.top-bar {
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.scroll-text {
+  display: inline-block;
+  padding-left: 100%;
+  animation: scroll 15s linear infinite;
+  color: #b2dffb;
+  font-family: monospace;
+  font-size: 1.2em;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+main {
+  padding-top: 80px;
+  text-align: center;
+}
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="top-bar">
+      <div class="scroll-text">
+        &lt;div class="sample"&gt;&lt;p&gt;おしゃれなHTMLコードが流れます...&lt;/p&gt;&lt;/div&gt;
+        &lt;header&gt;美しいヘッダー&lt;/header&gt;
+        &lt;nav&gt;ナビゲーションメニュー&lt;/nav&gt;
+        &lt;section&gt;セクションコンテンツ&lt;/section&gt;
+      </div>
+    </div>
+  </header>
+  <main>
+    <h1>Studyノートへようこそ</h1>
+    <p>HTML、CSS、JavaScriptを学習しましょう</p>
+  </main>
+  <script>
+    // JavaScriptはこの例では使用していませんが、他のアニメーション効果やインタラクションを追加する場合に使えます。
+console.log("Studyノートへようこそ");
+
+  </script>
+</body>
+</html>
