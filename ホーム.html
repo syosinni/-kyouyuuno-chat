@@ -8,6 +8,35 @@
     <meta charset="UTF-8">
     <title>共有ノートチャットホーム</title>
     <style>
+        /* ベーススタイル */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        /* ヘッダー画像 */
+        .header {
+            width: 100%;
+            height: 550px; /* お好みの高さに調整可能 */
+            background-image: url('https://kyouyuuno-to.f5.si/png/Screenshot%202024-11-02%2013.27.01.png'); /* ヘッダー画像のパス */
+            background-size: cover; /* 画像を横幅いっぱいに拡大 */
+            background-position: center; /* 中央に画像を配置 */
+            background-repeat: no-repeat; /* 繰り返しを防止 */
+        }
+
+        /* スマートフォン対応 */
+        @media (max-width: 768px) {
+            .header {
+                height: 200px; /* スマホの画面で高さを調整 */
+            }
+        }
+    </style>
+    <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -75,36 +104,6 @@
     </ul>
 </nav>
 <head>
-<style>
-        /* ベーススタイル */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-        }
-
-        /* ヘッダー画像 */
-        .header {
-            width: 100%;
-            height: 550px; /* お好みの高さに調整可能 */
-            background-image: url('https://kyouyuuno-to.f5.si/png/Screenshot%202024-11-02%2013.27.01.png'); /* ヘッダー画像のパス */
-            background-size: cover; /* 画像を横幅いっぱいに拡大 */
-            background-position: center; /* 中央に画像を配置 */
-            background-repeat: no-repeat; /* 繰り返しを防止 */
-        }
-
-        /* スマートフォン対応 */
-        @media (max-width: 768px) {
-            .header {
-                height: 200px; /* スマホの画面で高さを調整 */
-            }
-        }
-    </style>
-</head>
 <!-- コンテンツセクション -->
 <section id="home">
     <h1>ホーム</h1>
