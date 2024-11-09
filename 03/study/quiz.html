@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プログラミングクイズ</title>
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+    <style>
+        /* スタイル設定 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        header, footer {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #quiz-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        #question-box p {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        #answer-input {
+            width: 80%;
+            padding: 10px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #feedback {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>埋め込み型HTMLクイズゲーム</h1>
+        <p>指示に従って正しいHTMLコードを入力してください。</p>
+        <p><strong>注意:</strong> 他のタブに移動するとゲームオーバーになります！</p>
+    </header>
+
+    <main>
+        <div id="quiz-container">
+            <div id="question-box">
+                <p id="question"></p>
+            </div>
+            <div id="answer-box">
+                <input type="text" id="answer-input" placeholder="ここにコードを入力">
+                <button onclick="checkAnswer()">回答する</button>
+                <p id="feedback"></p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 プログラミング学習サイト</p>
+    </footer>
+
+    <script>
+        // クイズデータ（例として10問中2問）
+        const quizData = [
+            { question: "「おはよう」を<h1>で表示してください。", answer: "<h1>おはよう</h1>" },
+            { question: "「こんにちは」を<h2>で表示してください。", answer: "<h2>こんにちは</h2>" },
+            // 他の問題を追加可能（50問まで）
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+
+        // 初期化：最初の質問を表示
+        window.onload = function() {
+            // タブが切り替わった時にゲームオーバー
+            window.addEventListener("blur", function() {
+                alert("タブを離れたためゲームオーバーです！");
+                location.reload();
+            });
+            displayQuestion();
+        };
+
+        // 問題を表示する関数
+        function displayQuestion() {
+            const questionElement = document.getElementById("question");
+            questionElement.textContent = quizData[currentQuestion].question;
+            document.getElementById("answer-input").value = "";  // 答え入力をクリア
+        }
+
+        // 回答をチェックする関数
+        function checkAnswer() {
+            const userAnswer = document.getElementById("answer-input").value.trim();
+            const feedbackElement = document.getElementById("feedback");
+
+            // 正答判定
+            if (userAnswer === quizData[currentQuestion].answer) {
+                feedbackElement.textContent = "正解です！";
+                score++;
+                currentQuestion++;
+
+                // 10問終了時のメッセージ
+                if (currentQuestion >= 10) {
+                    feedbackElement.textContent = `おめでとうございます！10問中${score}問正解です！`;
+                } else {
+                    displayQuestion();  // 次の問題へ
+                }
+            } else {
+                feedbackElement.textContent = "不正解です。もう一度試してください。";
+            }
+        }
+    </script>
+</body>
+</html>
