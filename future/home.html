@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ようこそ</title>
+    <title>welcome!</title>
    <style>
      /* style.css */
 * {
@@ -85,6 +85,63 @@ document.addEventListener('mousemove', (e) => {
     // CSS変換を使ってメニューバーを移動
     menuBar.style.transform = `translateX(${offsetX}px)`;
 });
+    </script>
+</body>
+    <style>
+        /* 背景をSF風にダークカラーに設定 */
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        /* テキストスタイル */
+        #typewriter {
+            font-size: 2em;
+            white-space: nowrap;
+            overflow: hidden;
+            border-right: .15em solid #0f0;
+            width: 0;
+            animation: typing 4s steps(30, end), blink-caret 0.75s step-end infinite;
+        }
+
+        /* タイピング効果 */
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        /* カーソルの点滅 */
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: #0f0; }
+        }
+    </style>
+<body>
+    <div id="typewriter">Welcome to the Shared Notebook</div>
+
+    <script>
+        // ページロード後にタイプライターアニメーション開始
+        document.addEventListener("DOMContentLoaded", () => {
+            const typewriterText = "Welcome to the Shared Notebook";
+            const typewriterElement = document.getElementById("typewriter");
+            let index = 0;
+
+            function typeNextChar() {
+                if (index < typewriterText.length) {
+                    typewriterElement.textContent += typewriterText[index];
+                    index++;
+                    setTimeout(typeNextChar, 100); // 一文字毎の速度（ms）
+                }
+            }
+            typeNextChar();
+        });
     </script>
 </body>
 
