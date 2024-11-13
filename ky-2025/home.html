@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>共有ノート2025</title>
+  <style>
+    /* 全体のリセットと基本設定 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* トップバー */
+    #top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+      background-color: #333;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 10;
+    }
+    /* タイトルのタイプライター風アニメーション */
+    .title {
+      font-size: 24px;
+      font-family: 'Courier New', Courier, monospace;
+      color: #00ccff;
+      overflow: hidden;
+      border-right: 4px solid #00ccff;
+      white-space: nowrap;
+      animation: typing 3s steps(15) infinite, blink .7s step-end infinite;
+    }
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 180px; }
+    }
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+
+    /* 円形リズムアニメーション */
+    .speaker-visualizer {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 4px solid #00ccff;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      animation: pulse 1s infinite ease-in-out;
+    }
+    .speaker-visualizer::before, .speaker-visualizer::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 4px solid #00ccff;
+      width: 60%;
+      height: 60%;
+      animation: ripple 1.5s infinite ease-in-out;
+    }
+    .speaker-visualizer::after {
+      width: 80%;
+      height: 80%;
+      animation-delay: 0.5s;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+    @keyframes ripple {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    /* ナビゲーションバー */
+    #navbar {
+      margin-top: 100px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      font-size: 18px;
+    }
+    #navbar a {
+      color: #00ccff;
+      text-decoration: none;
+      transition: color 0.3s;
+      position: relative;
+    }
+    #navbar a:hover {
+      color: #ff00cc;
+    }
+    #navbar a::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      height: 2px;
+      width: 100%;
+      background-color: #ff00cc;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    #navbar a:hover::after {
+      transform: scaleX(1);
+    }
+
+    /* 各セクション */
+    section {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- トップバー -->
+  <div id="top-bar">
+    <div class="title">共有ノート2025</div>
+    <div class="speaker-visualizer"></div>
+  </div>
+
+  <!-- ナビゲーションバー -->
+  <nav id="navbar">
+    <a href="#section1">home</a>
+    <a href="#section2">l</a>
+    <a href="#section3">セクション 3</a>
+  </nav>
+
+  <!-- 各セクション -->
+  <section id="section1">セクション 1</section>
+  <section id="section2">セクション 2</section>
+  <section id="section3">セクション 3</section>
+
+  <!-- スムーズスクロールのためのJavaScript -->
+  <script>
+    document.querySelectorAll('#navbar a').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+</body>
+</html>
