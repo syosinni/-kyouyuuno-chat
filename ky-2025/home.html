@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
   <title>共有ノート2025</title>
   <style>
     /* 全体のリセットと基本設定 */
@@ -136,14 +139,121 @@
   <!-- ナビゲーションバー -->
   <nav id="navbar">
     <a href="#section1">home</a>
-    <a href="#section2">l</a>
-    <a href="#section3">セクション 3</a>
+    <a href="#section2">activity</a>
+    <a href="#section3">etc</a>
   </nav>
 
   <!-- 各セクション -->
-  <section id="section1">セクション 1</section>
-  <section id="section2">セクション 2</section>
-  <section id="section3">セクション 3</section>
+  <section id="home">
+   <style>
+        /* 基本のスタイル */
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #0e0e0e;
+            overflow: hidden;
+        }
+        .header {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: radial-gradient(circle, rgba(0,255,0,0.1) 50%, transparent 70%);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        /* レーダーのスキャン効果 */
+        .scan {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(0, 255, 0, 0.3), transparent);
+            animation: rotate 3s linear infinite;
+        }
+        /* レーダーのグリッド線 */
+        .grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-image: 
+                radial-gradient(circle, transparent 30%, rgba(0, 255, 0, 0.2) 32%, transparent 35%),
+                radial-gradient(circle, transparent 60%, rgba(0, 255, 0, 0.1) 62%, transparent 65%),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px),
+                linear-gradient(0deg, rgba(0, 255, 0, 0.1) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 25% 25%, 25% 25%;
+            opacity: 0.8;
+        }
+        /* レーダーの回転アニメーション */
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        /* ターゲット点 */
+        .target {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background-color: #00ff00;
+            border-radius: 50%;
+            animation: blink 1s infinite alternate;
+        }
+        /* ターゲットの点滅 */
+        @keyframes blink {
+            0% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.2;
+            }
+        }
+    </style>
+<body>
+    <div class="header">
+        <div class="scan"></div>
+        <div class="grid"></div>
+        <!-- ターゲット点をランダムな位置に配置 -->
+        <div class="target" style="top: 50px; left: 80px;"></div>
+        <div class="target" style="top: 150px; left: 200px;"></div>
+        <div class="target" style="top: 200px; left: 100px;"></div>
+    </div>
+</body>
+  </section>
+  <section id="section2">
+  What We Do
+  <h2>我々の活動</h2>
+  <h3>ーKYPOINTー</h3>
+  <style>
+    a.btn--yellow {
+  color: #000;
+  background-color: #fff100;
+  border-bottom: 5px solid #ccc100;
+}
+
+a.btn--yellow:hover {
+  margin-top: 3px;
+  color: #000;
+  background: # fff20a;
+  border-bottom: 2px solid #ccc100;
+}
+  </style>
+  <body>
+  <a href="https://kyouyuuno-to.f5.si/ky-2025/mp4/0001.mp4" class="btn btn--yellow btn--cubic">内容動画を見る</a>
+  </body>
+  <h3>ー普段の活動ー</h3>
+  <p>共有ノートサービスの改善、アップデート、サービス開発、サービス停止</p>
+  </section>
+  <section id="section3">
+  executor
+  </section>
 
   <!-- スムーズスクロールのためのJavaScript -->
   <script>
