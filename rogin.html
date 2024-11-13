@@ -1,0 +1,256 @@
+<html>
+  <head>
+   <title>ログイン</title>
+  </head>
+  <style>
+    /* Variables */
+body {
+  --core-width: 50px;
+  --core-color: #de0b46;
+  --core-glow: 0px 0px 70px 20px #de0b46;
+
+  --outer-one-offset: 120px;
+  --outer-one-width: 10px;
+  --outer-one-height: 30px;
+  --outer-one-color: #de0b46;
+  --outer-one-glow: 0px 0px 20px 0px #de0b46;
+
+  --outer-two-offset: 290px;
+  --outer-two-width: 28px;
+  --outer-two-height: 5px;
+  --outer-two-color: #de0b46;
+  --outer-two-glow: 0px 0px 20px 0px #de0b46;
+
+  --outer-three-offset: 440px;
+  --outer-three-width: 55px;
+  --outer-three-height: 5px;
+  --outer-three-color: #55E2F9;
+  --outer-three-glow: 0px 0px 20px 0px #55E2F9;
+
+  --outer-four-offset: 440px;
+  --outer-four-width: 6px;
+  --outer-four-height: 5px;
+  --outer-four-color: #de0b46;
+  --outer-four-glow: 0px 0px 20px 0px #de0b46;
+
+  --outer-five-offset: 410px;
+
+  --menu-offset: 540px;
+  --menu-height: 20px;
+  --menu-color: transparent;
+  --menu-glow: 0px 0px 25px rgba(222, 11, 70, 0.27);
+}
+
+/* Styles */
+.intro {}
+
+body {
+  height: 100vh;
+  animation: intro_box 1s 1s forwards;
+  opacity: 0;
+  perspective-origin: 50% -10%;
+  margin: 0;
+  padding: 0;
+  font-family: montserrat;
+  perspective: 800;
+  background: radial-gradient(ellipse at top left, rgba(222, 11, 70, 0.26) -160%, rgba(255, 255, 255, 0) 103%), -webkit-radial-gradient(center, ellipse cover, #0C1019 0%, #0B0B0E 100%);
+  overflow: hidden;
+}
+
+/* Animations */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fade {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+
+  25% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  75% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes in {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes inalt {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes wiggle {
+  0% {
+    transform: translateY(0) translateZ(-840px) rotateX(64deg) rotateY(-21deg) rotatez(80deg) scale(0.9);
+  }
+
+  25% {
+    transform: translateY(0) translateZ(-820px) rotateX(66deg) rotateY(-24deg) rotatez(84deg) scale(0.9);
+  }
+
+  50% {
+    transform: translateY(0) translateZ(-840px) rotateX(62deg) rotateY(-23deg) rotatez(82deg) scale(0.9);
+  }
+
+  75% {
+    transform: translateY(0) translateZ(-840px) rotateX(63deg) rotateY(-19deg) rotatez(78deg) scale(0.9);
+  }
+
+  100% {
+    transform: translateY(0) translateZ(-840px) rotateX(64deg) rotateY(-21deg) rotatez(80deg) scale(0.9);
+  }
+}
+
+@keyframes intro_box {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+
+  20% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+
+  40% {
+    transform: scale(0.89);
+  }
+
+  60% {
+    transform: scale(1.04);
+  }
+
+  80% {
+    transform: scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Other styles, classes, and nested SCSS-like rules should be expanded similarly */
+
+  </style>
+  <body>
+    <div class="grain">
+  <div class="intro">
+    <div class="center">
+      <div class="core">
+        <div class="outer_one">
+          <!-- outer_one__piece -->
+          <!-- Repeated 36 times -->
+          <div class="outer_one__piece"></div>
+          <!-- (continue this for each outer_one__piece) -->
+        </div>
+        <div class="outer_two">
+          <!-- outer_two__piece -->
+          <!-- Repeated 36 times -->
+          <div class="outer_two__piece"></div>
+          <!-- (continue this for each outer_two__piece) -->
+        </div>
+        <div class="outer_three">
+          <!-- outer_three__piece -->
+          <!-- Repeated 36 times -->
+          <div class="outer_three__piece"></div>
+          <!-- (continue this for each outer_three__piece) -->
+        </div>
+        <div class="outer_four">
+          <!-- outer_four__piece -->
+          <!-- Repeated 36 times -->
+          <div class="outer_four__piece"></div>
+          <!-- (continue this for each outer_four__piece) -->
+        </div>
+        <div class="outer_five">
+          <!-- outer_five__piece -->
+          <!-- Repeated 36 times -->
+          <div class="outer_five__piece"></div>
+          <!-- (continue this for each outer_five__piece) -->
+        </div>
+      </div>
+      <div class="pieces">
+        <div class="future_ui__piece">
+          <span>Warp drive</span>
+          <div class="line"></div>
+          <div class="tip">Yes, commander!</div>
+        </div>
+        <div class="future_ui__piece">
+          <span>Teleport</span>
+          <div class="line"></div>
+          <div class="tip">Beam me up!</div>
+        </div>
+        <div class="future_ui__piece">
+          <span>Fusion core</span>
+          <div class="line"></div>
+          <div class="tip">Engineering!</div>
+        </div>
+        <div class="future_ui__piece">
+          <span>Laser target</span>
+          <div class="line"></div>
+          <div class="tip">Charge laz0rs!</div>
+        </div>
+        <div class="future_ui__piece">
+          <span>Shields</span>
+          <div class="line"></div>
+          <div class="tip">Status report!</div>
+        </div>
+        <div class="future_ui__piece blank"></div>
+        <div class="future_ui__piece blank"></div>
+        <!-- Repeat the following for each blank element -->
+        <!-- There are 28 blank future_ui__piece elements in total -->
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
