@@ -1,150 +1,106 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>welcome!</title>
-   <style>
-     /* style.css */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>home</title>
+  <style>
+    /* 全体のスタイル */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a0a;
+      color: #00ff99;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #0b0c10;
-    font-family: Arial, sans-serif;
-    overflow: hidden;
-}
+    /* ナビバー */
+    .navbar {
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      padding: 10px;
+      background: rgba(0, 255, 153, 0.1);
+      border-bottom: 1px solid #00ff99;
+    }
+    .navbar a {
+      color: #00ff99;
+      text-decoration: none;
+      font-size: 1.2em;
+      transition: color 0.3s;
+    }
+    .navbar a:hover {
+      color: #ff0066;
+    }
 
-.menu-bar {
-    display: flex;
-    gap: 2rem;
-    padding: 1rem 2rem;
-    background-color: rgba(20, 20, 30, 0.8);
-    border: 1px solid #45a29e;
-    border-radius: 10px;
-    transition: transform 0.2s ease;
-    box-shadow: 0 4px 20px rgba(69, 162, 158, 0.4);
-}
+    /* タイプライターアニメーション */
+    .typewriter {
+      font-size: 2em;
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 4px solid #00ff99;
+      width: 100%;
+      animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+    }
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    @keyframes blink-caret {
+      50% { border-color: transparent; }
+    }
 
-.menu-item {
-    color: #66fcf1;
-    font-size: 1.2rem;
-    cursor: pointer;
-    position: relative;
-    transition: color 0.3s ease;
-}
-
-.menu-item:hover {
-    color: #c5c6c7;
-}
-
-/* SF風の光沢エフェクト */
-.menu-item::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(120deg, transparent, rgba(102, 252, 241, 0.5), transparent);
-    transform: translateX(-50%);
-    transition: opacity 0.4s ease;
-    opacity: 0;
-}
-
-.menu-item:hover::after {
-    opacity: 1;
-}
-</style>
+    /* 404エラー表示ウィンドウ */
+    .error-window {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      padding: 20px;
+      border: 2px solid #ff0000;
+      background-color: rgba(255, 0, 0, 0.1);
+      text-align: center;
+      color: #ff0000;
+      font-size: 1.5em;
+      display: none;
+    }
+    .error-window.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-    <div class="menu-bar">
-        <div class="menu-item"><a href="#home">Home</a></div>
-        <div class="menu-item"><a href="#0001">activity</a></div>
-        <div class="menu-item"><a href="#0002">Services</a></div>
-        <div class="menu-item"><a href="#0003"></a></div>
-        <div class="menu-item"><a href="#0004">Contact</a></div>
-    </div>
-    <script>
-      // script.js
-const menuBar = document.querySelector('.menu-bar');
+  <!-- ナビゲーションバー -->
+  <div class="navbar">
+    <a href="#0001">Home</a>
+    <a href="#0002">Project</a>
+    <a href="#0003">Activity</a>
+    <a href="#0004">Team</a>
+  </div>
 
-document.addEventListener('mousemove', (e) => {
-    // ウィンドウの中心からのマウスのオフセットを計算
-    const windowCenterX = window.innerWidth / 2;
-    const mouseX = e.clientX;
-    const offsetX = (mouseX - windowCenterX) * 0.02; // 0.02で動きを小さく調整
+  <!-- タイプライター風テキスト -->
+  <div class="typewriter">Welcome to the future...</div>
 
-    // CSS変換を使ってメニューバーを移動
-    menuBar.style.transform = `translateX(${offsetX}px)`;
-});
-    </script>
+  <!-- エラーメッセージウィンドウ -->
+  <div class="error-window" id="errorWindow">アクセス拒否 404</div>
+
+  <script>
+    // タブが非アクティブになったときにエラーメッセージを表示
+    document.addEventListener("visibilitychange", function() {
+      const errorWindow = document.getElementById("errorWindow");
+      if (document.hidden) {
+        errorWindow.classList.add("active");
+      } else {
+        errorWindow.classList.remove("active");
+      }
+    });
+  </script>
 </body>
-    <body>
-    <style>
-        /* 背景をSF風にダークカラーに設定 */
-        body {
-            background-color: #000;
-            color: #0f0;
-            font-family: monospace;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            margin: 0;
-        }
-
-        /* テキストスタイル */
-        #typewriter {
-            font-size: 2em;
-            white-space: nowrap;
-            overflow: hidden;
-            border-right: .15em solid #0f0;
-            width: 0;
-            animation: typing 4s steps(30, end), blink-caret 0.75s step-end infinite;
-        }
-
-        /* タイピング効果 */
-        @keyframes typing {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-
-        /* カーソルの点滅 */
-        @keyframes blink-caret {
-            from, to { border-color: transparent; }
-            50% { border-color: #0f0; }
-        }
-    </style>
-<body>
-    <div id="typewriter">Welcome to the Shared Notebook</div>
-
-    <script>
-        // ページロード後にタイプライターアニメーション開始
-        document.addEventListener("DOMContentLoaded", () => {
-            const typewriterText = "Welcome to the Shared Notebook";
-            const typewriterElement = document.getElementById("typewriter");
-            let index = 0;
-
-            function typeNextChar() {
-                if (index < typewriterText.length) {
-                    typewriterElement.textContent += typewriterText[index];
-                    index++;
-                    setTimeout(typeNextChar, 100); // 一文字毎の速度（ms）
-                }
-            }
-            typeNextChar();
-        });
-    </script>
-</body>
-</body>
-
 </html>
