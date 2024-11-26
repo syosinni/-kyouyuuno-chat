@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+    <title>部屋に参加</title>
+  <!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>おしゃれなフォーム</title>
+  <style>
+    /* 全体のスタイリング */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .form-container {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .form-container h2 {
+      font-size: 1.8rem;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      transition: 0.3s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: #ff7e67;
+      box-shadow: 0 4px 8px rgba(255, 126, 103, 0.3);
+    }
+
+    .form-group label {
+      position: absolute;
+      top: -10px;
+      left: 15px;
+      background: #ffffff;
+      padding: 0 5px;
+      font-size: 0.9rem;
+      color: #ff7e67;
+      pointer-events: none;
+      transition: 0.3s ease;
+      transform: translateY(20px);
+      opacity: 0;
+    }
+
+    .form-group input:focus + label,
+    .form-group select:focus + label,
+    .form-group input:not(:placeholder-shown) + label,
+    .form-group select:not([value=""]) + label {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .form-container button {
+      width: 100%;
+      padding: 10px 15px;
+      font-size: 1rem;
+      color: #fff;
+      background: linear-gradient(135deg, #ff7e67, #ff6a88);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .form-container button:hover {
+      background: linear-gradient(135deg, #ff6a88, #ff7e67);
+      box-shadow: 0 6px 12px rgba(255, 126, 103, 0.4);
+    }
+
+    .form-container p {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .form-container p a {
+      color: #ff7e67;
+      text-decoration: none;
+    }
+
+    .form-container p a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>部屋に参加する</h2>
+    <form>
+      <div class="form-group">
+        <input type="text" id="username" placeholder=" " required>
+        <label for="username">ユーザー名</label>
+      </div>
+      <div class="form-group">
+        <select id="room" required>
+          <option value="" disabled selected>部屋を選択</option>
+          <option value="room1">Room 1</option>
+          <option value="room2">Room 2</option>
+          <option value="room3">Room 3</option>
+        </select>
+        <label for="room">部屋を選択</label>
+      </div>
+      <button type="submit">参加する</button>
+    </form>
+    <p>アカウントをお持ちではありませんか？ <a href="#">登録はこちら</a></p>
+  </div>
+</body>
+</html>
