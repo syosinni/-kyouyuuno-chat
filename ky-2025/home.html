@@ -6,6 +6,21 @@
 <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
 <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+   <script>
+  document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+</script>
+<script>
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+    }
+    if (e.key === 'F12') {
+        e.preventDefault();
+    }
+});
+</script>
     <script>
     // 日付チェックとリダイレクト処理
     document.addEventListener('DOMContentLoaded', () => {
