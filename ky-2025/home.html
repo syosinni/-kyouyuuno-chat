@@ -135,21 +135,6 @@
     <div class="title">共有ノート</div>
     <div class="speaker-visualizer"></div>
   </div>
-
-  <!-- ナビゲーションバー -->
-  <nav id="navbar">
-    <a href="#section1">home</a>
-    <a href="#section2">activity</a>
-    <a href="#section3">etc</a>
-  </nav>
-
-  <!-- 各セクション -->
-  <section id="home">
-  </section>
-  <section id="section2">
-  What We Do
-  <h2>我々の活動</h2>
-  <h3>ーKYPOINTー</h3>
   <style>
     a.btn--yellow {
   color: #000;
@@ -165,16 +150,80 @@ a.btn--yellow:hover {
 }
   </style>
   <body>
-  <a href="https://kyouyuuno-to.f5.si/ky-2025/mp4/0001.mp4" class="btn btn--yellow btn--cubic">内容動画を見る</a>
-  </body>
-  <h3>ー普段の活動ー</h3>
-  <p>共有ノートサービスの改善、アップデート、サービス開発、サービス停止</p>
-  </section>
-  <section id="section3">
-  executor
-  </section>
+   <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+            background: #121212;
+            color: #ffffff;
+        }
+        .countdown {
+            font-size: 2em;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        .countdown.last-seconds {
+            font-size: 4em;
+            color: #ff4081;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                color: #ff4081;
+                text-shadow: 0 0 20px #ff4081;
+            }
+            50% {
+                color: #ff80ab;
+                text-shadow: 0 0 40px #ff80ab;
+            }
+            100% {
+                color: #ff4081;
+                text-shadow: 0 0 20px #ff4081;
+            }
+        }
+    </style>
+    <body>
+    <body>
+    <h1>2025年1月1日までのカウントダウン</h1>
+    <div class="countdown" id="countdown"></div>
 
-  <!-- スムーズスクロールのためのJavaScript -->
+    <script>
+        function updateCountdown() {
+            const now = new Date();
+            const targetDate = new Date('2025-01-01T00:00:00');
+            const diff = targetDate - now;
+
+            const countdownElement = document.getElementById('countdown');
+
+            if (diff <= 0) {
+                countdownElement.innerText = 'あけましておめでとうございます！🎉';
+                countdownElement.classList.remove('last-seconds');
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            // 残り時間の表示更新
+            countdownElement.innerText = 
+                `${days}日 ${hours}時間 ${minutes}分 ${seconds}秒`;
+
+            // 残り10秒以下の場合のスタイリング
+            if (diff <= 10000) { // 10秒以下
+                countdownElement.classList.add('last-seconds');
+            } else {
+                countdownElement.classList.remove('last-seconds');
+            }
+        }
+
+        // 初回実行と1秒ごとの更新
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
   <script>
     document.querySelectorAll('#navbar a').forEach(anchor => {
       anchor.addEventListener('click', function (e) {
