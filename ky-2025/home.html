@@ -6,6 +6,18 @@
 <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
 <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+    <script>
+    // 日付チェックとリダイレクト処理
+    document.addEventListener('DOMContentLoaded', () => {
+      const targetDate = new Date('2025-01-01T00:00:00'); // リダイレクト開始日時
+      const currentDate = new Date();
+
+      if (currentDate >= targetDate) {
+        // 指定日時以降は別のサイトに移動
+        window.location.href = 'https://kyouyuuno-to.f5.si/ky-2025/0ex1/home';
+      }
+    });
+  </script>
   <title>共有ノート2025</title>
   <style>
     /* 全体のリセットと基本設定 */
@@ -187,6 +199,7 @@ a.btn--yellow:hover {
     <body>
     <br><br><br><br>
 <h1>2025年1月1日までのカウントダウン</h1>
+<p>2025年1月1日以降、このページは共有ノート2025年祭に移動します。</p>
     <div class="countdown" id="countdown"></div>
 
     <script>
