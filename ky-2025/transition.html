@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1年間ありがとうございました</title>
+  <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    .container {
+      position: relative;
+      height: 100vh;
+    }
+
+    .image-container {
+      position: relative;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .main-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .magnifier {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      transform: scale(2);
+      display: none;
+    }
+
+    .message {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      font-size: 2rem;
+      color: white;
+      display: none;
+    }
+
+    #message1 {
+      top: 20%;
+    }
+
+    #message2 {
+      top: 50%;
+    }
+
+    .final-message {
+      position: absolute;
+      top: 70%;
+      width: 100%;
+      text-align: center;
+      font-size: 1.5rem;
+      color: white;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="image-container">
+      <img src="" alt="インタラクティブ画像" class="main-image">
+      <div class="magnifier"></div>
+    </div>
+    <div class="message" id="message1">2024年1月19日サービス開始</div>
+    <div class="message" id="message2"></div>
+    <div class="final-message"></div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const imageContainer = document.querySelector(".image-container");
+      const magnifier = document.querySelector(".magnifier");
+      const message1 = document.getElementById("message1");
+      const message2 = document.getElementById("message2");
+      const finalMessage = document.querySelector(".final-message");
+
+      let scrollPosition = 0;
+
+      // マウス移動で拡大部分を追従
+      imageContainer.addEventListener("mousemove", (e) => {
+        const rect = imageContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        magnifier.style.display = "block";
+        magnifier.style.left = `${x - magnifier.offsetWidth / 2}px`;
+        magnifier.style.top = `${y - magnifier.offsetHeight / 2}px`;
+        magnifier.style.background = `url('your-image.jpg') no-repeat`;
+        magnifier.style.backgroundSize = `${rect.width * 2}px ${rect.height * 2}px`;
+        magnifier.style.backgroundPosition = `-${x}px -${y}px`;
+      });
+
+      imageContainer.addEventListener("mouseleave", () => {
+        magnifier.style.display = "none";
+      });
+
+      // スクロール操作でイベントをトリガー
+      window.addEventListener("scroll", () => {
+        scrollPosition = window.scrollY;
+
+        if (scrollPosition > 300) {
+          message1.style.display = "block";
+        }
+
+        if (scrollPosition > 600) {
+          message1.style.display = "none";
+          message2.style.display = "block";
+          typewriterEffect("皆様のデータを楽に移行するのをお手伝いした1年間でした", message2);
+        }
+
+        if (scrollPosition > 900) {
+          document.querySelector(".image-container").style.display = "none";
+          finalMessage.style.display = "block";
+          finalMessage.innerText = "データ移行に感謝！";
+        }
+      });
+
+      function typewriterEffect(text, element) {
+        let index = 0;
+        element.innerHTML = "";
+        const interval = setInterval(() => {
+          element.innerHTML += text[index];
+          index++;
+          if (index === text.length) clearInterval(interval);
+        }, 100);
+      }
+    });
+  </script>
+</body>
+</html>
