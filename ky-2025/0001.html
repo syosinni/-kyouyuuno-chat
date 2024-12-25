@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -10,14 +11,15 @@
       margin: 20px;
     }
     .form-container {
-      max-width: 300px;
+      max-width: 400px;
       margin: auto;
     }
     label {
       display: block;
-      margin-bottom: 10px;
+      margin-top: 10px;
+      font-weight: bold;
     }
-    input[type="date"] {
+    select {
       width: 100%;
       padding: 8px;
       margin-bottom: 20px;
@@ -32,43 +34,129 @@
     button:hover {
       background-color: #0056b3;
     }
+    .alert {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <div class="form-container">
     <h1>生年月日登録フォーム</h1>
     <form id="birthdateForm">
-      <label for="birthdate">生年月日:</label>
-      <input type="date" id="birthdate" name="birthdate" required>
+      <label for="year">年:</label>
+      <select id="year" name="year" required></select>
+
+      <label for="month">月:</label>
+      <select id="month" name="month" required>
+        <option value="">--選択してください--</option>
+        ${Array.from({ length: 12 }, (_, i) => `<option value="${i + 1}">${i + 1}月</option>`).join("")}
+      </select>
+
+      <label for="day">日:</label>
+      <select id="day" name="day" required></select>
+
       <button type="submit">送信</button>
     </form>
+
+    <div id="alertMessage" class="alert"></div>
   </div>
 
   <script>
-    document.getElementById("birthdateForm").addEventListener("submit", function(event) {
-      event.preventDefault(); // フォームのデフォルト送信動作をキャンセル
+    const yearSelect = document.getElementById("year");
+    const monthSelect = document.getElementById("month");
+    const daySelect = document.getElementById("day");
+    const alertMessage = document.getElementById("alertMessage");
 
-      const birthdateInput = document.getElementById("birthdate").value;
-      if (!birthdateInput) {
-        alert("生年月日を入力してください。");
+    // 年と日付の初期化
+    function populateYears() {
+      const currentYear = new Date().getFullYear();
+      for (let year = currentYear; year >= 1900; year--) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = `${year}年`;
+        yearSelect.appendChild(option);
+      }
+    }
+
+    function populateDays() {
+      daySelect.innerHTML = '<option value="">--選択してください--</option>'; // リセット
+      const year = parseInt(yearSelect.value, 10);
+      const month = parseInt(monthSelect.value, 10);
+
+      if (!year || !month) return;
+
+      const daysInMonth = new Date(year, month, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const option = document.createElement("option");
+        option.value = day;
+        option.textContent = `${day}日`;
+        daySelect.appendChild(option);
+      }
+    }
+
+    // イベントリスナーの設定
+    yearSelect.addEventListener("change", populateDays);
+    monthSelect.addEventListener("change", populateDays);
+
+    // 初期化
+    populateYears();
+
+    // フォーム送信イベント
+    document.getElementById("birthdateForm").addEventListener("submit", function(event) {
+      event.preventDefault(); // デフォルト動作を停止
+
+      const year = yearSelect.value;
+      const month = monthSelect.value;
+      const day = daySelect.value;
+
+      if (!year || !month || !day) {
+        alert("すべてのフィールドを入力してください。");
         return;
       }
 
-      const birthdate = new Date(birthdateInput);
+      const birthdate = new Date(year, month - 1, day);
       const today = new Date();
       const age = today.getFullYear() - birthdate.getFullYear();
       const monthDiff = today.getMonth() - birthdate.getMonth();
       const dayDiff = today.getDate() - birthdate.getDate();
-
-      // 年齢を正確に計算
       const exactAge = (monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0)) ? age : age - 1;
 
+      let message;
       if (exactAge < 20) {
-        alert("18歳以下としか通信はできなくなりました。");
+        message = "18歳以下としか通信はできなくなりました。";
       } else {
-        alert("18歳以下の方との通信はできなくなりました。");
+        message = "18歳以下の方との通信はできなくなりました。";
       }
+
+      // ローカルストレージに保存
+      localStorage.setItem("birthdate", JSON.stringify({ year, month, day }));
+
+      // メッセージの表示
+      alertMessage.textContent = message;
+      alertMessage.style.display = "block";
     });
+
+    // フォームを再入力できないようにロック
+    const savedBirthdate = localStorage.getItem("birthdate");
+    if (savedBirthdate) {
+      const { year, month, day } = JSON.parse(savedBirthdate);
+      yearSelect.value = year;
+      monthSelect.value = month;
+      populateDays();
+      daySelect.value = day;
+
+      alertMessage.textContent = "生年月日は既に登録されています。変更はできません。";
+      alertMessage.style.display = "block";
+
+      document.querySelectorAll("select, button").forEach(element => {
+        element.disabled = true; // 入力禁止
+      });
+    }
   </script>
 </body>
 </html>
