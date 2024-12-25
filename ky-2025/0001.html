@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生年月日登録フォーム</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .form-container {
+      max-width: 300px;
+      margin: auto;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    input[type="date"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>生年月日登録フォーム</h1>
+    <form id="birthdateForm">
+      <label for="birthdate">生年月日:</label>
+      <input type="date" id="birthdate" name="birthdate" required>
+      <button type="submit">送信</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("birthdateForm").addEventListener("submit", function(event) {
+      event.preventDefault(); // フォームのデフォルト送信動作をキャンセル
+
+      const birthdateInput = document.getElementById("birthdate").value;
+      if (!birthdateInput) {
+        alert("生年月日を入力してください。");
+        return;
+      }
+
+      const birthdate = new Date(birthdateInput);
+      const today = new Date();
+      const age = today.getFullYear() - birthdate.getFullYear();
+      const monthDiff = today.getMonth() - birthdate.getMonth();
+      const dayDiff = today.getDate() - birthdate.getDate();
+
+      // 年齢を正確に計算
+      const exactAge = (monthDiff > 0 || (monthDiff === 0 && dayDiff >= 0)) ? age : age - 1;
+
+      if (exactAge < 20) {
+        alert("18歳以下としか通信はできなくなりました。");
+      } else {
+        alert("18歳以下の方との通信はできなくなりました。");
+      }
+    });
+  </script>
+</body>
+</html>
