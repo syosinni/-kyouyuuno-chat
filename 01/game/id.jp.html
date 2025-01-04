@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>通信次元（仮5）</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon"> <link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152"> <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon"> <link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152"> <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64"> 
     <style>
         #map {
-            height: 75vh;
+            height: 85vh;
             width: 100vw;
         }
 
@@ -25,15 +25,219 @@
             margin: 10px;
         }
 
-        /* ユーザーバー */
-        #user-bar {
-            text-align: center;
-            margin: 10px;
-        }
-
         /* モーダルのスタイル */
         #modal {
             display: none; /* デフォルトでは非表示 */
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #modal-content button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- コマンドバー -->
+    <div id="command-bar">
+        <input type="text" id="command-input" placeholder='[war "国の3文字タグ"]'>
+        <button id="command-submit">送信</button>
+    </div>
+
+    <div id="map"></div>
+    <div id="message"></div> <!-- メッセージ表示用 -->
+
+    <!-- モーダルのHTML -->
+    <div id="modal">
+        <div id="modal-content">
+            <p id="modal-text">「外交」か「申請」を選んでください:</p>
+            <button id="diplomacy-button">外交</button>
+            <button id="apply-button">申請</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // 初期申請可能回数（初回は2回まで申請可能）
+        var initialApplyLimit = 2;
+
+        // 現在の申請数を確認
+        function getApplyCount() {
+            return Number(localStorage.getItem('applyCount')) || 0;
+        }
+
+        // 申請数を増やす
+        function incrementApplyCount() {
+            var count = getApplyCount();
+            localStorage.setItem('applyCount', count + 1);
+        }
+
+        // コマンドバーの実装
+        document.getElementById("command-submit").onclick = function() {
+            var command = document.getElementById("command-input").value;
+            if (command.startsWith("[war ")) {
+                var tag = command.match(/"([^"]+)"/);
+                if (tag) {
+                    // URLに移動
+                    window.location.href = `https://kyouyuuno-to.f5.si/game/war/home?country=${tag[1]}`;
+                }
+            }
+        };
+
+        // 地図の初期化
+        var map = L.map('map').setView([20, 0], 2); // 世界全体を表示
+
+        // OpenStreetMapのタイルレイヤーを追加
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // モーダルを開く関数
+        function openModal(callback) {
+            var modal = document.getElementById("modal");
+            modal.style.display = "flex"; // モーダルを表示
+
+            // 各ボタンにクリックイベントを設定
+            document.getElementById("diplomacy-button").onclick = function() {
+                modal.style.display = "none"; // モーダルを閉じる
+                callback('外交');
+            };
+
+            document.getElementById("apply-button").onclick = function() {
+                modal.style.display = "none"; // モーダルを閉じる
+                callback('申請');
+            };
+        }
+
+        // メッセージを表示する関数
+        function showMessage(message) {
+            document.getElementById("message").innerText = message;
+        }
+
+        // 1日1回の「申請」制限をチェックする関数
+        function canApply() {
+            var lastChange = localStorage.getItem('lastApplyDate');
+            if (lastChange) {
+                var lastDate = new Date(lastChange);
+                var today = new Date();
+                if (lastDate.toDateString() === today.toDateString()) {
+                    return false; // 今日はすでに申請した
+                }
+            }
+            return true;
+        }
+
+        // 今日の「申請」変更を保存する関数
+        function saveApplyDate() {
+            var now = new Date();
+            localStorage.setItem('lastApplyDate', now.toISOString()); // 現在の日時を保存
+        }
+
+        // 国ごとのデータを取得する関数
+        function getCountryData() {
+            var savedData = localStorage.getItem('countryData');
+            return savedData ? JSON.parse(savedData) : {};
+        }
+
+        function saveCountryData(countryData) {
+            localStorage.setItem('countryData', JSON.stringify(countryData));
+        }
+
+        // 国名を設定する関数
+        function setCountryName(countryName, callback) {
+            var newName = prompt(`新しい国名を入力してください（${countryName}）:`);
+            if (newName) {
+                callback(newName);
+            } else {
+                callback(countryName); // 名前が入力されなければ、元の名前を保持
+            }
+        }
+
+        // 国のGeoJSONデータを読み込む
+        fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+            .then(response => response.json())
+            .then(data => {
+                var countryData = getCountryData(); // 保存された国のデータを取得
+
+                // GeoJSONデータを地図に追加し、各国にクリックイベントを設定
+                L.geoJSON(data, {
+                    style: function (feature) {
+                        var countryName = feature.properties.name;
+                        var fillColor = countryData[countryName]?.color || 'green'; // 保存された色があれば適用、なければ緑
+                        return {
+                            color: 'blue',  // 国境線の色
+                            fillColor: fillColor, // 国の色
+                            weight: 1,
+                            fillOpacity: 0.5
+                        };
+                    },
+                    onEachFeature: function (feature, layer) {
+                        var countryName = feature.properties.name;
+
+                        layer.on('click', function (e) {
+                            // 「外交」か「申請」を選ぶモーダルを開く
+                            openModal(function(selection) {
+                                if (selection === '申請') {
+                                    // 申請は1日1回までだが、初回は2回まで許可
+                                    if (getApplyCount() < initialApplyLimit || canApply()) {
+                                        // 「申請」が選ばれた場合、国の色を赤に変更
+                                        layer.setStyle({
+                                            fillColor: 'red',
+                                            fillOpacity: 0.7
+                                        });
+
+                                        // 申請数をカウント
+                                        incrementApplyCount();
+                                        saveApplyDate();
+
+                                        // 国のデータを保存
+                                        countryData[countryName] = {
+                                            ...countryData[countryName],
+                                            color: 'red',
+                                            isOwned: true
+                                        };
+                                        saveCountryData(countryData);
+
+                                        showMessage(`申請が完了しました！ ${countryName}の色が赤に変わりました。`);
+                                    } else {
+                                        showMessage("申し訳ありませんが、申請は1日1回しかできません。");
+                                    }
+                                } else if (selection === '外交') {
+                                    // 外交の場合、申請された場所のみ名前を変更できる
+                                    if (countryData[countryName]?.isOwned) {
+                                        setCountryName(countryData[countryName]?.name || countryName, function(newName) {
+                                            countryData[countryName].name = newName;
+                                            saveCountryData(countryData);
+                                            showMessage(`外交成功！ ${countryName}の新しい名前は「${newName}」です。`);
+                                        });
+                                    } else {
+                                        showMessage(`この場所(${countryName})はあなたのものではありません。`);
+                                    }
+                                }
+                            });
+                        });
+                    }
+                }).addTo(map);
+            });
+    </script>
+</body>
+</html>
+
             position: fixed;
             z-index: 9999;
             left: 0;
