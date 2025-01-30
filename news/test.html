@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>β版</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; }
+    #commentList { max-width: 600px; margin: 20px auto; text-align: left; }
+    .comment { border-bottom: 1px solid #ddd; padding: 10px; }
+    input, button { padding: 8px; margin: 5px; }
+  </style>
+</head>
+<body>
+
+  <h1>β掲示板</h1>
+
+  <div>
+    <input type="text" id="name" placeholder="名前" required>
+    <input type="text" id="comment" placeholder="コメント" required>
+    <button onclick="postComment()">投稿</button>
+  </div>
+
+  <h2>みんなのコメント</h2>
+  <div id="commentList"></div>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzstq2HsdQOSMY27mgPBbL3lJPg5xZawWH9RUWK2md8kZAWsAWUKGnJ18T0blpxH5QvMg/exec"; // GASのURLをここに貼る
+
+    // 🔹 コメント取得
+    async function fetchComments() {
+      let response = await fetch(API_URL);
+      let comments = await response.json();
+      
+      let list = document.getElementById("commentList");
+      list.innerHTML = "";
+
+      comments.reverse().forEach(c => {
+        let div = document.createElement("div");
+        div.className = "comment";
+        div.innerHTML = `<strong>${c.name}</strong>（${c.time}）<br>${c.comment}`;
+        list.appendChild(div);
+      });
+    }
+
+    // 🔹 コメント投稿
+    async function postComment() {
+      let name = document.getElementById("name").value.trim();
+      let comment = document.getElementById("comment").value.trim();
+
+      if (!name || !comment) {
+        alert("名前とコメントを入力してください！");
+        return;
+      }
+
+      let data = { name, comment };
+
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      });
+
+      document.getElementById("name").value = "";
+      document.getElementById("comment").value = "";
+      
+      fetchComments();
+    }
+
+    // 🔹 初回ロード時にコメントを取得
+    fetchComments();
+  </script>
+
+</body>
+</html>
