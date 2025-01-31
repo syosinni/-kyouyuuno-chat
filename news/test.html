@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>β版</title>
+  <title>β掲示板</title>
   <style>
     body { font-family: Arial, sans-serif; text-align: center; }
     #commentList { max-width: 600px; margin: 20px auto; text-align: left; }
@@ -13,7 +13,7 @@
 </head>
 <body>
 
-  <h1>β掲示板</h1>
+  <h1>コメント掲示板</h1>
 
   <div>
     <input type="text" id="name" placeholder="名前" required>
@@ -25,9 +25,9 @@
   <div id="commentList"></div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzstq2HsdQOSMY27mgPBbL3lJPg5xZawWH9RUWK2md8kZAWsAWUKGnJ18T0blpxH5QvMg/exec"; // GASのURLをここに貼る
+    const API_URL = "https://script.google.com/macros/s/AKfycby65DpiWEFJgesoCBFjBcRbjHfhh1BhiDFOzZ7rNRWQrrjRUwR2cOMwJ5geJlMum1zdzw/exec"; // GASのURLをここに貼る
 
-    // 🔹 コメント取得
+    // 🔹コメント取得
     async function fetchComments() {
       let response = await fetch(API_URL);
       let comments = await response.json();
@@ -43,7 +43,7 @@
       });
     }
 
-    // 🔹 コメント投稿
+    //  コメント投稿
     async function postComment() {
       let name = document.getElementById("name").value.trim();
       let comment = document.getElementById("comment").value.trim();
@@ -67,7 +67,7 @@
       fetchComments();
     }
 
-    // 🔹 初回ロード時にコメントを取得
+    //  初回ロード時にコメントを取得
     fetchComments();
   </script>
 
