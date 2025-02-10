@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プライバシー検索</title>
+    <title>サイト埋め込みビューア</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin: 50px;
+            margin: 20px;
         }
         input {
             padding: 10px;
@@ -21,21 +21,34 @@
             margin-left: 10px;
             cursor: pointer;
         }
+        iframe {
+            width: 100%;
+            height: 80vh;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
-    <h2>匿名検索エンジン</h2>
-    <input type="text" id="searchQuery" placeholder="検索ワードを入力">
-    <button onclick="search()">検索</button>
+    <h2>サイト埋め込みビューア</h2>
+    <input type="text" id="urlInput" placeholder="URLを入力 (例: https://example.com)">
+    <button onclick="loadSite()">表示</button>
+
+    <iframe id="siteFrame" sandbox="allow-scripts allow-same-origin"></iframe>
 
     <script>
-        function search() {
-            let query = document.getElementById("searchQuery").value;
-            if (query.trim() !== "") {
-                let searchUrl = "https://duckduckgo.com/?q=" + encodeURIComponent(query);
-                window.open(searchUrl, "_blank", "noopener,noreferrer");
+        function loadSite() {
+            let url = document.getElementById("urlInput").value;
+            
+            // http または https で始まるURLかチェック
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                alert("有効なURLを入力してください (http:// または https:// で始めてください)");
+                return;
             }
+
+            // iframeにURLを設定
+            document.getElementById("siteFrame").src = url;
         }
     </script>
 
