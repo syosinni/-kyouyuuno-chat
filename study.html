@@ -31,25 +31,31 @@
 </head>
 <body>
 
-    <h2>学習.com</h2>
-    <p>Googleが提供するサービスは教えられません(youtubeなど）,共有ノートは教えられますが投稿はできません,以下のサービスは受けれません、ドワンゴ(ニコニコ),scratch,Xなど<<br>X-Frame-Optionsが適用されていると利用できません。</p>
-    <input type="text" id="urlInput" placeholder="知りたい教科を教えてね">
-    <button onclick="loadSite()">表示</button>
+    <h2>共有ノートが作った履歴が残らない検索エンジン</h2>
+    <input type="text" id="searchInput" placeholder="URLまたは検索ワードを入力">
+    <button onclick="handleSearch()">検索</button>
 
-    <iframe id="siteFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+    <iframe id="resultFrame" sandbox="allow-scripts allow-same-origin"></iframe>
 
     <script>
-        function loadSite() {
-            let url = document.getElementById("urlInput").value;
-            
-            // http または https で始まるURLかチェック
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                alert("有効なURLを入力してください (http:// または https:// で始めてください)");
-                return;
-            }
+        function handleSearch() {
+            let input = document.getElementById("searchInput").value.trim();
+            let iframe = document.getElementById("resultFrame");
 
-            // iframeにURLを設定
-            document.getElementById("siteFrame").src = url;
+            // URLの形式かどうかをチェック
+            let urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+
+            if (urlPattern.test(input)) {
+                // 入力がURLなら、そのサイトを埋め込む
+                if (!input.startsWith("http://") && !input.startsWith("https://")) {
+                    input = "https://" + input; // プロトコルがなければhttpsを付与
+                }
+                iframe.src = input;
+            } else {
+                // URL以外ならDuckDuckGoで検索し、検索結果を表示
+                let searchUrl = "https://duckduckgo.com/html/?q=" + encodeURIComponent(input);
+                iframe.src = searchUrl;
+            }
         }
     </script>
 
