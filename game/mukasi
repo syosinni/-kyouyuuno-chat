@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>オンライン昔話伝言ゲーム</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+    <script>
+        function sendMessage() {
+            let input = document.getElementById("inputText").value;
+            if (input.trim() === "") return;
+
+            google.script.run.withSuccessHandler(() => {
+                document.getElementById("inputText").value = "";
+                loadLastMessage();
+            }).saveMessage(input);
+        }
+
+        function loadLastMessage() {
+            google.script.run.withSuccessHandler(function(lastMessage) {
+                document.getElementById("previous").textContent = "前の人: " + lastMessage;
+            }).getLastMessage();
+        }
+
+        function showFinalResult() {
+            google.script.run.withSuccessHandler(function(finalText) {
+                document.getElementById("result").textContent = "完成した文章: " + finalText;
+            }).getAllMessages();
+        }
+
+        window.onload = loadLastMessage;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>オンライン昔話伝言ゲーム</h1>
+        <p id="previous">前の人: 読み込み中...</p>
+        <input type="text" id="inputText" placeholder="ここに入力">
+        <button onclick="sendMessage()">送信</button>
+        <button onclick="showFinalResult()">結果を表示</button>
+        <p id="result"></p>
+    </div>
+</body>
+</html>
