@@ -1,0 +1,85 @@
+<html>
+  <head>
+    <title>2025年7年運動会特設サイト</title>
+     <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+  </head>
+  <body>
+  <h3>開運おみくじ：<span id="result"></span></h3>
+  <button id="startButton">くじを引く</button>
+  <script  src="https://code.jquery.com/jquery-3.4.1.slim.min.js"  
+integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="  crossorigin="anonymous"></script>
+  <script>
+    // くじ引き結果
+    var results = [
+      // "大吉"、""、"2等"、"3等"、"はずれ"
+      "大吉",
+      "𠮷",
+      "凶",
+      "大凶",
+      "ご冥福をお祈りいたします。"
+    ];
+    // ボタンを押した際の動作
+    $('#startButton').on('click', function() {
+      var random = Math.floor( Math.random() * results.length );
+      var result =  results[random];
+      $('#result').html(result);
+    });
+</script>
+</body>
+  <body>
+    <h3>先生からのメッセージ(違うメッセージが見たい場合は更新を)</h3>
+    <script>
+let omikuji = Math.floor(Math.random() * 5);
+if(omikuji == 0){
+    document.write(".by下村先生")
+}
+else if(omikuji == 1){
+    document.write(".by安丸先生")
+}
+else if(omikuji == 2){
+    document.write(".by青木先生")
+}
+else if(omikuji == 3){
+    document.write(".by豊沢先生")
+}
+else if(omikuji == 4){
+    document.write(".by永井先生")
+}
+
+  </body>
+     <style>
+        /* 広告バナーのスタイル */
+        .ad-banner {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            width: 100px; /* 必要に応じてサイズ調整 */
+            height: auto;
+            background-color: #fff;
+            border: 2px solid #ccc;
+            box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1000; /* 他の要素より前面に表示 */
+        }
+
+        .ad-banner img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ホバー効果 */
+        .ad-banner:hover {
+            box-shadow: -4px 4px 10px rgba(0, 0, 0, 0.5);
+            opacity: 0.9;
+        }
+    </style>
+<body>
+
+    <!-- 広告バナー -->
+    <a href="https://c.kuku.lu/tbd245rk" target="_blank" class="ad-banner">
+        <img src="https://kyouyuuno-to.f5.si/png/0001.png" alt="広告バナー">
+    </a>
+</html>
