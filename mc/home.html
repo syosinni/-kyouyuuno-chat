@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MC共有ノートサーバー</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #1e1e2f, #2e3a59);
+      color: white;
+      overflow-x: hidden;
+    }
+    header {
+      text-align: center;
+      padding: 60px 20px;
+      background-color: #111c3b;
+      animation: fadeIn 2s ease-out;
+    }
+    header h1 {
+      font-size: 2.8rem;
+      margin-bottom: 10px;
+    }
+    header p {
+      font-size: 1.2rem;
+      color: #ccc;
+    }
+
+    .section {
+      padding: 40px 20px;
+      max-width: 1000px;
+      margin: auto;
+      animation: slideIn 1.5s ease-out;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      transition: transform 0.3s ease;
+      border-left: 5px solid #4fa9ff;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+
+    .team-card {
+      background: #222;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 10px #0005;
+      transition: transform 0.4s ease;
+    }
+    .team-card:hover {
+      transform: scale(1.05);
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      background: #111c3b;
+      color: #bbb;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(-20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    @keyframes slideIn {
+      from {opacity: 0; transform: translateX(-40px);}
+      to {opacity: 1; transform: translateX(0);}
+    }
+
+    .toggle-button {
+      cursor: pointer;
+      padding: 10px 15px;
+      background: #4fa9ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>共有ノートMC サーバーへようこそ！</h1>
+  <p>冒険・建築・バトル、全てがここにある。</p>
+</header>
+
+<section class="section">
+  <div class="card">
+    <h2>🌐 サーバー情報</h2>
+    <p><strong>アドレス：</strong> kyoyuuno-to.aternos.me</p>
+    <p><strong>ポート：</strong> 38924</p>
+    <p><strong>バージョン：</strong> 1.21.5</p>
+  </div>
+
+  <div class="card">
+    <h2>🔌 使用プラグイン</h2>
+    <ul>
+      <li>QualityArmory</li>
+      <li>一括破壊プラグイン</li>
+      <li>WorldEdit</li>
+      <li>クロスプレイプラグイン</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>🧭 サーバーの特徴</h2>
+    <ul>
+      <li>建国と戦争、統合版もプレイ可能</li>
+      <li>国家内の建築は自由</li>
+      <li>長期休暇のタイミングで開催されるイベント</li>
+      <li>経済・ショップシステム</li>
+    </ul>
+    <button class="toggle-button" onclick="toggleMore()">もっと読む</button>
+    <div id="moreInfo" style="display: none; margin-top: 10px;">
+      <p>また、兵器などもあります！新たな仲間と共に冒険を始めよう！</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>国家紹介・運営紹介</h2>
+  <div class="team-grid">
+    <div class="team-card">
+      <h3>旧帝都大帝国</h3>
+      <p>皇帝/syosinni(プラグインやシステムの開発をしてます)</p>
+    </div>
+    <div class="team-card">
+      <h3>エンド共和国</h3>
+      <p></p>
+    </div>
+    <div class="team-card">
+      <h3>運営</h3>
+      <p>二代目管理者/? システム開発者/syosinni　企画者/.AiryString98904</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>&copy; 2025 Kyouyuuno-to. 2025 ATERNOS.</p>
+</footer>
+
+<script>
+  function toggleMore() {
+    const moreInfo = document.getElementById('moreInfo');
+    moreInfo.style.display = moreInfo.style.display === 'none' ? 'block' : 'none';
+  }
+</script>
+
+</body>
+</html>
