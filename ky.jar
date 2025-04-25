@@ -1,0 +1,143 @@
+package sharednoteplugin;
+
+import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.map.*;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
+public class SharedNotePlugin extends JavaPlugin implements Listener {
+    private Map<UUID, Integer> balances = new HashMap<>();
+    private Map<String, Set<UUID>> countries = new HashMap<>();
+    private Map<UUID, String> playerCountry = new HashMap<>();
+    private File dataFile;
+
+    @Override
+    public void onEnable() {
+        Bukkit.getPluginManager().registerEvents(this, this);
+        loadData();
+    }
+
+    @Override
+    public void onDisable() {
+        saveData();
+    }
+
+    private void loadData() {
+        // データ読み込み処理（省略・追加可）
+    }
+
+    private void saveData() {
+        // データ保存処理（省略・追加可）
+    }
+
+    private void giveNationTool(Player player) {
+        ItemStack tool = new ItemStack(Material.STICK);
+        ItemMeta meta = tool.getItemMeta();
+        meta.setDisplayName(ChatColor.GREEN + "建国ツール");
+        tool.setItemMeta(meta);
+        player.getInventory().addItem(tool);
+    }
+
+    private int getBalance(UUID uuid) {
+        return balances.getOrDefault(uuid, 0);
+    }
+
+    private void changeBalance(UUID uuid, int amount) {
+        balances.put(uuid, getBalance(uuid) + amount);
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItemInHand();
+        if (item.getType() == Material.STICK && item.hasItemMeta()
+                && ChatColor.stripColor(item.getItemMeta().getDisplayName()).equals("建国ツール")) {
+
+            UUID uuid = player.getUniqueId();
+            if (getBalance(uuid) < 1) {
+                player.sendMessage(ChatColor.RED + "Payが足りません！（1Pay/50ブロック）");
+                event.setCancelled(true);
+                return;
+            }
+            changeBalance(uuid, -1);
+            player.sendMessage(ChatColor.GREEN + "1Pay消費して領土を拡張しました！");
+        }
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) return false;
+        Player player = (Player) sender;
+        UUID uuid = player.getUniqueId();
+
+        switch (command.getName().toLowerCase()) {
+            case "pay":
+                // (省略：Payの各機能コード)
+                break;
+
+            case "country":
+                if (args.length == 0) return false;
+                if (args[0].equals("new") && args.length == 2) {
+                    String code = args[1].toUpperCase();
+                    if (countries.containsKey(code)) {
+                        player.sendMessage(ChatColor.RED + "その国コードは既に使用されています。");
+                        return true;
+                    }
+                    countries.put(code, new HashSet<>(Collections.singleton(uuid)));
+                    playerCountry.put(uuid, code);
+                    giveNationTool(player);
+                    player.sendMessage(ChatColor.GREEN + code + " 国を建国しました！\nあなたがトップです。");
+                    return true;
+                }
+                if (args[0].equals("join") && args.length == 2) {
+                    String code = args[1].toUpperCase();
+                    if (!countries.containsKey(code)) {
+                        player.sendMessage(ChatColor.RED + "その国は存在しません。");
+                        return true;
+                    }
+                    countries.get(code).add(uuid);
+                    playerCountry.put(uuid, code);
+                    player.sendMessage(ChatColor.YELLOW + code + " 国に参加しました。");
+                    return true;
+                }
+                if (args[0].equals("map")) {
+                    MapView map = Bukkit.createMap(player.getWorld());
+                    map.getRenderers().clear();
+                    map.addRenderer(new MapRenderer() {
+                        @Override
+                        public void render(MapView mapView, MapCanvas canvas, Player player) {
+                            canvas.drawText(10, 10, MinecraftFont.Font, "[領土マップ]");
+                            int y = 20;
+                            for (Map.Entry<String, Set<UUID>> entry : countries.entrySet()) {
+                                String code = entry.getKey();
+                                canvas.drawText(10, y, MinecraftFont.Font, code + "：" + entry.getValue().size() + "人");
+                                y += 10;
+                            }
+                        }
+                    });
+                    ItemStack mapItem = new ItemStack(Material.FILLED_MAP);
+                    MapMeta meta = (MapMeta) mapItem.getItemMeta();
+                    meta.setMapView(map);
+                    meta.setDisplayName(ChatColor.AQUA + "国マップ");
+                    mapItem.setItemMeta(meta);
+                    player.getInventory().addItem(mapItem);
+                    player.sendMessage(ChatColor.GREEN + "領土マップを配布しました！");
+                    return true;
+                }
+                break;
+        }
+
+        return false;
+    }
+}
