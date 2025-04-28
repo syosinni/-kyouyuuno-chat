@@ -1,0 +1,11 @@
+name: SharedNotePlugin
+version: 1.0
+main: sharednoteplugin.SharedNotePlugin
+api-version: 1.21
+commands:
+  pay:
+    description: 仮想通貨システム（残高確認・送金・換金）
+    usage: /pay
+  country:
+    description: 国を作ったり、領土管理したりするコマンド
+    usage: /country
