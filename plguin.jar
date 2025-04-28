@@ -1,0 +1,247 @@
+package sharednoteplugin;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.Server;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.*;
+import java.io.*;
+
+public class SharedNotePlugin extends JavaPlugin implements TabExecutor {
+
+    private Map<UUID, Integer> balances = new HashMap<>();
+    private Map<UUID, String> playerCountries = new HashMap<>();
+    private Map<String, UUID> countryLeaders = new HashMap<>();
+
+    private File balancesFile;
+
+    @Override
+    public void onEnable() {
+        getLogger().info("共有ノートプラグインが起動しました！");
+        getCommand("pay").setExecutor(this);
+        getCommand("country").setExecutor(this);
+
+        balancesFile = new File(getDataFolder(), "balances.dat");
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdirs();
+        }
+        loadBalances();
+    }
+
+    @Override
+    public void onDisable() {
+        saveBalances();
+        getLogger().info("共有ノートプラグインが停止しました！");
+    }
+
+    private void loadBalances() {
+        if (!balancesFile.exists()) return;
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(balancesFile))) {
+            balances = (Map<UUID, Integer>) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void saveBalances() {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(balancesFile))) {
+            oos.writeObject(balances);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addBalance(UUID uuid, int amount) {
+        balances.put(uuid, balances.getOrDefault(uuid, 0) + amount);
+    }
+
+    private void subtractBalance(UUID uuid, int amount) {
+        balances.put(uuid, balances.getOrDefault(uuid, 0) - amount);
+    }
+
+    private int getBalance(UUID uuid) {
+        return balances.getOrDefault(uuid, 0);
+    }
+
+    private ItemStack createKingdomTool() {
+        ItemStack item = new ItemStack(Material.STICK);
+        ItemMeta meta = item.getItemMeta();
+        meta.setDisplayName(ChatColor.GOLD + "建国ツール");
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("このコマンドはプレイヤー専用です！");
+            return true;
+        }
+        Player player = (Player) sender;
+        UUID uuid = player.getUniqueId();
+
+        if (command.getName().equalsIgnoreCase("pay")) {
+            if (args.length == 0) return false;
+
+            if (args[0].equalsIgnoreCase("my")) {
+                player.sendMessage(ChatColor.AQUA + "あなたの残高: " + getBalance(uuid) + " pay");
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("ex")) {
+                if (args.length < 2) {
+                    player.sendMessage(ChatColor.RED + "例: /pay ex 丸石");
+                    return true;
+                }
+                String materialName = args[1];
+                Material material = null;
+                int reward = 0;
+
+                switch (materialName) {
+                    case "丸石":
+                        material = Material.COBBLESTONE;
+                        reward = 20;
+                        break;
+                    case "石炭":
+                        material = Material.COAL;
+                        reward = 35;
+                        break;
+                    case "鉄":
+                        material = Material.IRON_INGOT;
+                        reward = 50;
+                        break;
+                    case "ダイヤ":
+                        material = Material.DIAMOND;
+                        reward = 100;
+                        break;
+                    default:
+                        player.sendMessage(ChatColor.RED + "換金できるアイテムではありません！");
+                        return true;
+                }
+
+                if (player.getInventory().contains(material)) {
+                    player.getInventory().removeItem(new ItemStack(material, 1));
+                    addBalance(uuid, reward);
+                    player.sendMessage(ChatColor.GREEN + materialName + "を換金しました！ +" + reward + "pay");
+                } else {
+                    player.sendMessage(ChatColor.RED + "アイテムが足りません！");
+                }
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("so")) {
+                if (args.length < 3) {
+                    player.sendMessage(ChatColor.RED + "例: /pay so (プレイヤー名) (金額)");
+                    return true;
+                }
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    player.sendMessage(ChatColor.RED + "そのプレイヤーは存在しません！");
+                    return true;
+                }
+                int amount = Integer.parseInt(args[2]);
+                if (getBalance(uuid) < amount) {
+                    player.sendMessage(ChatColor.RED + "残高不足です！");
+                    return true;
+                }
+                subtractBalance(uuid, amount);
+                addBalance(target.getUniqueId(), amount);
+                player.sendMessage(ChatColor.GREEN + "送金しました！ -" + amount + "pay");
+                target.sendMessage(ChatColor.GREEN + player.getName() + "から+" + amount + "payを受け取りました！");
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("op")) {
+                if (!player.isOp()) {
+                    player.sendMessage(ChatColor.RED + "OP権限が必要です！");
+                    return true;
+                }
+                player.sendMessage(ChatColor.YELLOW + "--- プレイヤー残高一覧 ---");
+                for (Map.Entry<UUID, Integer> entry : balances.entrySet()) {
+                    OfflinePlayer offPlayer = Bukkit.getOfflinePlayer(entry.getKey());
+                    player.sendMessage(offPlayer.getName() + ": " + entry.getValue() + " pay");
+                }
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("pl")) {
+                if (!player.isOp()) {
+                    player.sendMessage(ChatColor.RED + "OP権限が必要です！");
+                    return true;
+                }
+                if (args.length < 3) {
+                    player.sendMessage(ChatColor.RED + "例: /pay pl (金額) (プレイヤー名)");
+                    return true;
+                }
+                int amount = Integer.parseInt(args[1]);
+                Player target = Bukkit.getPlayer(args[2]);
+                if (target == null) {
+                    player.sendMessage(ChatColor.RED + "そのプレイヤーは存在しません！");
+                    return true;
+                }
+                addBalance(target.getUniqueId(), amount);
+                Bukkit.broadcastMessage(ChatColor.GOLD + target.getName() + "に " + amount + "payが支給されました！");
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("rank")) {
+                List<Map.Entry<UUID, Integer>> top = new ArrayList<>(balances.entrySet());
+                top.sort((a, b) -> b.getValue() - a.getValue());
+                player.sendMessage(ChatColor.AQUA + "--- payランキング ---");
+                for (int i = 0; i < Math.min(3, top.size()); i++) {
+                    OfflinePlayer p = Bukkit.getOfflinePlayer(top.get(i).getKey());
+                    player.sendMessage((i + 1) + "位: " + p.getName() + " - " + top.get(i).getValue() + "pay");
+                }
+                return true;
+            }
+        }
+
+        if (command.getName().equalsIgnoreCase("country")) {
+            if (args.length == 0) return false;
+
+            if (args[0].equalsIgnoreCase("new")) {
+                if (args.length < 2) {
+                    player.sendMessage(ChatColor.RED + "例: /country new JPN");
+                    return true;
+                }
+                String code = args[1].toUpperCase();
+                if (countryLeaders.containsKey(code)) {
+                    player.sendMessage(ChatColor.RED + "この国コードは既に使われています！");
+                    return true;
+                }
+                player.getInventory().addItem(createKingdomTool());
+                countryLeaders.put(code, uuid);
+                playerCountries.put(uuid, code);
+                player.sendMessage(ChatColor.GREEN + "建国ツールを配布しました！国コード: " + code);
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("map")) {
+                player.sendMessage(ChatColor.AQUA + "--- 国一覧 ---");
+                for (Map.Entry<String, UUID> entry : countryLeaders.entrySet()) {
+                    OfflinePlayer p = Bukkit.getOfflinePlayer(entry.getValue());
+                    player.sendMessage(entry.getKey() + " : " + p.getName() + " (建国者)");
+                }
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("join")) {
+                if (args.length < 2) {
+                    player.sendMessage(ChatColor.RED + "例: /country join JPN");
+                    return true;
+                }
+                String code = args[1].toUpperCase();
+                if (!countryLeaders.containsKey(code)) {
+                    player.sendMessage(ChatColor.RED + "存在しない国コードです！");
+                    return true;
+                }
+                playerCountries.put(uuid, code);
+                player.sendMessage(ChatColor.GREEN + code + "に参加しました！");
+                return true;
+            }
+        }
+        return true;
+    }
+}
