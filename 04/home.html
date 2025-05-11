@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Note+LINK | ノート共有サービス</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    body {
+      background: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    header {
+      background: #2d87f0;
+      color: white;
+      padding: 20px 30px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2rem;
+    }
+
+    header p {
+      font-size: 1rem;
+      margin-top: 5px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    .feature {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+
+    .feature:hover {
+      transform: translateY(-5px);
+    }
+
+    .feature h3 {
+      margin-bottom: 10px;
+      color: #2d87f0;
+    }
+
+    footer {
+      background: #2d87f0;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      margin-top: 40px;
+    }
+
+    .cta {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .cta button {
+      background: #ff9900;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .cta button:hover {
+      background: #e48b00;
+    }
+
+    @media (max-width: 768px) {
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Note+LINK</h1>
+    <p>みんなのノートとプリントをまとめて共有。なくしても安心。</p>
+  </header>
+
+  <div class="container">
+    <div class="cta">
+      <p>今すぐノートをアップロードして、友達とシェアしよう！</p>
+      <button onclick="alert('ログイン機能は準備中です。')">はじめる</button>
+    </div>
+
+    <section class="features">
+      <div class="feature">
+        <h3>📄 ノート共有</h3>
+        <p>クラスの仲間とノートやプリントを簡単にアップロード＆共有。</p>
+      </div>
+      <div class="feature">
+        <h3>🔍 いつでも検索</h3>
+        <p>授業名や日付でファイルを検索できて、見返しもラクラク。</p>
+      </div>
+      <div class="feature">
+        <h3>🗂 整理整頓</h3>
+        <p>科目ごとに自動で分類。探す時間を減らして、学習効率アップ！</p>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    &copy; 2025 Note+LINK. All rights reserved.
+  </footer>
+</body>
+</html>
