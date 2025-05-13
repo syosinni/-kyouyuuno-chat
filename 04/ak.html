@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <h2>アカウント登録</h2>
+    <form id="signupForm">
+      名前: <input type="text" name="name" required><br>
+      メール: <input type="email" name="email" required><br>
+      パスワード: <input type="password" name="password" required><br>
+      <button type="submit">認証コードを送信</button>
+    </form>
+
+    <div id="codeSection" style="display:none;">
+      <h3>メールに届いた認証コードを入力してください</h3>
+      <input type="text" id="codeInput" maxlength="3">
+      <button onclick="verifyCode()">確認</button>
+    </div>
+
+    <script>
+      let emailGlobal = "";
+
+      document.getElementById("signupForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        emailGlobal = formData.get("email");
+        fetch("https://script.google.com/macros/s/AKfycbz0s7N2rIKEL4EhKglz78Ya4HIFC26G2Tv9L5Hi0q0vucsGjf_YZ5H5nYFCC3L69hUo/exec", {
+          method: "POST",
+          body: formData,
+        })
+        .then(res => res.text())
+        .then(msg => {
+          alert(msg);
+          document.getElementById("codeSection").style.display = "block";
+        });
+      });
+
+      function verifyCode() {
+        const code = document.getElementById("codeInput").value;
+        fetch("https://script.google.com/macros/s/AKfycbz0s7N2rIKEL4EhKglz78Ya4HIFC26G2Tv9L5Hi0q0vucsGjf_YZ5H5nYFCC3L69hUo/exec" + encodeURIComponent(emailGlobal) + "&code=" + code)
+          .then(res => res.text())
+          .then(alert);
+      }
+    </script>
+  </body>
+</html>
