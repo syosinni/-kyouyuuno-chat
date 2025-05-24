@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <meta name="ROBOTS" content="NOINDEX, NOFOLLOW" />
+    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+    <meta charset="UTF-8">
+    <title>共有ノートチャットホーム</title> 
+    <style>
+        /* メンテ用 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        /* ヘッダー画像 */
+        .header {
+            width: 100%;
+            height: 550px; /* お好みの高さに調整可能 */
+            background-image: url('https://kyouyuuno-to.f5.si/png/Screenshot%202024-11-02%2013.27.01.png'); /* ヘッダー画像のパス */
+            background-size: cover; /* 画像を横幅いっぱいに拡大 */
+            background-position: center; /* 中央に画像を配置 */
+            background-repeat: no-repeat; /* 繰り返しを防止 */
+        }
+
+        /* スマートフォン対応 */
+        @media (max-width: 768px) {
+            .header {
+                height: 200px; /* スマホの画面で高さを調整 */
+            }
+        }
+    </style>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ナビゲーションバーのスタイル */
+        nav {
+            background-color: #333;
+            overflow: hidden;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        nav ul li {
+            display: inline;
+        }
+
+        nav ul li a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+        }
+
+        nav ul li a:hover {
+            background-color: #111;
+        }
+
+        /* コンテンツセクションのスタイル */
+        div {
+            padding: 60px 20px;
+        }
+
+        /* 各セクションのスタイル */
+        section {
+            padding: 60px 20px;
+            margin-top: 50px; /* ナビゲーションバーの高さを避けるため */
+        }
+    </style>
+</head>
+<body>
+
+<!-- ナビゲーションバー -->
+<nav>
+    <ul>
+        <li><h3>Note+LINK</h3></li>
+        <li><a href="#home">最近の投稿</a></li>
+        <li><a href="#osusume">おすすめ</a></li>
+        <li><a href="#プレミアム会員用"></a></li>
+        <li><a href="https://sites.google.com/view/ky-server/%E3%83%9B%E3%83%BC%E3%83%A0">サーバー状況</a></li>
+        <li><a href="#news">ニュース</a></li>
+        <li> あと
+  <div id="countdown">
+    読み込み中...
+  </div>
+
+  <script>
+    function updateCountdown() {
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const targetDate = new Date(currentYear, 5, 15, 23, 59, 59); // 6月は0始まりで6番目=5
+
+      const diff = targetDate - now;
+
+      if (diff <= 0) {
+        document.getElementById('countdown').innerText = 'カウントダウン終了！';
+        clearInterval(timer);
+        return;
+      }
+
+      const seconds = Math.floor((diff / 1000) % 60);
+      const minutes = Math.floor((diff / 1000 / 60) % 60);
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      document.getElementById('countdown').innerText =
+        days + '日 ' +
+        hours + '時間 ' +
+        minutes + '分 ' +
+        seconds + '秒';
+    }
+
+    const timer = setInterval(updateCountdown, 1000);
+    updateCountdown(); // 1秒ごとにずっと数える
+  </script></li>
+    </ul>
+</nav>
+  </head>
+</html>
