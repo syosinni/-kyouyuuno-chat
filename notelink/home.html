@@ -105,31 +105,6 @@
   <body>
     <sction id="home">
       <h1>最近の投稿</h1>
-<div class="slideshow-container">
-    <!-- スライド1 -->
-    <img src="https://1.bp.blogspot.com/-APe13dG1QiY/Wm1ypQjCskI/AAAAAAABJ6g/UHHWDomFCeMY7fxzfzYc26TrNwAcT12xACLcBGAs/s800/game_friends_kids_sueoki.png" class="slides" style="display:block">
-    <!-- スライド2 -->
-    <img src="https://1.bp.blogspot.com/-n0AYoA_Jmd4/Wmqh7-Y3quI/AAAAAAABJ10/KgHUry7c8oQYyNKAINFhEtHWS8GBcLdNwCLcBGAs/s800/sns_happy_man.png" class="slides">
-
-    <!-- 前へ/次へボタン -->
-    <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
-    <a class="next" onclick="changeSlide(1)">&#10095;</a>
-</div>
-
-<script>
-    let currentSlide = 0; // 現在のスライドのインデックス
-
-    // スライドを切り替える関数
-    function changeSlide(direction) {
-        const slides = document.getElementsByClassName("slides");
-        slides[currentSlide].style.display = "none"; // 現在のスライドを非表示
-
-        currentSlide = (currentSlide + direction + slides.length) % slides.length; // スライドインデックスを更新
-
-        slides[currentSlide].style.display = "block"; // 新しいスライドを表示
-    }
-</script>
-</body>
     </sction>
      <h1>予告</h1>
   <div id="countdown">
