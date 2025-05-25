@@ -97,6 +97,7 @@
         <li><a href="#home">最近の投稿</a></li>
         <li><a href="https://kyouyuuno-to.f5.si/notelink/up">投稿</a></li>
         <li><a href="https://kyouyuuno-to.f5.si/notelink/ak">垢</a></li>
+       <li><a href="#アンケート">アンケート</a></li>
         <li><a href="#news">ニュース</a></li>
     </ul>
 </nav>
@@ -267,13 +268,13 @@
     }
 </script>
   <!-- イイネボタン -->
-  <button type="button" onclick="increment('likeCount')">👍</button>
+  <button type="button" onclick="increment('likeCount2')">👍</button>
   <span id="likeCount">0</span>
   <!-- ダウンロードボタン -->
-  <button type="button" onclick="increment('downloadCount')">💻️</button>
+  <button type="button" onclick="increment('downloadCount2')">💻️</button>
   <span id="downloadCount">0</span>
   <!-- コメントボタン -->
-  <button type="button" onclick="increment('commentCount')">💬</button>
+  <button type="button" onclick="increment('commentCount2')">💬</button>
   <span id="commentCount">0</span>
 
   <script>
@@ -282,6 +283,9 @@
       counter.textContent = parseInt(counter.textContent) + 1;
     }
   </script>
+    </section>
+    <section id="アンケート">
+      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScR7p6xgG8VCGMz4FcPeleWUz8DD3o4jAj4yvg6YtjuOg6j1Q/viewform?embedded=true" width="640" height="1320" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
     </section>
     <section id="news">
       <h2>ニュース</h2>
@@ -382,4 +386,4 @@ Resources
     updateCountdown(); // 最初に一度実行
   </script>
   </body>
-</html>
+  </html>
