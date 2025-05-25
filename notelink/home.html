@@ -175,7 +175,22 @@
         slides[currentSlide].style.display = "block"; // 新しいスライドを表示
     }
 </script>
-    <p>👍️8 💻️13　📻️1</p>
+    <!-- イイネボタン -->
+  <button type="button" onclick="increment('likeCount')">👍</button>
+  <span id="likeCount">0</span>
+  <!-- ダウンロードボタン -->
+  <button type="button" onclick="increment('downloadCount')">💻️</button>
+  <span id="downloadCount">0</span>
+  <!-- コメントボタン -->
+  <button type="button" onclick="increment('commentCount')">💬</button>
+  <span id="commentCount">0</span>
+
+  <script>
+    function increment(id) {
+      const counter = document.getElementById(id);
+      counter.textContent = parseInt(counter.textContent) + 1;
+    }
+  </script>
 </body>
     </sction>
     <section id="osusume">
@@ -251,8 +266,22 @@
         slides[currentSlide].style.display = "block"; // 新しいスライドを表示
     }
 </script>
-  <p>👍️12 💻️21　📻️3</p>
-</body>
+  <!-- イイネボタン -->
+  <button type="button" onclick="increment('likeCount')">👍</button>
+  <span id="likeCount">0</span>
+  <!-- ダウンロードボタン -->
+  <button type="button" onclick="increment('downloadCount')">💻️</button>
+  <span id="downloadCount">0</span>
+  <!-- コメントボタン -->
+  <button type="button" onclick="increment('commentCount')">💬</button>
+  <span id="commentCount">0</span>
+
+  <script>
+    function increment(id) {
+      const counter = document.getElementById(id);
+      counter.textContent = parseInt(counter.textContent) + 1;
+    }
+  </script>
     </section>
     <section id="news">
       <h2>ニュース</h2>
