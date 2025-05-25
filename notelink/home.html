@@ -150,7 +150,7 @@
     </style>
 </head>
 <body>
-<h3>我々のやっていること</h3>
+<h3>理科Aプリント/h3>
 <div class="slideshow-container">
     <!-- スライド1 -->
     <img src="https://1.bp.blogspot.com/-APe13dG1QiY/Wm1ypQjCskI/AAAAAAABJ6g/UHHWDomFCeMY7fxzfzYc26TrNwAcT12xACLcBGAs/s800/game_friends_kids_sueoki.png" class="slides" style="display:block">
@@ -175,11 +175,84 @@
         slides[currentSlide].style.display = "block"; // 新しいスライドを表示
     }
 </script>
+    <p>👍️8 💻️13　📻️1</p>
 </body>
     </sction>
     <section id="osusume">
       <h1>みんなのおすすめ</h1>
       <p>リアクションが多い投稿が表示されます。</p>
+      <style>
+        /* スライドショーのスタイル */
+        .slideshow-container {
+            position: relative;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        /* 画像のスタイル */
+        .slides {
+            display: none;
+            width: 100%;
+            height: auto;
+        }
+
+        /* 前へ/次へボタンのスタイル */
+        .prev, .next {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            width: auto;
+            padding: 16px;
+            margin-top: -22px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 0 3px 3px 0;
+            user-select: none;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        /* 左矢印の位置 */
+        .prev {
+            left: 0;
+            border-radius: 3px 0 0 3px;
+        }
+
+        /* 右矢印の位置 */
+        .next {
+            right: 0;
+            border-radius: 0 3px 3px 0;
+        }
+    </style>
+</head>
+<body>
+<h3>国語ノート「私達の未来」</h3>
+<div class="slideshow-container">
+    <!-- スライド1 -->
+    <img src="https://1.bp.blogspot.com/-APe13dG1QiY/Wm1ypQjCskI/AAAAAAABJ6g/UHHWDomFCeMY7fxzfzYc26TrNwAcT12xACLcBGAs/s800/game_friends_kids_sueoki.png" class="slides" style="display:block">
+    <!-- スライド2 -->
+    <img src="https://1.bp.blogspot.com/-n0AYoA_Jmd4/Wmqh7-Y3quI/AAAAAAABJ10/KgHUry7c8oQYyNKAINFhEtHWS8GBcLdNwCLcBGAs/s800/sns_happy_man.png" class="slides">
+
+    <!-- 前へ/次へボタン -->
+    <a class="prev" onclick="changeSlide(-1)">&#10094;</a>
+    <a class="next" onclick="changeSlide(1)">&#10095;</a>
+</div>
+
+<script>
+    let currentSlide = 0; // 現在のスライドのインデックス
+
+    // スライドを切り替える関数
+    function changeSlide(direction) {
+        const slides = document.getElementsByClassName("slides");
+        slides[currentSlide].style.display = "none"; // 現在のスライドを非表示
+
+        currentSlide = (currentSlide + direction + slides.length) % slides.length; // スライドインデックスを更新
+
+        slides[currentSlide].style.display = "block"; // 新しいスライドを表示
+    }
+</script>
+  <p>👍️12 💻️21　📻️3</p>
+</body>
     </section>
     <section id="news">
       <h2>ニュース</h2>
