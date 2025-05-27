@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6980201498457818"
+     crossorigin="anonymous"></script>
+    <title>投稿</title>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Materialize CSS for clean UI -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: linear-gradient(to right, #6a11cb, #2575fc);
+        color: white;
+        margin: 0;
+      }
+
+      #loading-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      #upload-form {
+        display: none;
+        text-align: center;
+      }
+
+      .card {
+        padding: 30px;
+        background-color: white;
+        border-radius: 10px;
+        color: #333;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      }
+
+      .success-message {
+        margin-top: 15px;
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ローディング画面 -->
+    <div id="loading-screen">
+      <div class="preloader-wrapper big active">
+        <div class="spinner-layer spinner-white-only">
+          <div class="circle-clipper left"><div class="circle"></div></div>
+          <div class="gap-patch"><div class="circle"></div></div>
+          <div class="circle-clipper right"><div class="circle"></div></div>
+        </div>
+      </div>
+      <p>読み込み中...</p>
+    </div>
+
+    <!-- アップロードフォーム -->
+    <div id="upload-form">
+      <div class="card">
+        <h5>ファイルをアップロード</h5>
+        <input type="file" id="fileInput" accept="image/*,application/pdf">
+        <br><br>
+        <button class="btn waves-effect waves-light" onclick="upload()">アップロード</button>
+        <div class="success-message" id="status"></div>
+      </div>
+    </div>
+
+    <!-- Materialize JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+      // ローディング画面の非表示とフォーム表示
+      window.onload = function() {
+        setTimeout(() => {
+          document.getElementById("loading-screen").style.display = "none";
+          document.getElementById("upload-form").style.display = "block";
+        }, 1500); // 1.5秒後に切り替え
+      };
+
+      function upload() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+
+        if (!file) {
+          M.toast({html: 'ファイルを選択してください。'});
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const base64Data = e.target.result.split(',')[1];
+          google.script.run.withSuccessHandler(function(res) {
+            if (res.success) {
+              document.getElementById("status").innerHTML = "アップロード成功！<br><a href='" + res.url + "' target='_blank'>ファイルを表示</a>";
+            } else {
+              document.getElementById("status").innerText = "エラー: " + res.message;
+            }
+          }).uploadFile({
+            filename: file.name,
+            mimeType: file.type,
+            data: base64Data
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    </script>
+  </body>
+</html>
