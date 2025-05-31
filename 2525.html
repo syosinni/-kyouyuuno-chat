@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>共有ノート</title>
+  <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
+<link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
+<link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6980201498457818"
+     crossorigin="anonymous"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    .loader {
+      position: fixed;
+      background: #222;
+      color: #fff;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      z-index: 9999;
+      animation: fadeOut 2s ease 2s forwards;
+    }
+
+    @keyframes fadeOut {
+      to { opacity: 0; visibility: hidden; }
+    }
+
+    header {
+      background: #ffffffee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 24px;
+      color: #333;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 20px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: #0077ff;
+    }
+
+    section {
+      padding: 80px 10%;
+      min-height: 100vh;
+    }
+
+    .hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #e0f7ff, #fff);
+      text-align: center;
+      animation: fadeUp 1s ease-out;
+    }
+
+    .hero h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: #555;
+    }
+
+    .section-title {
+      font-size: 32px;
+      margin-bottom: 40px;
+      text-align: center;
+    }
+
+    .projects, .contact {
+      animation: fadeUp 1s ease-out;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    footer {
+      background: #222;
+      color: #fff;
+      padding: 40px 10%;
+      text-align: center;
+    }
+
+    @keyframes fadeUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loader">共有ノート 読み込み中...</div>
+
+  <header>
+    <div class="logo">共有ノートProject</div>
+    <nav>
+      <ul>
+        <li><a href="#about">プロジェクト紹介</a></li>
+        <li><a href="#projects">制作物</a></li>
+        <li><a href="#contact">お問い合わせ</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>「楽しい」を第1</h1>
+    <p>私たちは学生による創作集団「共有ノート」です。</p>
+  </section>
+
+  <section id="about">
+    <h2 class="section-title">プロジェクト紹介</h2>
+    <p style="text-align:center; max-width: 600px; margin: auto;">
+      共有ノートは、学生が集まってプログラミングで自由にものづくりをするチームです。
+      Webアプリ、ゲームなど多彩なプロジェクトに挑戦しています。
+    </p>
+  </section>
+
+  <section id="projects" class="projects">
+    <h2 class="section-title">制作物や管理しているもの</h2>
+    <div class="project-grid">
+      <div class="card">
+        <h3>チャット（我々の創作物ではありません。）</h3>
+        <p><a href="https://c.kuku.lu/tbd245rk">c.kuku.lu</a></p>
+      </div>
+      <div class="card">
+        <h3>Note+LINK</h3>
+        <p><a href="https://drive.google.com/drive/u/0/folders/1PsbFxQMbEXKuBOrczuOqtORSwPX2k-Wp">Googleドライブ版</a><br><a href="https://kyouyuuno-to.f5.si/notelink/home">web試験版</a></p>
+      </div>
+      <div class="card">
+        <h3>その他</h3>
+        <p>共有ノートロイロ（サ終）、<a href="https://sites.google.com/view/0channel/%E3%83%9B%E3%83%BC%E3%83%A0">０ch掲示板</a>
+        <br><a href="https://kyouyuuno-to.f5.si/study/studyUP/%E3%83%9B%E3%83%BC%E3%83%A0">StudyUP</a><a href="https://sites.google.com/view/ky-server/%E3%83%9B%E3%83%BC%E3%83%A0">サーバー状況</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact">
+    <h2 class="section-title">お問い合わせ</h2>
+    <p style="text-align:center;">ご質問や参加希望は <a href="https://forms.gle/7knNAGHMMG2SFcCa9">Googleフォーム</a> で！</p>
+  </section>
+
+  <footer>
+    © 2025 共有ノートProject - All Rights Reserved
+  </footer>
+
+  <script>
+    // ページ読み込みアニメーション（ローダー）
+    window.addEventListener("load", () => {
+      document.querySelector('.loader').style.display = 'none';
+    });
+
+    // スムーズスクロール
+    document.querySelectorAll("nav a").forEach(anchor => {
+      anchor.addEventListener("click", function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute("href"));
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
