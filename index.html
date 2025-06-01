@@ -8,9 +8,9 @@
 <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6980201498457818"
      crossorigin="anonymous"></script>
-  <title>共有ノートProject</title>
+  <title>共有ノートProjectお</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
     * {
       margin: 0;
@@ -19,20 +19,20 @@
     }
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background: #f9f9f9;
+      font-family: 'Inter', sans-serif;
+      background: #fdfdfd;
       color: #333;
-      overflow-x: hidden;
+      line-height: 1.6;
     }
 
     a {
-      color: #0077ff;
+      color: #0077cc;
       text-decoration: none;
     }
 
     .loader {
       position: fixed;
-      background: #ffffff;
+      background: #fff;
       color: #333;
       height: 100vh;
       width: 100vw;
@@ -50,9 +50,9 @@
 
     header {
       background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
-      padding: 60px 10%;
       color: white;
       text-align: center;
+      padding: 80px 10%;
       position: relative;
     }
 
@@ -63,7 +63,7 @@
       background: rgba(0,0,0,0.4);
     }
 
-    header .logo {
+    .logo {
       position: relative;
       font-size: 36px;
       font-weight: 700;
@@ -72,8 +72,8 @@
 
     nav {
       position: relative;
-      margin-top: 20px;
       z-index: 1;
+      margin-top: 20px;
     }
 
     nav ul {
@@ -88,7 +88,7 @@
       font-weight: 500;
       padding: 6px 10px;
       border-bottom: 2px solid transparent;
-      transition: all 0.3s ease;
+      transition: border 0.3s ease;
     }
 
     nav a:hover {
@@ -107,22 +107,21 @@
     .hero h1 {
       font-size: 42px;
       margin-bottom: 20px;
-      color: #333;
     }
 
     .hero p {
       font-size: 18px;
-      color: #666;
+      color: #555;
     }
 
     .section-title {
-      font-size: 28px;
-      color: #444;
-      margin-bottom: 40px;
+      font-size: 32px;
       text-align: center;
+      margin-bottom: 40px;
+      color: #444;
     }
 
-    .project-grid {
+    .project-grid, .news-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 30px;
@@ -132,8 +131,8 @@
       background: #fff;
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
-      transition: transform 0.3s ease, background 0.3s ease;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+      transition: transform 0.3s ease;
     }
 
     .card:hover {
@@ -142,32 +141,43 @@
 
     .card h3 {
       margin-bottom: 10px;
-      color: #333;
+      color: #222;
     }
 
     .card p {
       color: #666;
     }
 
-    .contact p {
+    .news-date {
+      font-size: 14px;
+      color: #999;
+      margin-bottom: 5px;
+    }
+
+    .contact {
       text-align: center;
-      font-size: 16px;
     }
 
     footer {
-      background: #f1f1f1;
-      color: #777;
-      padding: 30px 10%;
+      background: #f0f0f0;
+      padding: 40px 10%;
       text-align: center;
+      color: #777;
       font-size: 14px;
     }
 
     @media (max-width: 768px) {
-      header .logo {
-        font-size: 28px;
-      }
       .hero h1 {
         font-size: 28px;
+      }
+
+      .logo {
+        font-size: 28px;
+      }
+
+      nav ul {
+        flex-direction: column;
+        gap: 10px;
       }
     }
   </style>
@@ -182,6 +192,7 @@
       <ul>
         <li><a href="#about">チーム紹介</a></li>
         <li><a href="#projects">制作物</a></li>
+        <li><a href="#news">ニュース</a></li>
         <li><a href="#contact">お問い合わせ</a></li>
       </ul>
     </nav>
@@ -195,8 +206,8 @@
   <section id="about">
     <h2 class="section-title">チーム紹介</h2>
     <p style="text-align:center; max-width: 600px; margin: auto;">
-      私たちは学生同士で技術を学び、アイデアを形にすることに情熱を注いでいます。
-      Web、ゲームなど幅広い領域でプロジェクトを展開中です。
+      私たちは学生が集まってプログラミングで自由にモノづくりをするチームです。<br>
+      Webアプリ・ゲーム・AIなど多彩なプロジェクトに挑戦中！
     </p>
   </section>
 
@@ -204,23 +215,46 @@
     <h2 class="section-title">制作物</h2>
     <div class="project-grid">
       <div class="card">
-        <h3>タスク管理アプリ</h3>
-        <p>日々の予定をスマートに管理できるシンプルで美しいアプリ。</p>
+        <h3>日常タスク管理</h3>
+        <p>学生のための直感的タスク管理アプリ。</p>
       </div>
       <div class="card">
-        <h3>チャットシステム</h3>
-        <p>リアルタイム通信を活用したブラウザベースのチャットアプリ。</p>
+        <h3>チャットアプリ</h3>
+        <p>Socket.IOを使ったリアルタイムチャット。</p>
       </div>
       <div class="card">
-        <h3>画像認識AI</h3>
-        <p>AIで画像を自動識別・分類する学習プロジェクト。</p>
+        <h3>AI画像認識</h3>
+        <p>画像をAIで分類・ラベリングするプロジェクト。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="news">
+    <h2 class="section-title">ニュース</h2>
+    <div class="news-grid">
+      <div class="card">
+        <div class="news-date">2025年5月1日</div>
+        <h3>新メンバー募集中！</h3>
+        <p>2025年度前期に向けて新たな仲間を募集しています。</p>
+      </div>
+      <div class="card">
+        <div class="news-date">2025年4月15日</div>
+        <h3>新プロジェクト始動</h3>
+        <p>音声認識を用いたツールの開発がスタートしました！</p>
+      </div>
+      <div class="card">
+        <div class="news-date">2025年3月30日</div>
+        <h3>学内発表に参加しました</h3>
+        <p>共有ノート代表がWebアプリ部門で登壇しました。</p>
       </div>
     </div>
   </section>
 
   <section id="contact">
     <h2 class="section-title">お問い合わせ</h2>
-    <p>ご質問や参加希望は <a href="mailto:info@kyounote.jp">info@kyounote.jp</a> までお気軽にご連絡ください。</p>
+    <div class="contact">
+      <p>ご質問や参加希望は <a href="mailto:info@kyounote.jp">info@kyounote.jp</a> までお気軽にご連絡ください。</p>
+    </div>
   </section>
 
   <footer>
@@ -228,12 +262,10 @@
   </footer>
 
   <script>
-    // ローダー非表示処理
     window.addEventListener("load", () => {
       document.querySelector('.loader').style.display = 'none';
     });
 
-    // スムーズスクロール
     document.querySelectorAll("nav a").forEach(anchor => {
       anchor.addEventListener("click", function(e) {
         e.preventDefault();
@@ -244,5 +276,6 @@
       });
     });
   </script>
+
 </body>
 </html>
