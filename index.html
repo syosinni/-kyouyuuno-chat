@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>共有ノートProject</title>
   <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
 <link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
 <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6980201498457818"
      crossorigin="anonymous"></script>
-  <title>共有ノートProject</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
@@ -44,64 +44,57 @@
     }
 
     header {
-      background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80') no-repeat center center/cover;
-      color: white;
-      text-align: center;
-      padding: 60px 10%;
-      position: relative;
+      background: #ffffffee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
 
-    header::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-    }
-
-    header .logo {
-      position: relative;
-      font-size: 36px;
+    .logo {
       font-weight: 700;
-      z-index: 1;
-    }
-
-    nav {
-      position: relative;
-      margin-top: 20px;
-      z-index: 1;
+      font-size: 24px;
+      color: #333;
     }
 
     nav ul {
       display: flex;
-      justify-content: center;
       list-style: none;
-      gap: 30px;
+      gap: 20px;
     }
 
     nav a {
-      color: #fff;
-      font-weight: 500;
-      padding: 6px 10px;
-      border-bottom: 2px solid transparent;
-      transition: border 0.3s ease;
       text-decoration: none;
+      color: #333;
+      font-weight: 500;
+      transition: color 0.3s ease;
     }
 
     nav a:hover {
-      border-color: #fff;
+      color: #0077ff;
     }
 
     section {
       padding: 80px 10%;
+      min-height: 100vh;
     }
 
     .hero {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #e0f7ff, #fff);
       text-align: center;
-      margin-top: 40px;
+      animation: fadeUp 1s ease-out;
     }
 
     .hero h1 {
-      font-size: 42px;
+      font-size: 48px;
       margin-bottom: 20px;
     }
 
@@ -111,13 +104,16 @@
     }
 
     .section-title {
-      font-size: 28px;
+      font-size: 32px;
       margin-bottom: 40px;
       text-align: center;
-      color: #444;
     }
 
-    .project-grid, .news-grid {
+    .projects, .contact {
+      animation: fadeUp 1s ease-out;
+    }
+
+    .project-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 30px;
@@ -125,7 +121,7 @@
 
     .card {
       background: #fff;
-      border-radius: 12px;
+      border-radius: 10px;
       padding: 20px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
       transition: transform 0.3s ease;
@@ -135,44 +131,27 @@
       transform: translateY(-5px);
     }
 
-    .card h3 {
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      color: #666;
-    }
-
-    .news-date {
-      font-size: 14px;
-      color: #999;
-      margin-bottom: 5px;
-    }
-
-    .contact {
-      text-align: center;
-    }
-
     footer {
-      background: #f1f1f1;
-      color: #777;
-      padding: 30px 10%;
+      background: #222;
+      color: #fff;
+      padding: 40px 10%;
       text-align: center;
-      font-size: 14px;
+    }
+
+    @keyframes fadeUp {
+      from {
+        transform: translateY(20px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     @media (max-width: 768px) {
       .hero h1 {
-        font-size: 28px;
-      }
-
-      .logo {
-        font-size: 28px;
-      }
-
-      nav ul {
-        flex-direction: column;
-        gap: 10px;
+        font-size: 32px;
       }
     }
   </style>
@@ -187,69 +166,49 @@
       <ul>
         <li><a href="#about">チーム紹介</a></li>
         <li><a href="#projects">制作物</a></li>
-        <li><a href="#news">ニュース</a></li>
         <li><a href="#contact">お問い合わせ</a></li>
       </ul>
     </nav>
   </header>
 
   <section class="hero">
-    <h1>創る力で未来を変える。</h1>
-    <p>学生による創作集団「共有ノート」です。</p>
+    <h1>面白いを第一に</h1>
+    <p>私たちは学生による創作集団「共有ノート」です。</p>
   </section>
 
   <section id="about">
     <h2 class="section-title">チーム紹介</h2>
     <p style="text-align:center; max-width: 600px; margin: auto;">
-      私たちは学生が集まってプログラミングで自由にモノづくりをするチームです。<br>
-      Webアプリ・ゲーム・AIなど多彩なプロジェクトに挑戦中！
+      共有ノートは、学生が集まってプログラミングで自由にものづくりをするチームです。
+      Webアプリ、ゲームなど多彩なプロジェクトに挑戦しています。
     </p>
   </section>
 
-  <section id="projects">
-    <h2 class="section-title">制作物</h2>
+  <section id="projects" class="projects">
+    <h2 class="section-title">制作物＆管理物</h2>
     <div class="project-grid">
       <div class="card">
-        <h3>日常タスク管理</h3>
-        <p>学生のための直感的タスク管理アプリ。</p>
+        <h3>c.kuku.lu系</h3>
+        <p><a href="https://c.kuku.lu/tbd245rk">チャット</a><a href="https://c.kuku.lu/3uscaxbm">しりとり</a><a href="https://c.kuku.lu/bchan5f8">イベント部屋</a></p>
       </div>
       <div class="card">
-        <h3>チャットアプリ</h3>
-        <p>Socket.IOを使ったリアルタイムチャット。</p>
+        <h3>Note+LINK</h3>
+        <p><a href="https://drive.google.com/drive/u/0/folders/1PsbFxQMbEXKuBOrczuOqtORSwPX2k-Wp">ドライブ版</a><a href="https://kyouyuuno-to.f5.si/notelink/home">HTML版</a></p>
       </div>
       <div class="card">
-        <h3>AI画像認識</h3>
-        <p>画像をAIで分類・ラベリングするプロジェクト。</p>
+        <h3>マイクラサーバー</h3>
+        <p>アドレス：kyoyuuno-to.aternos.me<br>ポート：kyoyuuno-to.aternos.me</p>
+      </div>
+      <div class="card">
+        <h3>その他</h3>
+        <p>ロイロ版（サ終）<a href="https://www.canva.com/design/DAFzvsPzslk/so-QDeeoyOhW9qe56yun9Q/edit">Canva版（サ終）</a><<a href="https://sites.google.com/view/0channel/%E3%83%9B%E3%83%BC%E3%83%A0">0ちゃんねる（更新停止）</a><a href="https://www.canva.com/design/DAF0YZZ-pag/HPdB8pLTSd43uzCtn1h9YQ/edit">WebTV</a></p>
       </div>
     </div>
   </section>
 
-  <section id="news">
-    <h2 class="section-title">ニュース</h2>
-    <div class="news-grid">
-      <div class="card">
-        <div class="news-date">2025年5月1日</div>
-        <h3>新メンバー募集中！</h3>
-        <p>2025年度前期に向けて新たな仲間を募集しています。</p>
-      </div>
-      <div class="card">
-        <div class="news-date">2025年4月15日</div>
-        <h3>新プロジェクト始動</h3>
-        <p>音声認識を用いたツールの開発がスタートしました！</p>
-      </div>
-      <div class="card">
-        <div class="news-date">2025年3月30日</div>
-        <h3>学内発表に参加しました</h3>
-        <p>共有ノート代表がWebアプリ部門で登壇しました。</p>
-      </div>
-    </div>
-  </section>
-
-  <section id="contact">
+  <section id="contact" class="contact">
     <h2 class="section-title">お問い合わせ</h2>
-    <div class="contact">
-      <p>ご質問や参加希望は <a href="mailto:info@kyounote.jp">info@kyounote.jp</a> までお気軽にご連絡ください。</p>
-    </div>
+    <p style="text-align:center;">ご質問や参加希望は <a href="mailto:info@kyounote.jp">info@kyounote.jp</a> まで！</p>
   </section>
 
   <footer>
@@ -257,10 +216,12 @@
   </footer>
 
   <script>
+    // ページ読み込みアニメーション（ローダー）
     window.addEventListener("load", () => {
       document.querySelector('.loader').style.display = 'none';
     });
 
+    // スムーズスクロール
     document.querySelectorAll("nav a").forEach(anchor => {
       anchor.addEventListener("click", function(e) {
         e.preventDefault();
@@ -271,6 +232,5 @@
       });
     });
   </script>
-
 </body>
 </html>
