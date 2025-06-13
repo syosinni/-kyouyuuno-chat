@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IPアドレス表示</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin-top: 100px;
+      background: #f0f0f0;
+    }
+
+    #ip-display {
+      font-size: 2rem;
+      color: #333;
+      padding: 20px;
+      background: #fff;
+      border-radius: 10px;
+      display: inline-block;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .label {
+      font-weight: bold;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="ip-display">
+    <span class="label">あなたのIPアドレス:</span>
+    <span id="ip">読み込み中...</span>
+  </div>
+
+  <script>
+    fetch('https://api.ipify.org?format=json')
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('ip').textContent = data.ip;
+      })
+      .catch(error => {
+        document.getElementById('ip').textContent = "取得失敗 😢";
+        console.error("IP取得エラー:", error);
+      });
+  </script>
+</body>
+</html>
