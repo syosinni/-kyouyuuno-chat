@@ -2,31 +2,14 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>進化型 弾幕ゲーム</title>
+<title>弾幕シューティング - 前半ステージ</title>
 <style>
-  body {
-    margin:0; overflow:hidden;
-    background: #000;
-    color: #fff;
-    font-family: sans-serif;
-  }
-  #gameCanvas {
-    display:block; margin:0 auto;
-    background: url('https://i.imgur.com/f8gG6K9.png') center top;
-    background-size: cover;
-    box-shadow: 0 0 20px cyan;
-  }
-  #ui {
-    position:absolute; top:10px; left:50%; transform:translateX(-50%);
-    display:flex; gap:20px;
-  }
-  .bar {
-    width:200px; height:8px; background:#444; border:1px solid #fff;
-    position:relative;
-  }
-  .bar-inner {
-    height:100%; background:lime;
-  }
+  body { margin:0; overflow:hidden; background:#000; color:#fff; font-family:sans-serif }
+  canvas { display:block; margin:0 auto; background:#111; box-shadow:0 0 20px cyan }
+  #ui { position:absolute; top:10px; left:50%; transform:translateX(-50%); display:flex; gap:20px }
+  .bar { width:150px; height:8px; background:#444; border:1px solid #fff; position:relative }
+  .bar-inner { height:100%; background:lime }
+  #nextBtn { display:none; margin-top:5px; padding:5px 10px; background:cyan; border:none; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -34,129 +17,164 @@
 <div id="ui">
   <div>自機HP:<div id="pHP" class="bar"><div id="pHPi" class="bar-inner"></div></div></div>
   <div>敵HP:<div id="eHP" class="bar"><div id="eHPi" class="bar-inner"></div></div></div>
-  <div>Stage: <span id="stageNum">1</span></div>
+  <div>Stage: <span id="stageNum">1</span>/5</div>
+  <div>Time: <span id="timer">00:00</span></div>
+</div>
+<div style="text-align:center; margin-top:10px">
+  <button id="nextBtn">次のステージへ</button>
 </div>
 
 <script>
 const canvas = document.getElementById("gameCanvas"), ctx = canvas.getContext("2d");
 const pHPi = document.getElementById("pHPi"), eHPi = document.getElementById("eHPi"), stageNum = document.getElementById("stageNum");
-const keys = {}; document.addEventListener("keydown", e=>keys[e.key]=true);
+const timerEl = document.getElementById("timer"), nextBtn = document.getElementById("nextBtn");
+let startTime = Date.now();
+
+const keys = {};
+document.addEventListener("keydown", e=>keys[e.key]=true);
 document.addEventListener("keyup", e=>keys[e.key]=false);
 
-const player={x:240,y:580,size:8,speed:4,hp:100,maxHP:100};
+const player = { x:240, y:580, size:8, speed:4, hp:100, maxHP:100 };
 const shots = [], enemyShots = [];
 
 const stages = [
-  { name:"円形弾幕", enemyHP:50, pattern:"circle", interval:1000, speed:2, count:16 },
-  { name:"スパイラル", enemyHP:80, pattern:"spiral", interval:120, speed:3, count:1 },
-  { name:"拡散弾幕", enemyHP:120, pattern:"spread", interval:800, speed:2.5, count:8 }
+  { pattern:"circle", interval:1000, speed:2, count:16, hp:50 },
+  { pattern:"spiral", interval:200, speed:3.5, count:1, hp:70 },
+  { pattern:"spread", interval:800, speed:3, count:8, hp:90 },
+  { pattern:"homing", interval:600, speed:4, count:2, hp:110 },
+  { pattern:"big", interval:1500, speed:2.5, count:1, hp:150 }
 ];
 let stageIndex = 0, enemy = null, shotCooldown = 0;
 
-function spawnEnemy(){
-  const st = stages[stageIndex];
-  enemy = {
-    x:240, y:100, size:12, hp:st.enemyHP, maxHP:st.enemyHP,
-    pattern: st.pattern, interval:st.interval, speed:st.speed, count:st.count,
-    timer:0
-  };
-  stageNum.textContent = stageIndex+1;
+function loadProgress(){
+  const s = localStorage.getItem("shootStage");
+  startTime = Date.now() - (parseInt(localStorage.getItem("shootTime")) || 0);
+  if(s) stageIndex = Math.min(parseInt(s), stages.length -1);
+}
+function saveProgress(){
+  localStorage.setItem("shootStage", stageIndex);
+  const elapsed = Date.now() - startTime;
+  localStorage.setItem("shootTime", elapsed);
 }
 
+loadProgress();
+
+function spawnEnemy(){
+  const st = stages[stageIndex];
+  enemy = { x:240, y:100, size:12, hp:st.hp, maxHP:st.hp,
+    pattern:st.pattern,interval:st.interval,speed:st.speed,count:st.count, timer:0 };
+  stageNum.textContent = stageIndex+1;
+  nextBtn.style.display = "none";
+}
 spawnEnemy();
 
+nextBtn.onclick = ()=> {
+  stageIndex++;
+  saveProgress();
+  spawnEnemy();
+};
+
 function enemyFire(e){
-  const now = Date.now();
-  if (e.timer && now - e.timer < e.interval) return;
-  e.timer = now;
+  if (Date.now() - e.timer < e.interval) return;
+  e.timer = Date.now();
   const dx = player.x - e.x, dy = player.y - e.y;
-  if (e.pattern==="circle") {
+  if(e.pattern==="circle"){
     for(let i=0;i<e.count;i++){
-      let ang = (i/e.count)*Math.PI*2;
+      const ang = i * (2*Math.PI / e.count);
       enemyShots.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.speed,vy:Math.sin(ang)*e.speed,size:4});
     }
-  } else if (e.pattern==="spiral"){
-    const ang = (now/200)% (Math.PI*2);
+  } else if(e.pattern==="spiral"){
+    const ang = (Date.now()/300) % (2*Math.PI);
     enemyShots.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.speed,vy:Math.sin(ang)*e.speed,size:4});
-  } else if (e.pattern==="spread"){
-    const base = Math.atan2(dy,dx), spread = Math.PI/8;
-    for(let i= -e.count/2; i<e.count/2; i++){
-      const ang = base + (i * spread / (e.count/2));
+  } else if(e.pattern==="spread"){
+    const base = Math.atan2(dy,dx), spr = Math.PI/8;
+    for(let i=-e.count/2;i<e.count/2;i++){
+      const ang = base + i*(spr/(e.count/2));
       enemyShots.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.speed,vy:Math.sin(ang)*e.speed,size:4});
     }
+  } else if(e.pattern==="homing"){
+    const ang = Math.atan2(dy,dx);
+    enemyShots.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.speed,vy:Math.sin(ang)*e.speed,size:6});
+  } else if(e.pattern==="big"){
+    enemyShots.push({x:e.x,y:e.y,vx:0,vy:e.speed,size:16});
   }
 }
 
 function update(){
-  // player movement
-  if (keys.ArrowLeft) player.x -= player.speed;
-  if (keys.ArrowRight) player.x += player.speed;
-  if (keys.ArrowUp) player.y -= player.speed;
-  if (keys.ArrowDown) player.y += player.speed;
+  // Timer
+  const elapsed = Date.now() - startTime;
+  const s = String(Math.floor(elapsed/1000)%60).padStart(2,"0");
+  const m = String(Math.floor(elapsed/60000)).padStart(2,"0");
+  timerEl.textContent = `${m}:${s}`;
+
+  // Player movement
+  if(keys.ArrowLeft) player.x -= player.speed;
+  if(keys.ArrowRight) player.x += player.speed;
+  if(keys.ArrowUp) player.y -= player.speed;
+  if(keys.ArrowDown) player.y += player.speed;
   player.x = Math.max(0,Math.min(canvas.width,player.x));
   player.y = Math.max(0,Math.min(canvas.height,player.y));
-  // shooting
-  if (keys[" "] && shotCooldown < Date.now()){
-    shots.push({x:player.x,y:player.y,vx:0,vy:-6,size:4});
+
+  // Shooting
+  if(keys[" "] && Date.now() > shotCooldown){
+    shots.push({x:player.x,y:player.y,vx:0,vy:-6,size:5});
     shotCooldown = Date.now() + 200;
   }
-  // enemy fire
-  if (enemy) enemyFire(enemy);
-  // move shots
-  [...shots, ...enemyShots].forEach(b => {b.x += b.vx; b.y += b.vy});
-  // collision detection player hit
-  enemyShots.forEach((b,i) => {
-    const dx=b.x-player.x, dy=b.y-player.y;
-    if (Math.hypot(dx,dy) < b.size+player.size){
+
+  if(enemy) enemyFire(enemy);
+
+  [...shots, ...enemyShots].forEach(b=>{ b.x += b.vx; b.y += b.vy });
+
+  // Collisions
+  enemyShots.forEach((b,i)=>{
+    if(Math.hypot(b.x-player.x,b.y-player.y) < b.size+player.size){
       player.hp -= 10;
       enemyShots.splice(i,1);
     }
   });
-  // collision detection enemy hit
-  shots.forEach((b,i) => {
-    const dx=b.x-enemy.x, dy=b.y-enemy.y;
-    if (Math.hypot(dx,dy) < b.size+enemy.size){
-      enemy.hp -=10;
+  shots.forEach((b,i)=>{
+    if(enemy && Math.hypot(b.x-enemy.x,b.y-enemy.y) < b.size+enemy.size){
+      enemy.hp -= 15;
       shots.splice(i,1);
     }
   });
-  // cleanup off-screen
+
+  // Cleanup
   [shots,enemyShots].forEach(arr=>{
     for(let i=arr.length-1;i>=0;i--){
-      const b=arr[i];
-      if (b.x<0||b.x>canvas.width||b.y<0||b.y>canvas.height) arr.splice(i,1);
+      const b = arr[i];
+      if(b.x<0||b.x>canvas.width||b.y<0||b.y>canvas.height) arr.splice(i,1);
     }
   });
+
   // HP bars
   pHPi.style.width = (player.hp/player.maxHP*100)+"%";
-  if (enemy) eHPi.style.width = (enemy.hp/enemy.maxHP*100)+"%";
-  // stage transition
-  if (enemy && enemy.hp<=0){
-    stageIndex++;
-    if (stageIndex>=stages.length){
-      alert("ゲームクリア！おめでとう！");
-      location.reload();
-      return;
-    }
-    spawnEnemy();
+  if(enemy) eHPi.style.width = (enemy.hp/enemy.maxHP*100)+"%";
+
+  // Stage clear
+  if(enemy && enemy.hp<=0){
+    nextBtn.style.display = "inline-block";
+    enemy = null;
   }
-  if (player.hp<=0){
-    alert("ゲームオーバー！");
+  // Game over
+  if(player.hp <=0){
+    alert("ゲームオーバー...");
+    localStorage.clear();
     location.reload();
   }
 }
 
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  // player
+  // Player
   ctx.fillStyle="cyan"; ctx.beginPath();
   ctx.arc(player.x,player.y,player.size,0,2*Math.PI); ctx.fill();
-  // enemy
-  if (enemy){
+  // Enemy
+  if(enemy){
     ctx.fillStyle="orange"; ctx.beginPath();
     ctx.arc(enemy.x,enemy.y,enemy.size,0,2*Math.PI); ctx.fill();
   }
-  // draw shots
+  // Shots
   shots.forEach(b=>{
     ctx.fillStyle="lime"; ctx.beginPath();
     ctx.arc(b.x,b.y,b.size,0,2*Math.PI); ctx.fill();
@@ -168,9 +186,9 @@ function draw(){
 }
 
 function loop(){
-  update(); draw();
-  requestAnimationFrame(loop);
+  update(); draw(); requestAnimationFrame(loop);
 }
+
 loop();
 </script>
 </body>
