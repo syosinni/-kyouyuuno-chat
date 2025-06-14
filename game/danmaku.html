@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>MiniGamePARK</title>
+  <title>MiniGame🎮️PARK</title>
   <style>
     body { margin:0; overflow:hidden; background:#000; color:#fff; font-family:sans-serif }
     canvas { display:block; margin:0 auto; background:#111; box-shadow:0 0 20px cyan }
@@ -25,7 +25,7 @@
   </style>
 </head>
 <body>
-  <div id="logoScreen">MiniGame🎮️PARK</div>
+  <div id="logoScreen">🎮 MiniGame🎮️PARK 🎮</div>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
   <div id="ui">
     <div>自機HP:<div id="pHP" class="bar"><div id="pHPi" class="bar-inner"></div></div></div>
@@ -75,8 +75,10 @@ function spawnEnemy(){
     x:240, y:100, size:12, hp:st.hp, maxHP:st.hp,
     pattern:st.pattern, interval:st.interval, speed:st.speed, count:st.count, timer:0
   };
+  player.hp = player.maxHP; // 🩹 回復！
   stageNum.textContent = stageIndex+1;
   nextBtn.style.display = "none";
+  enemyDefeated = false;
 }
 
 loadProgress();
@@ -85,9 +87,8 @@ spawnEnemy();
 nextBtn.onclick = () => {
   stageIndex++;
   saveProgress();
-  enemyDefeated = false;
   if(stageIndex >= stages.length){
-    alert("🎉 5ステージクリア！後半マリオ風ゲームへ続く…（後日実装）");
+    alert("🎉 5ステージクリア！後半マリオ風ゲームへ続く…（近日追加）");
     localStorage.clear();
     location.reload();
   } else {
@@ -143,17 +144,21 @@ function update(){
 
   [...shots, ...enemyShots].forEach(b=>{ b.x += b.vx; b.y += b.vy });
 
-  enemyShots.forEach((b,i)=>{
-    if(Math.hypot(b.x-player.x,b.y-player.y) < b.size+player.size){
-      player.hp -= 10; enemyShots.splice(i,1);
+  for(let i = enemyShots.length - 1; i >= 0; i--){
+    const b = enemyShots[i];
+    if(Math.hypot(b.x - player.x, b.y - player.y) < b.size + player.size){
+      player.hp -= 10;
+      enemyShots.splice(i, 1);
     }
-  });
+  }
 
-  shots.forEach((b,i)=>{
-    if(enemy && Math.hypot(b.x-enemy.x,b.y-enemy.y) < b.size+enemy.size){
-      enemy.hp -= 15; shots.splice(i,1);
+  for(let i = shots.length - 1; i >= 0; i--){
+    const b = shots[i];
+    if(enemy && Math.hypot(b.x - enemy.x, b.y - enemy.y) < b.size + enemy.size){
+      enemy.hp -= 5; // 🎯 攻撃力調整済
+      shots.splice(i, 1);
     }
-  });
+  }
 
   [shots,enemyShots].forEach(arr=>{
     for(let i=arr.length-1;i>=0;i--){
@@ -171,7 +176,7 @@ function update(){
   }
 
   if(player.hp <= 0){
-    alert("ゲームオーバー！");
+    alert("💀 ゲームオーバー！");
     localStorage.clear();
     location.reload();
   }
@@ -191,16 +196,9 @@ function draw(){
     ctx.arc(b.x,b.y,b.size,0,2*Math.PI); ctx.fill(); });
 }
 
-function loop(){
-  update(); draw();
-  requestAnimationFrame(loop);
-}
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
 
-// ⏳ 2秒ロゴ → ゲーム開始
-setTimeout(() => {
-  logo.style.display = "none";
-  loop();
-}, 2000);
+setTimeout(() => { logo.style.display = "none"; loop(); }, 2000);
 </script>
 </body>
 </html>
