@@ -1,116 +1,177 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>弾幕ゲーム</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: linear-gradient(#000010, #000000);
-    }
-
-    canvas {
-      display: block;
-      margin: 0 auto;
-      background: url('https://i.imgur.com/f8gG6K9.png'); /* 宇宙背景画像 */
-      background-size: cover;
-      animation: scrollBg 20s linear infinite;
-      border: 2px solid white;
-      box-shadow: 0 0 20px cyan;
-    }
-
-    @keyframes scrollBg {
-      from { background-position: 0 0; }
-      to { background-position: 0 1000px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>進化型 弾幕ゲーム</title>
+<style>
+  body {
+    margin:0; overflow:hidden;
+    background: #000;
+    color: #fff;
+    font-family: sans-serif;
+  }
+  #gameCanvas {
+    display:block; margin:0 auto;
+    background: url('https://i.imgur.com/f8gG6K9.png') center top;
+    background-size: cover;
+    box-shadow: 0 0 20px cyan;
+  }
+  #ui {
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    display:flex; gap:20px;
+  }
+  .bar {
+    width:200px; height:8px; background:#444; border:1px solid #fff;
+    position:relative;
+  }
+  .bar-inner {
+    height:100%; background:lime;
+  }
+</style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="480" height="640"></canvas>
+<canvas id="gameCanvas" width="480" height="640"></canvas>
+<div id="ui">
+  <div>自機HP:<div id="pHP" class="bar"><div id="pHPi" class="bar-inner"></div></div></div>
+  <div>敵HP:<div id="eHP" class="bar"><div id="eHPi" class="bar-inner"></div></div></div>
+  <div>Stage: <span id="stageNum">1</span></div>
+</div>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+<script>
+const canvas = document.getElementById("gameCanvas"), ctx = canvas.getContext("2d");
+const pHPi = document.getElementById("pHPi"), eHPi = document.getElementById("eHPi"), stageNum = document.getElementById("stageNum");
+const keys = {}; document.addEventListener("keydown", e=>keys[e.key]=true);
+document.addEventListener("keyup", e=>keys[e.key]=false);
 
-    const keys = {};
-    document.addEventListener("keydown", e => keys[e.key] = true);
-    document.addEventListener("keyup", e => keys[e.key] = false);
+const player={x:240,y:580,size:8,speed:4,hp:100,maxHP:100};
+const shots = [], enemyShots = [];
 
-    const player = {
-      x: canvas.width / 2,
-      y: canvas.height - 60,
-      size: 8,
-      speed: 4
-    };
+const stages = [
+  { name:"円形弾幕", enemyHP:50, pattern:"circle", interval:1000, speed:2, count:16 },
+  { name:"スパイラル", enemyHP:80, pattern:"spiral", interval:120, speed:3, count:1 },
+  { name:"拡散弾幕", enemyHP:120, pattern:"spread", interval:800, speed:2.5, count:8 }
+];
+let stageIndex = 0, enemy = null, shotCooldown = 0;
 
-    const bullets = [];
+function spawnEnemy(){
+  const st = stages[stageIndex];
+  enemy = {
+    x:240, y:100, size:12, hp:st.enemyHP, maxHP:st.enemyHP,
+    pattern: st.pattern, interval:st.interval, speed:st.speed, count:st.count,
+    timer:0
+  };
+  stageNum.textContent = stageIndex+1;
+}
 
-    function shootBullets() {
-      const angleStep = Math.PI / 8;
-      for (let i = 0; i < 16; i++) {
-        const angle = i * angleStep;
-        bullets.push({
-          x: canvas.width / 2,
-          y: 100,
-          vx: Math.cos(angle) * 2,
-          vy: Math.sin(angle) * 2
-        });
-      }
+spawnEnemy();
+
+function enemyFire(e){
+  const now = Date.now();
+  if (e.timer && now - e.timer < e.interval) return;
+  e.timer = now;
+  const dx = player.x - e.x, dy = player.y - e.y;
+  if (e.pattern==="circle") {
+    for(let i=0;i<e.count;i++){
+      let ang = (i/e.count)*Math.PI*2;
+      enemyShots.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.speed,vy:Math.sin(ang)*e.speed,size:4});
     }
-
-    setInterval(shootBullets, 1000);
-
-    function update() {
-      // Player Movement
-      if (keys["ArrowLeft"]) player.x -= player.speed;
-      if (keys["ArrowRight"]) player.x += player.speed;
-      if (keys["ArrowUp"]) player.y -= player.speed;
-      if (keys["ArrowDown"]) player.y += player.speed;
-
-      // Clamp position
-      player.x = Math.max(0, Math.min(canvas.width, player.x));
-      player.y = Math.max(0, Math.min(canvas.height, player.y));
-
-      // Move bullets
-      for (let b of bullets) {
-        b.x += b.vx;
-        b.y += b.vy;
-      }
-
-      // Remove bullets out of screen
-      for (let i = bullets.length - 1; i >= 0; i--) {
-        if (bullets[i].x < 0 || bullets[i].x > canvas.width || bullets[i].y < 0 || bullets[i].y > canvas.height) {
-          bullets.splice(i, 1);
-        }
-      }
+  } else if (e.pattern==="spiral"){
+    const ang = (now/200)% (Math.PI*2);
+    enemyShots.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.speed,vy:Math.sin(ang)*e.speed,size:4});
+  } else if (e.pattern==="spread"){
+    const base = Math.atan2(dy,dx), spread = Math.PI/8;
+    for(let i= -e.count/2; i<e.count/2; i++){
+      const ang = base + (i * spread / (e.count/2));
+      enemyShots.push({x:e.x,y:e.y,vx:Math.cos(ang)*e.speed,vy:Math.sin(ang)*e.speed,size:4});
     }
+  }
+}
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Player
-      ctx.beginPath();
-      ctx.fillStyle = "cyan";
-      ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bullets
-      for (let b of bullets) {
-        ctx.beginPath();
-        ctx.fillStyle = "red";
-        ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
+function update(){
+  // player movement
+  if (keys.ArrowLeft) player.x -= player.speed;
+  if (keys.ArrowRight) player.x += player.speed;
+  if (keys.ArrowUp) player.y -= player.speed;
+  if (keys.ArrowDown) player.y += player.speed;
+  player.x = Math.max(0,Math.min(canvas.width,player.x));
+  player.y = Math.max(0,Math.min(canvas.height,player.y));
+  // shooting
+  if (keys[" "] && shotCooldown < Date.now()){
+    shots.push({x:player.x,y:player.y,vx:0,vy:-6,size:4});
+    shotCooldown = Date.now() + 200;
+  }
+  // enemy fire
+  if (enemy) enemyFire(enemy);
+  // move shots
+  [...shots, ...enemyShots].forEach(b => {b.x += b.vx; b.y += b.vy});
+  // collision detection player hit
+  enemyShots.forEach((b,i) => {
+    const dx=b.x-player.x, dy=b.y-player.y;
+    if (Math.hypot(dx,dy) < b.size+player.size){
+      player.hp -= 10;
+      enemyShots.splice(i,1);
     }
-
-    function loop() {
-      update();
-      draw();
-      requestAnimationFrame(loop);
+  });
+  // collision detection enemy hit
+  shots.forEach((b,i) => {
+    const dx=b.x-enemy.x, dy=b.y-enemy.y;
+    if (Math.hypot(dx,dy) < b.size+enemy.size){
+      enemy.hp -=10;
+      shots.splice(i,1);
     }
+  });
+  // cleanup off-screen
+  [shots,enemyShots].forEach(arr=>{
+    for(let i=arr.length-1;i>=0;i--){
+      const b=arr[i];
+      if (b.x<0||b.x>canvas.width||b.y<0||b.y>canvas.height) arr.splice(i,1);
+    }
+  });
+  // HP bars
+  pHPi.style.width = (player.hp/player.maxHP*100)+"%";
+  if (enemy) eHPi.style.width = (enemy.hp/enemy.maxHP*100)+"%";
+  // stage transition
+  if (enemy && enemy.hp<=0){
+    stageIndex++;
+    if (stageIndex>=stages.length){
+      alert("ゲームクリア！おめでとう！");
+      location.reload();
+      return;
+    }
+    spawnEnemy();
+  }
+  if (player.hp<=0){
+    alert("ゲームオーバー！");
+    location.reload();
+  }
+}
 
-    loop();
-  </script>
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // player
+  ctx.fillStyle="cyan"; ctx.beginPath();
+  ctx.arc(player.x,player.y,player.size,0,2*Math.PI); ctx.fill();
+  // enemy
+  if (enemy){
+    ctx.fillStyle="orange"; ctx.beginPath();
+    ctx.arc(enemy.x,enemy.y,enemy.size,0,2*Math.PI); ctx.fill();
+  }
+  // draw shots
+  shots.forEach(b=>{
+    ctx.fillStyle="lime"; ctx.beginPath();
+    ctx.arc(b.x,b.y,b.size,0,2*Math.PI); ctx.fill();
+  });
+  enemyShots.forEach(b=>{
+    ctx.fillStyle="red"; ctx.beginPath();
+    ctx.arc(b.x,b.y,b.size,0,2*Math.PI); ctx.fill();
+  });
+}
+
+function loop(){
+  update(); draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
 </body>
 </html>
