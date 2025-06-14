@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>弾幕ゲーム</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(#000010, #000000);
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background: url('https://i.imgur.com/f8gG6K9.png'); /* 宇宙背景画像 */
+      background-size: cover;
+      animation: scrollBg 20s linear infinite;
+      border: 2px solid white;
+      box-shadow: 0 0 20px cyan;
+    }
+
+    @keyframes scrollBg {
+      from { background-position: 0 0; }
+      to { background-position: 0 1000px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="480" height="640"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const keys = {};
+    document.addEventListener("keydown", e => keys[e.key] = true);
+    document.addEventListener("keyup", e => keys[e.key] = false);
+
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height - 60,
+      size: 8,
+      speed: 4
+    };
+
+    const bullets = [];
+
+    function shootBullets() {
+      const angleStep = Math.PI / 8;
+      for (let i = 0; i < 16; i++) {
+        const angle = i * angleStep;
+        bullets.push({
+          x: canvas.width / 2,
+          y: 100,
+          vx: Math.cos(angle) * 2,
+          vy: Math.sin(angle) * 2
+        });
+      }
+    }
+
+    setInterval(shootBullets, 1000);
+
+    function update() {
+      // Player Movement
+      if (keys["ArrowLeft"]) player.x -= player.speed;
+      if (keys["ArrowRight"]) player.x += player.speed;
+      if (keys["ArrowUp"]) player.y -= player.speed;
+      if (keys["ArrowDown"]) player.y += player.speed;
+
+      // Clamp position
+      player.x = Math.max(0, Math.min(canvas.width, player.x));
+      player.y = Math.max(0, Math.min(canvas.height, player.y));
+
+      // Move bullets
+      for (let b of bullets) {
+        b.x += b.vx;
+        b.y += b.vy;
+      }
+
+      // Remove bullets out of screen
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        if (bullets[i].x < 0 || bullets[i].x > canvas.width || bullets[i].y < 0 || bullets[i].y > canvas.height) {
+          bullets.splice(i, 1);
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Player
+      ctx.beginPath();
+      ctx.fillStyle = "cyan";
+      ctx.arc(player.x, player.y, player.size, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bullets
+      for (let b of bullets) {
+        ctx.beginPath();
+        ctx.fillStyle = "red";
+        ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>
