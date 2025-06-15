@@ -25,22 +25,19 @@
   </style>
 </head>
 <body>
-  <div id="logoScreen"> MiniGame🎮️PARK </div>
+  <div id="logoScreen">  MiniGame🎮️PARK  </div>
   <canvas id="gameCanvas" width="480" height="640"></canvas>
   <div id="ui">
     <div>自機HP:<div id="pHP" class="bar"><div id="pHPi" class="bar-inner"></div></div></div>
     <div>敵HP:<div id="eHP" class="bar"><div id="eHPi" class="bar-inner"></div></div></div>
     <div>Stage: <span id="stageNum">1</span>/5</div>
     <div>Time: <span id="timer">00:00</span></div>
-  </div>
-  <div style="text-align:center; margin-top:10px">
     <button id="nextBtn">次のステージへ</button>
   </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-
     const pHPi = document.getElementById("pHPi");
     const eHPi = document.getElementById("eHPi");
     const stageNum = document.getElementById("stageNum");
@@ -54,8 +51,7 @@
     document.addEventListener("keyup", e => keys[e.key] = false);
 
     const player = { x:240, y:580, size:8, speed:4, hp:100, maxHP:100 };
-    const shots = [];
-    const enemyShots = [];
+    const shots = [], enemyShots = [];
 
     const stages = [
       { pattern:"circle", interval:1000, speed:2, count:16, hp:50 },
@@ -66,8 +62,8 @@
     ];
     let stageIndex = 0;
     let enemy = null;
-    let shotCooldown = 0;
     let enemyDead = false;
+    let shotCooldown = 0;
 
     function loadProgress(){
       const s = localStorage.getItem("shootStage");
@@ -91,15 +87,15 @@
       };
       enemyDead = false;
       player.hp = player.maxHP;
-      nextBtn.style.display = "none";
       stageNum.textContent = stageIndex + 1;
+      nextBtn.style.display = "none";
     }
 
     nextBtn.addEventListener("click", () => {
       stageIndex++;
       saveProgress();
       if(stageIndex >= stages.length){
-        alert("🎉 全5ステージクリア！進行記録をリセットします。");
+        alert("🎉 全5ステージクリア！記録をリセットします");
         localStorage.clear();
         location.reload();
       } else {
@@ -112,51 +108,42 @@
       const now = Date.now();
       if(now - enemy.timer < enemy.interval) return;
       enemy.timer = now;
+
       const dx = player.x - enemy.x;
       const dy = player.y - enemy.y;
       switch(enemy.pattern){
         case "circle":
-          for(let i=0; i<enemy.count; i++){
-            const ang = i * 2*Math.PI / enemy.count;
-            enemyShots.push({ x: enemy.x, y: enemy.y,
-              vx:Math.cos(ang)*enemy.speed, vy:Math.sin(ang)*enemy.speed,
-              size:4 });
+          for(let i=0;i<enemy.count;i++){
+            let ang = i * 2*Math.PI / enemy.count;
+            enemyShots.push({ x:enemy.x, y:enemy.y, vx:Math.cos(ang)*enemy.speed, vy:Math.sin(ang)*enemy.speed, size:4 });
           }
           break;
         case "spiral":
-          const ang = (now / 300) % (2*Math.PI);
-          enemyShots.push({ x:enemy.x, y:enemy.y,
-            vx:Math.cos(ang)*enemy.speed, vy:Math.sin(ang)*enemy.speed,
-            size:4 });
+          let ang = (now / 300) % (2*Math.PI);
+          enemyShots.push({ x:enemy.x, y:enemy.y, vx:Math.cos(ang)*enemy.speed, vy:Math.sin(ang)*enemy.speed, size:4 });
           break;
         case "spread":
-          const base = Math.atan2(dy, dx);
-          const spr = Math.PI/8;
-          for(let i=-enemy.count/2; i<enemy.count/2; i++){
-            const a = base + i*(spr/(enemy.count/2));
-            enemyShots.push({ x:enemy.x, y:enemy.y,
-              vx:Math.cos(a)*enemy.speed, vy:Math.sin(a)*enemy.speed,
-              size:4 });
+          const base = Math.atan2(dy, dx), spr = Math.PI/8;
+          for(let i=-enemy.count/2;i<enemy.count/2;i++){
+            let a = base + i*(spr/(enemy.count/2));
+            enemyShots.push({ x:enemy.x, y:enemy.y, vx:Math.cos(a)*enemy.speed, vy:Math.sin(a)*enemy.speed, size:4 });
           }
           break;
         case "homing":
-          const ha = Math.atan2(dy, dx);
-          enemyShots.push({ x:enemy.x, y:enemy.y,
-            vx:Math.cos(ha)*enemy.speed, vy:Math.sin(ha)*enemy.speed,
-            size:6 });
+          let ha = Math.atan2(dy,dx);
+          enemyShots.push({ x:enemy.x, y:enemy.y, vx:Math.cos(ha)*enemy.speed, vy:Math.sin(ha)*enemy.speed, size:6 });
           break;
         case "big":
-          enemyShots.push({ x:enemy.x, y:enemy.y,
-            vx:0, vy:enemy.speed, size:16 });
+          enemyShots.push({ x:enemy.x, y:enemy.y, vx:0, vy:enemy.speed, size:16 });
           break;
       }
     }
 
     function update(){
       const elapsed = Date.now() - startTime;
-      const m = String(Math.floor(elapsed/60000)).padStart(2,'0');
-      const s = String(Math.floor(elapsed/1000)%60).padStart(2,'0');
-      timerEl.textContent = m + ":" + s;
+      const m = String(Math.floor(elapsed / 60000)).padStart(2,'0');
+      const s = String(Math.floor(elapsed / 1000) % 60).padStart(2,'0');
+      timerEl.textContent = `${m}:${s}`;
 
       if(keys.ArrowLeft) player.x -= player.speed;
       if(keys.ArrowRight) player.x += player.speed;
@@ -192,7 +179,7 @@
       }
 
       [shots, enemyShots].forEach(arr => {
-        for(let i=arr.length - 1; i >= 0; i--){
+        for(let i = arr.length - 1; i >= 0; i--){
           const b = arr[i];
           if(b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height){
             arr.splice(i,1);
@@ -200,9 +187,9 @@
         }
       });
 
-      pHPi.style.width = (player.hp / player.maxHP * 100) + "%";
+      pHPi.style.width = `${player.hp / player.maxHP * 100}%`;
       if(enemy){
-        eHPi.style.width = (enemy.hp / enemy.maxHP * 100) + "%";
+        eHPi.style.width = `${enemy.hp / enemy.maxHP * 100}%`;
       }
 
       if(enemy && enemy.hp <= 0 && !enemyDead){
@@ -232,17 +219,13 @@
       }
 
       shots.forEach(b => {
-        ctx.fillStyle = "lime";
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.size, 0, 2*Math.PI);
-        ctx.fill();
+        ctx.fillStyle = "lime"; ctx.beginPath();
+        ctx.arc(b.x, b.y, b.size, 0, 2*Math.PI); ctx.fill();
       });
 
       enemyShots.forEach(b => {
-        ctx.fillStyle = "red";
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.size, 0, 2*Math.PI);
-        ctx.fill();
+        ctx.fillStyle = "red"; ctx.beginPath();
+        ctx.arc(b.x, b.y, b.size, 0, 2*Math.PI); ctx.fill();
       });
     }
 
@@ -254,12 +237,7 @@
 
     loadProgress();
     spawnEnemy();
-
-    setTimeout(() => {
-      logo.style.display = "none";
-      loop();
-    }, 2000);
-
+    setTimeout(() => { logo.style.display = "none"; loop(); }, 2000);
   </script>
 </body>
 </html>
