@@ -239,5 +239,141 @@
     spawnEnemy();
     setTimeout(() => { logo.style.display = "none"; loop(); }, 2000);
   </script>
+  <script>
+/** 前半終了後のフロー開始ポイント */
+function startMario() {
+  // キャンバス上で動作するマリオ風ゲームクラス
+  class MarioGame {
+    constructor(canvas, onComplete) {
+      this.canvas = canvas;
+      this.ctx = canvas.getContext('2d');
+      this.onComplete = onComplete;
+      this.width = canvas.width;
+      this.height = canvas.height;
+      this.gravity = 0.5;
+      this.initControls();
+
+      this.stages = [
+        { ground: [ {x:0,y:600,w:480,h:40} ], enemies: [ {x:300,y:560} ], goal: {x:450,y:540} },
+        { ground: [ {x:0,y:600,w:480,h:40}, {x:200,y:500,w:100,h:10} ], enemies: [ {x:250,y:460} ], goal: {x:200,y:460} },
+        { ground: [ {x:0,y:600,w:480,h:40}, {x:150,y:550,w:80,h:10}, {x:300,y:500,w:100,h:10} ], enemies: [ {x:320,y:460}, {x:180,y:510} ], goal: {x:340,y:460} },
+        { ground: [ {x:0,y:600,w:480,h:40}, {x:100,y:500,w:100,h:10}, {x:250,y:450,w:100,h:10}, {x:380,y:400,w:80,h:10} ], enemies: [ {x:280,y:410} ], goal: {x:450,y:360} },
+        { ground: [ {x:0,y:600,w:480,h:40}, {x:120,y:550,w:80,h:10}, {x:240,y:500,w:80,h:10}, {x:360,y:450,w:80,h:10} ], enemies: [ {x:260,y:410}, {x:380,y:360} ], goal: {x:440,y:360} }
+      ];
+
+      this.stageIndex = 0;
+      this.spawnStage();
+      this.loop();
+    }
+
+    initControls() {
+      this.keys = {};
+      document.addEventListener('keydown', e => this.keys[e.key] = true);
+      document.addEventListener('keyup', e => this.keys[e.key] = false);
+    }
+
+    spawnStage() {
+      const st = this.stages[this.stageIndex];
+      this.ground = st.ground;
+      this.enemies = st.enemies.map(e => ({...e, size:20}));
+      this.goal = {...st.goal, size:30};
+      this.player = { x:50, y:520, vx:0, vy:0, w:20, h:30, onGround:false };
+    }
+
+    loop() {
+      this.update();
+      this.draw();
+      if (!this.completed) requestAnimationFrame(() => this.loop());
+    }
+
+    update() {
+      const p = this.player;
+      p.vy += this.gravity;
+      if (this.keys['ArrowLeft']) p.vx = -3;
+      else if (this.keys['ArrowRight']) p.vx = 3;
+      else p.vx = 0;
+      if (this.keys[' '] && p.onGround) { p.vy = -10; p.onGround = false; }
+
+      p.x += p.vx; p.y += p.vy;
+      this.resolveCollisions();
+
+      if (this.checkEnemyHit()) {
+        alert('やられた...');
+        this.stageIndex = 0;
+        this.spawnStage();
+      }
+
+      if (this.checkGoal()) {
+        this.stageIndex++;
+        if (this.stageIndex >= this.stages.length) {
+          this.completed = true;
+          this.showRestart();
+        } else this.spawnStage();
+      }
+    }
+
+    resolveCollisions() {
+      const p = this.player;
+      p.onGround = false;
+      this.ground.forEach(g => {
+        if (p.x + p.w > g.x && p.x < g.x + g.w && p.y + p.h > g.y && p.y + p.vy < g.y + g.h) {
+          p.y = g.y - p.h;
+          p.vy = 0;
+          p.onGround = true;
+        }
+      });
+      p.x = Math.max(0, Math.min(this.width - p.w, p.x));
+      p.y = Math.min(this.height - p.h, p.y);
+    }
+
+    checkEnemyHit() {
+      const p = this.player;
+      for (let e of this.enemies) {
+        if (p.x + p.w > e.x && p.x < e.x + e.size && p.y + p.h > e.y && p.y < e.y + e.size) return true;
+      }
+      return false;
+    }
+
+    checkGoal() {
+      const p = this.player, g = this.goal;
+      if (p.x + p.w > g.x && p.x < g.x + g.size && p.y + p.h > g.y && p.y < g.y + g.size) return true;
+      return false;
+    }
+
+    draw() {
+      const ctx = this.ctx;
+      ctx.clearRect(0,0,this.width,this.height);
+      ctx.fillStyle = '#88f';
+      this.ground.forEach(g => ctx.fillRect(g.x, g.y, g.w, g.h));
+      this.enemies.forEach(e => { ctx.fillStyle='red'; ctx.fillRect(e.x, e.y, e.size, e.size); });
+      ctx.fillStyle='gold'; ctx.fillRect(this.goal.x, this.goal.y, this.goal.size, this.goal.size);
+      ctx.fillStyle='green';
+      const p = this.player;
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+    }
+
+    showRestart() {
+      const btn = document.createElement('button');
+      btn.textContent = 'はじめから';
+      btn.style = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);padding:10px;font-size:18px;';
+      document.body.appendChild(btn);
+      btn.addEventListener('click', () => location.reload());
+    }
+  }
+
+  new MarioGame(canvas, () => {});
+}
+
+/** 前半の終了イベント */
+nextBtn.addEventListener('click', () => {
+  if(stageIndex === 5 && enemyDead) {
+    // **後半マリオ風ゲーム開始準備**
+    document.getElementById('ui').style.display = 'none';
+    nextBtn.style.display = 'none';
+    startMario();
+  }
+});
+</script>
+
 </body>
 </html>
