@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>生徒会選挙 世論調査システム</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    h2 {
+      color: #333;
+    }
+    .section {
+      margin-bottom: 30px;
+      padding: 15px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-weight: bold;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 生徒会選挙 世論調査</h1>
+
+  <div class="section">
+    <h2>会長 選挙</h2>
+    <form id="presidentForm"></form>
+  </div>
+
+  <div class="section">
+    <h2>副会長 選挙（異なる2人を選んでください）</h2>
+    <form id="vicePresidentForm"></form>
+  </div>
+
+  <button onclick="submitVote()">投票する</button>
+
+  <div class="results">
+    <h2>🗳️ 投票結果</h2>
+    <pre id="resultsDisplay"></pre>
+  </div>
+
+  <script>
+    const presidentCandidates = ['佐藤', '鈴木', '高橋', '田中'];  // 編集可能
+    const vicePresidentCandidates = ['山本', '伊藤', '中村', '小林'];  // 編集可能
+
+    const results = JSON.parse(localStorage.getItem('electionResults')) || {
+      president: {},
+      vicePresident: {}
+    };
+
+    presidentCandidates.forEach(name => {
+      results.president[name] = results.president[name] || 0;
+    });
+
+    vicePresidentCandidates.forEach(name => {
+      results.vicePresident[name] = results.vicePresident[name] || 0;
+    });
+
+    function renderForm() {
+      const pForm = document.getElementById('presidentForm');
+      presidentCandidates.forEach(name => {
+        const radio = `<label><input type="radio" name="president" value="${name}"> ${name}</label>`;
+        pForm.innerHTML += radio;
+      });
+
+      const vForm = document.getElementById('vicePresidentForm');
+      vicePresidentCandidates.forEach(name => {
+        const checkbox = `<label><input type="checkbox" name="vicePresident" value="${name}"> ${name}</label>`;
+        vForm.innerHTML += checkbox;
+      });
+    }
+
+    function submitVote() {
+      const pChoice = document.querySelector('input[name="president"]:checked');
+      const vChoices = Array.from(document.querySelectorAll('input[name="vicePresident"]:checked'));
+
+      if (!pChoice) {
+        alert('会長を選んでください。');
+        return;
+      }
+
+      if (vChoices.length !== 2) {
+        alert('副会長は異なる2人を選んでください。');
+        return;
+      }
+
+      const [vp1, vp2] = vChoices.map(c => c.value);
+      if (vp1 === vp2) {
+        alert('副会長には異なる2人を選んでください。');
+        return;
+      }
+
+      results.president[pChoice.value]++;
+      results.vicePresident[vp1]++;
+      results.vicePresident[vp2]++;
+
+      localStorage.setItem('electionResults', JSON.stringify(results));
+
+      alert('投票完了しました！');
+      showResults();
+    }
+
+    function showResults() {
+      const display = document.getElementById('resultsDisplay');
+      let output = '【会長】\n';
+      for (const [name, votes] of Object.entries(results.president)) {
+        output += `${name}: ${votes}票\n`;
+      }
+
+      output += '\n【副会長】\n';
+      for (const [name, votes] of Object.entries(results.vicePresident)) {
+        output += `${name}: ${votes}票\n`;
+      }
+
+      display.textContent = output;
+    }
+
+    renderForm();
+    showResults();
+  </script>
+</body>
+</html>
