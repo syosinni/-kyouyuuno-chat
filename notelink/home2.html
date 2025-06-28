@@ -2,150 +2,174 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="google-adsense-account" content="ca-pub-6980201498457818">
+  <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Note+LINK(共有ノート)</title>
-
-  <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" type="image/x-icon">
-  <link rel="apple-touch-icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="152x152">
-  <link rel="icon" href="https://kyouyuuno-to.f5.si/%E5%85%B1%E6%9C%89%E3%83%8E%E3%83%BC.png" sizes="64x64">
-
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6980201498457818" crossorigin="anonymous"></script>
-
+  
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-    }
-
-    .header {
-      width: 100%;
-      height: 550px;
-      background-image: url('https://kyouyuuno-to.f5.si/png/Screenshot%202024-11-02%2013.27.01.png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-    }
-
-    nav {
-      background-color: #333;
-      overflow: hidden;
-      position: fixed;
-      top: 0;
-      width: 100%;
-      z-index: 1000;
-    }
-
-    nav ul {
-      list-style: none;
-      display: flex;
-      justify-content: space-around;
-    }
-
-    nav ul li a,
-    nav ul li h2 {
-      display: block;
-      color: white;
-      text-align: center;
-      padding: 14px 20px;
-      text-decoration: none;
-    }
-
-    nav ul li a:hover {
-      background-color: #111;
-    }
-
-    .search-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 300px;
-      margin-top: 80px;
-    }
-
-    .search-form-7 {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 90%;
-      max-width: 600px;
-    }
-
-    .search-form-7 input {
-      width: 100%;
-      height: 40px;
-      padding: 5px 10px;
-      border: 1px solid #999999;
-      box-sizing: border-box;
-      color: #000;
-      outline: none;
-      font-size: 16px;
-    }
-
-    .search-form-7 button {
-      width: 30%;
-      max-width: 140px;
-      height: 40px;
-      border: none;
-      background-color: #4070ff;
-      color: #fff;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    .search-form-7 button::before {
-      width: 14px;
-      height: 14px;
-      margin-right: 5px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M18.031 16.6168L22.3137 20.8995L20.8995 22.3137L16.6168 18.031C15.0769 19.263 13.124 20 11 20C6.032 20 2 15.968 2 11C2 6.032 6.032 2 11 2C15.968 2 20 6.032 20 11C20 13.124 19.263 15.0769 18.031 16.6168ZM16.0247 15.8748C17.2475 14.6146 18 12.8956 18 11C18 7.1325 14.8675 4 11 4C7.1325 4 4 7.1325 4 11C4 14.8675 7.1325 18 11 18C12.8956 18 14.6146 17.2475 15.8748 16.0247L16.0247 15.8748Z' fill='%23fff'%3E%3C/path%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      content: '';
-    }
-
-    @media (max-width: 768px) {
-      .search-form-7 {
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .search-form-7 button {
-        width: 100%;
-      }
-
-      nav ul {
-        flex-direction: column;
-      }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:Arial,sans-serif;}
+    nav{background:#333;position:fixed;top:0;width:100%;z-index:1000;}
+    nav ul{display:flex;justify-content:space-around;list-style:none;}
+    nav ul li a, nav ul li h2{color:#fff;text-decoration:none;padding:14px 20px;display:block;}
+    nav ul li a:hover{background:#111;}
+    .header{height:200px;margin-top:48px;background:url('https://kyouyuuno-to.f5.si/png/Screenshot%202024-11-02%2013.27.01.png') center/cover no-repeat;}
+    .search-wrapper{display:flex;justify-content:center;align-items:center;padding:20px;}
+    .search-form-7{display:flex;width:90%;max-width:600px;gap:10px;}
+    .search-form-7 input{flex:1;padding:8px;border:1px solid #999;font-size:16px;}
+    .search-form-7 button{width:120px;background:#4070ff;color:#fff;border:none;cursor:pointer;font-size:16px;}
+    .search-form-7 button::before{margin-right:5px;background:url("data:image/svg+xml,%3Csvg...") no-repeat;}
+    
+    section{padding:60px 20px;margin-top:20px;}
+    h2.section-title{margin-bottom:16px;font-size:1.5rem;}
+    .slideshow-container{position:relative;display:flex;overflow:hidden;gap:10px;}
+    .card{min-width:280px;background:#fff;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:16px;flex-shrink:0;}
+    .card img{width:100%;border-radius:4px;}
+    .card h3{margin:12px 0 8px;font-size:1.2rem;}
+    .meta{font-size:0.9rem;color:#555;}
+    .like-btn{background:#ff4081;color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:0.9rem;margin-top:8px;}
+    .comments{margin-top:12px;}
+    .comment-form{display:flex;gap:4px;}
+    .comment-form input{flex:1;padding:4px;}
+    .comment-form button{padding:4px 8px;}
+    .comment-list p{background:#f0f0f0;padding:6px;border-radius:4px;margin-top:6px;font-size:0.9rem;}
+    .nav-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;}
+    .prev{left:0;} .next{right:0;}
+    
+    .countdown{padding:20px;text-align:center;font-size:1.1rem;background:#eee;}
+    
+    @media(max-width:768px){
+      .slideshow-container{overflow-x:auto;}
+      .card{min-width:80%;max-width:300px;}
     }
   </style>
 </head>
 <body>
+  <nav><ul>
+    <li><h2>Note+LINK</h2></li>
+    <li><a href="#home">おすすめ</a></li>
+    <li><a href="#home">最近の投稿</a></li>
+    <li><a href="#アンケート">アンケート</a></li>
+  </ul></nav>
 
-  <nav>
-    <ul>
-      <li><h2>Note+LINK</h2></li>
-      <li><a href="#おすすめ">おすすめ</a></li>
-      <li><a href="https://kyouyuuno-to.f5.si/notelink/up">投稿</a></li>
-      <li><a href="https://kyouyuuno-to.f5.si/notelink/ak">垢</a></li>
-    </ul>
-  </nav>
+  <div class="header"></div>
 
   <div class="search-wrapper">
-    <form action="#" class="search-form-7">
-      <input type="text" placeholder="キーワードを入力..." aria-label="キーワードを入力">
+    <form class="search-form-7"><input type="text" placeholder="キーワードを入力..." aria-label="キーワード">
       <button type="submit">検索</button>
     </form>
   </div>
 
-  <footer style="text-align:center; padding:20px;">
-    <a href="https://kyouyuuno-to.f5.si/study/studyUP/etc">Study UP（勉強支援サービス）</a> |
-    <a href="https://c.kuku.lu/tbd245rk">共有ノートChat</a>
+  <!-- おすすめ投稿 -->
+  <section id="home">
+    <h2 class="section-title">おすすめの投稿</h2>
+    <div id="slideshow-rcm" class="slideshow-container">
+      <button class="nav-btn prev" onclick="changeSlide('slideshow-rcm', -1)">&#10094;</button>
+      <div class="card active">
+        <img src="https://via.placeholder.com/400x240?text=おすすめ1" alt="おすすめ1">
+        <h3>おすすめタイトル1</h3>
+        <div class="meta">投稿者：Carol</div>
+        <button class="like-btn" onclick="addLike(this)">👍 <span>15</span></button>
+        <div class="comments"><form class="comment-form" onsubmit="addComment(event)">
+          <input type="text" placeholder="コメント..." required><button type="submit">送信</button>
+        </form><div class="comment-list"></div></div>
+      </div>
+      <div class="card">
+        <img src="https://via.placeholder.com/400x240?text=おすすめ2" alt="おすすめ2">
+        <h3>おすすめタイトル2</h3>
+        <div class="meta">投稿者：Eve</div>
+        <button class="like-btn" onclick="addLike(this)">👍 <span>9</span></button>
+        <div class="comments"><form class="comment-form" onsubmit="addComment(event)">
+          <input type="text" placeholder="コメント..." required><button type="submit">送信</button>
+        </form><div class="comment-list"></div></div>
+      </div>
+      <button class="nav-btn next" onclick="changeSlide('slideshow-rcm', 1)">&#10095;</button>
+    </div>
+  </section>
+
+  <!-- 最近の投稿 -->
+  <section>
+    <h2 class="section-title">最近の投稿</h2>
+    <div id="slideshow-recent" class="slideshow-container">
+      <button class="nav-btn prev" onclick="changeSlide('slideshow-recent', -1)">&#10094;</button>
+      <div class="card active">
+        <img src="https://via.placeholder.com/400x240?text=最近1" alt="最近1">
+        <h3>投稿タイトル1</h3>
+        <div class="meta">投稿者：Alice</div>
+        <button class="like-btn" onclick="addLike(this)">👍 <span>12</span></button>
+        <div class="comments"><form class="comment-form" onsubmit="addComment(event)">
+          <input type="text" placeholder="コメント..." required><button type="submit">送信</button>
+        </form><div class="comment-list"></div></div>
+      </div>
+      <div class="card">
+        <img src="https://via.placeholder.com/400x240?text=最近2" alt="最近2">
+        <h3>投稿タイトル2</h3>
+        <div class="meta">投稿者：Bob</div>
+        <button class="like-btn" onclick="addLike(this)">👍 <span>5</span></button>
+        <div class="comments"><form class="comment-form" onsubmit="addComment(event)">
+          <input type="text" placeholder="コメント..." required><button type="submit">送信</button>
+        </form><div class="comment-list"></div></div>
+      </div>
+      <button class="nav-btn next" onclick="changeSlide('slideshow-recent', 1)">&#10095;</button>
+    </div>
+  </section>
+
+  <!-- アンケート -->
+  <section id="アンケート">
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScR7p6xgG8VCGMz4FcPeleWUz8DD3o4jAj4yvg6YtjuOg6j1Q/viewform?embedded=true" width="100%" height="500" frameborder="0">読み込んでいます…</iframe>
+  </section>
+
+  <!-- ニュース -->
+  <section id="news">
+    <h2 class="section-title">ニュース</h2>
+    <ul style="max-width:600px;margin:0 auto;">
+      <li><span>2025.5.25</span> バグ修正を行いました。</li>
+      <li><span>2025.5.24</span> システムアップデートを行いました。</li>
+      <li><span>2025.5.24</span> UIアップデートを行いました。</li>
+      <li><span>2025.5.24</span> html版News+LINK開始しました。</li>
+    </ul>
+  </section>
+
+  <!-- カウントダウン -->
+  <div class="countdown" id="countdown">読み込み中...</div>
+
+  <footer style="text-align:center;padding:20px;">
+    <a href="#">Study UP（勉強支援）</a> |
+    <a href="#">共有ノートChat</a>
   </footer>
 
+  <script>
+    const slideIdx = {};
+    function changeSlide(id, dir) {
+      const container = document.getElementById(id);
+      const cards = container.querySelectorAll('.card');
+      slideIdx[id] = slideIdx[id] ?? 0;
+      cards[slideIdx[id]].classList.remove('active');
+      slideIdx[id] = (slideIdx[id] + dir + cards.length) % cards.length;
+      cards[slideIdx[id]].classList.add('active');
+    }
+    function addLike(btn) {
+      const cnt = btn.querySelector('span');
+      cnt.textContent = parseInt(cnt.textContent) + 1;
+    }
+    function addComment(e) {
+      e.preventDefault();
+      const ip = e.target.querySelector('input');
+      if (!ip.value.trim()) return;
+      const cl = e.target.nextElementSibling;
+      const p = document.createElement('p');
+      p.textContent = ip.value; cl.append(p);
+      ip.value = '';
+    }
+    function updateCountdown() {
+      const now = new Date();
+      const target = new Date(now.getFullYear(), 5, 15,23,59,59);
+      const diff = target - now;
+      if(diff<=0){document.getElementById('countdown').innerText='カウントダウン終了！';clearInterval(timer);return;}
+      const d=Math.floor(diff/86400000), h=Math.floor(diff/3600000%24), m=Math.floor(diff/60000%60), s=Math.floor(diff/1000%60);
+      document.getElementById('countdown').innerText= `${d}日 ${h}時間 ${m}分 ${s}秒`;
+    }
+    const timer = setInterval(updateCountdown,1000); updateCountdown();
+  </script>
 </body>
 </html>
