@@ -61,34 +61,42 @@
       background-color: #111;
     }
 
+    .search-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 300px;
+      margin-top: 80px;
+    }
+
     .search-form-7 {
       display: flex;
       align-items: center;
-      gap: 0 10px;
-      margin: 80px 20px 20px;
+      gap: 10px;
+      width: 90%;
+      max-width: 600px;
     }
 
     .search-form-7 input {
       width: 100%;
-      height: 34px;
-      padding: 1px 5px 1px 8px;
+      height: 40px;
+      padding: 5px 10px;
       border: 1px solid #999999;
       box-sizing: border-box;
       color: #000;
       outline: none;
+      font-size: 16px;
     }
 
     .search-form-7 button {
-      display: flex;
-      justify-content: center;
-      align-items: center;
       width: 30%;
       max-width: 140px;
-      height: 34px;
+      height: 40px;
       border: none;
       background-color: #4070ff;
       color: #fff;
       cursor: pointer;
+      font-size: 16px;
     }
 
     .search-form-7 button::before {
@@ -100,120 +108,7 @@
       content: '';
     }
 
-    section {
-      padding: 60px 20px;
-      margin-top: 50px;
-    }
-
-    .slideshow-container {
-      position: relative;
-      width: 100%;
-      max-width: 600px;
-      margin: 20px auto;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-
-    .slide {
-      display: none;
-      padding: 20px;
-    }
-
-    .slide.active {
-      display: block;
-    }
-
-    .slide img {
-      width: 100%;
-      border-radius: 8px;
-    }
-
-    .nav-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: #333;
-      color: #fff;
-      border: none;
-      border-radius: 50%;
-      font-size: 20px;
-      padding: 8px;
-      cursor: pointer;
-    }
-
-    .prev { left: 10px; }
-    .next { right: 10px; }
-
-    .like-btn {
-      background: #ff4081;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .comment-form {
-      margin-top: 10px;
-      display: flex;
-    }
-
-    .comment-form input {
-      flex: 1;
-      padding: 5px;
-    }
-
-    .comment-form button {
-      padding: 5px 10px;
-    }
-
-    .comment-list p {
-      background: #f0f0f0;
-      padding: 5px;
-      border-radius: 4px;
-      margin: 5px 0;
-    }
-
-    ul {
-      width: 500px;
-      margin: 0 auto;
-    }
-
-    li {
-      border-bottom: 1px solid #ccc;
-      list-style: none;
-    }
-
-    a {
-      text-decoration: none;
-      display: block;
-      padding: 10px 0;
-    }
-
-    a:hover {
-      background-color: #ccc;
-    }
-
-    span {
-      color: #737373;
-      margin-right: 10px;
-    }
-
-    p {
-      color: #131313;
-      display: inline-block;
-      margin: 0;
-      padding: 0;
-    }
-
     @media (max-width: 768px) {
-      .header {
-        height: 200px;
-      }
-
       .search-form-7 {
         flex-direction: column;
         gap: 10px;
@@ -223,25 +118,13 @@
         width: 100%;
       }
 
-      .slideshow-container {
-        max-width: 100%;
-        margin: 10px auto;
-      }
-
       nav ul {
         flex-direction: column;
-      }
-
-      ul {
-        width: 100%;
-        padding: 0 10px;
       }
     }
   </style>
 </head>
 <body>
-
-  <div class="header"></div>
 
   <nav>
     <ul>
@@ -252,147 +135,17 @@
     </ul>
   </nav>
 
-  <form action="#" class="search-form-7">
-    <label>
-      <input type="text" aria-label="キーワードを入力">
-    </label>
-    <button type="submit">検索</button>
-  </form>
-
-  <section id="home">
-    <h1>最近の投稿</h1>
-    <p>最新の投稿が厳選されます。</p>
-
-    <div id="slideshow1" class="slideshow-container">
-      <div class="slide active">
-        <img src="https://via.placeholder.com/500x300?text=投稿1" alt="投稿1">
-        <h3>投稿タイトル1</h3>
-        <div class="meta">アップロード者：Alice</div>
-        <button class="like-btn" onclick="addLike(this)">👍 <span>12</span></button>
-        <div class="comments">
-          <strong>💬 コメント</strong>
-          <div class="comment-list"></div>
-          <form class="comment-form" onsubmit="addComment(event)">
-            <input type="text" placeholder="コメントを入力..." required />
-            <button type="submit">送信</button>
-          </form>
-        </div>
-      </div>
-      <div class="slide">
-        <img src="https://via.placeholder.com/500x300?text=投稿2" alt="投稿2">
-        <h3>投稿タイトル2</h3>
-        <div class="meta">アップロード者：Bob</div>
-        <button class="like-btn" onclick="addLike(this)">👍 <span>5</span></button>
-        <div class="comments">
-          <strong>💬 コメント</strong>
-          <div class="comment-list"></div>
-          <form class="comment-form" onsubmit="addComment(event)">
-            <input type="text" placeholder="コメントを入力..." required />
-            <button type="submit">送信</button>
-          </form>
-        </div>
-      </div>
-      <button class="nav-btn prev" onclick="changeSlide('slideshow1', -1)">&#10094;</button>
-      <button class="nav-btn next" onclick="changeSlide('slideshow1', 1)">&#10095;</button>
-    </div>
-  </section>
-
-  <section id="アンケート">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScR7p6xgG8VCGMz4FcPeleWUz8DD3o4jAj4yvg6YtjuOg6j1Q/viewform?embedded=true" width="100%" height="500" frameborder="0" marginheight="0" marginwidth="0">読み込んでいます…</iframe>
-  </section>
-
-  <section id="news">
-    <h2>ニュース</h2>
-    <ul>
-      <li>
-        <a href="https://kyouyuuno-to.f5.si/notelink/news/0004">
-          <span>2025.5.25</span>
-          <p>バグ修正を行いました。</p>
-        </a>
-      </li>
-      <li>
-        <a href="https://kyouyuuno-to.f5.si/notelink/news/0003">
-          <span>2025.5.24</span>
-          <p>システムアップデートを行いました。</p>
-        </a>
-      </li>
-      <li>
-        <a href="https://kyouyuuno-to.f5.si/notelink/news/0002">
-          <span>2025.5.24</span>
-          <p>UIアップデートを行いました。</p>
-        </a>
-      </li>
-      <li>
-        <a href="https://kyouyuuno-to.f5.si/notelink/news/0001">
-          <span>2025.5.24</span>
-          <p>News+LINK(仮)のサービスを開始しました。</p>
-        </a>
-      </li>
-    </ul>
-  </section>
-
-  <div id="countdown">読み込み中...</div>
-
-  <script>
-    const slideIndexes = {};
-
-    function changeSlide(containerId, direction) {
-      const container = document.getElementById(containerId);
-      const slides = container.querySelectorAll('.slide');
-
-      slideIndexes[containerId] = slideIndexes[containerId] || 0;
-      slides[slideIndexes[containerId]].classList.remove('active');
-
-      slideIndexes[containerId] = (slideIndexes[containerId] + direction + slides.length) % slides.length;
-      slides[slideIndexes[containerId]].classList.add('active');
-    }
-
-    function addLike(button) {
-      const span = button.querySelector('span');
-      span.textContent = parseInt(span.textContent) + 1;
-    }
-
-    function addComment(event) {
-      event.preventDefault();
-      const form = event.target;
-      const input = form.querySelector('input');
-      const text = input.value.trim();
-      if (!text) return;
-
-      const commentList = form.closest('.comments').querySelector('.comment-list');
-      const p = document.createElement('p');
-      p.textContent = text;
-      commentList.appendChild(p);
-      input.value = '';
-    }
-
-    function updateCountdown() {
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const targetDate = new Date(currentYear, 5, 15, 23, 59, 59); // 6月15日
-
-      const diff = targetDate - now;
-      if (diff <= 0) {
-        document.getElementById('countdown').innerText = 'カウントダウン終了！';
-        clearInterval(timer);
-        return;
-      }
-
-      const seconds = Math.floor((diff / 1000) % 60);
-      const minutes = Math.floor((diff / 1000 / 60) % 60);
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-      document.getElementById('countdown').innerText = `${days}日 ${hours}時間 ${minutes}分 ${seconds}秒`;
-    }
-
-    const timer = setInterval(updateCountdown, 1000);
-    updateCountdown();
-  </script>
+  <div class="search-wrapper">
+    <form action="#" class="search-form-7">
+      <input type="text" placeholder="キーワードを入力..." aria-label="キーワードを入力">
+      <button type="submit">検索</button>
+    </form>
+  </div>
 
   <footer style="text-align:center; padding:20px;">
     <a href="https://kyouyuuno-to.f5.si/study/studyUP/etc">Study UP（勉強支援サービス）</a> |
     <a href="https://c.kuku.lu/tbd245rk">共有ノートChat</a>
   </footer>
+
 </body>
 </html>
