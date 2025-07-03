@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>自動マスク世界地図</title>
+  <meta charset="UTF-8">
+  <title>マスク不要！白地図ステートクリック塗り分け</title>
   <style>
     html, body { margin: 0; overflow: hidden; background: #87CEFA; }
     canvas { display: block; cursor: grab; }
@@ -11,107 +11,108 @@
 <body>
 <canvas id="canvas"></canvas>
 <script>
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const mapImg = new Image();
-mapImg.crossOrigin = "anonymous";
-mapImg.src = "https://kyouyuuno-to.f5.si/img/0001.png";
+const img = new Image();
+img.crossOrigin = "anonymous";
+img.src = "https://kyouyuuno-to.f5.si/img/0001.png";
 
 let scale = 1, offsetX = 0, offsetY = 0;
-let dragging = false, dragStart = { x: 0, y: 0 };
-let maskMap = {}; // colorKey => true（赤塗り対象）
-let regionColors = {}; // x,y => regionKey
-let maskImageData;
+let dragging = false, dragStart = {x:0, y:0};
+const selectedRegions = new Set();
+let regionMap = {}; // x,y -> regionKey
+let maskReady = false;
 
-mapImg.onload = () => {
-  const w = mapImg.width, h = mapImg.height;
-  const maskCanvas = document.createElement('canvas');
-  maskCanvas.width = w; maskCanvas.height = h;
-  const maskCtx = maskCanvas.getContext('2d');
-  maskCtx.drawImage(mapImg, 0, 0);
-  const data = maskCtx.getImageData(0, 0, w, h);
-  maskImageData = data;
+img.onload = () => {
+  const w = img.width, h = img.height;
+  const tempCanvas = document.createElement("canvas");
+  tempCanvas.width = w;
+  tempCanvas.height = h;
+  const tempCtx = tempCanvas.getContext("2d");
+  tempCtx.drawImage(img, 0, 0);
+  const data = tempCtx.getImageData(0, 0, w, h).data;
 
   const visited = new Uint8Array(w * h);
   const dirs = [1, -1, w, -w];
   let regionId = 1;
 
-  const pickColor = i => [ (i*53)%256, (i*97)%256, (i*211)%256 ];
+  function pickColor(i) {
+    return [ (i*83)%255, (i*47)%255, (i*193)%255 ];
+  }
 
   for (let i = 0; i < w * h; i++) {
     if (visited[i]) continue;
     const idx = i * 4;
-    if (data.data[idx] === 255 && data.data[idx+1] === 255 && data.data[idx+2] === 255) {
-      // 白領域なら塗り始める
-      const regionKey = pickColor(regionId).join(",");
-      regionId++;
-
+    if (data[idx] === 255 && data[idx+1] === 255 && data[idx+2] === 255) {
+      const key = pickColor(regionId).join(',');
       const stack = [i];
       while (stack.length) {
-        const pos = stack.pop();
-        if (visited[pos]) continue;
-        visited[pos] = 1;
-        const pi = pos * 4;
-        const x = pos % w, y = Math.floor(pos / w);
-        regionColors[`${x},${y}`] = regionKey;
-
-        for (let d of dirs) {
-          const ni = pos + d;
+        const cur = stack.pop();
+        if (visited[cur]) continue;
+        visited[cur] = 1;
+        const x = cur % w, y = Math.floor(cur / w);
+        regionMap[`${x},${y}`] = key;
+        for (const d of dirs) {
+          const ni = cur + d;
           if (ni < 0 || ni >= w * h) continue;
           const ni4 = ni * 4;
           if (!visited[ni] &&
-              data.data[ni4] === 255 &&
-              data.data[ni4+1] === 255 &&
-              data.data[ni4+2] === 255) {
+              data[ni4] === 255 &&
+              data[ni4+1] === 255 &&
+              data[ni4+2] === 255) {
             stack.push(ni);
           }
         }
       }
+      regionId++;
     } else {
       visited[i] = 1;
     }
   }
 
+  maskReady = true;
   draw();
 };
 
 function draw() {
-  ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
-  ctx.clearRect(-offsetX / scale, -offsetY / scale, canvas.width / scale, canvas.height / scale);
-  ctx.drawImage(mapImg, 0, 0);
+  if (!maskReady) return;
 
-  const w = mapImg.width, h = mapImg.height;
-  const redOverlay = ctx.createImageData(w, h);
-  for (let key in regionColors) {
-    const [x, y] = key.split(',').map(Number);
-    const regionKey = regionColors[key];
-    if (!maskMap[regionKey]) continue;
-    const i = (y * w + x) * 4;
-    redOverlay.data[i] = 255;
-    redOverlay.data[i+1] = 0;
-    redOverlay.data[i+2] = 0;
-    redOverlay.data[i+3] = 128;
+  ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+  ctx.clearRect(-offsetX/scale, -offsetY/scale, canvas.width/scale, canvas.height/scale);
+  ctx.drawImage(img, 0, 0);
+
+  const overlay = ctx.createImageData(img.width, img.height);
+  for (const [xy, region] of Object.entries(regionMap)) {
+    if (!selectedRegions.has(region)) continue;
+    const [x, y] = xy.split(',').map(Number);
+    const i = (y * img.width + x) * 4;
+    overlay.data[i] = 255;
+    overlay.data[i+1] = 0;
+    overlay.data[i+2] = 0;
+    overlay.data[i+3] = 128;
   }
-  ctx.putImageData(redOverlay, 0, 0);
+  ctx.putImageData(overlay, 0, 0);
 }
 
-// クリック処理
-canvas.addEventListener('click', (e) => {
+canvas.addEventListener("click", e => {
+  if (!maskReady) return;
   const x = Math.floor((e.offsetX - offsetX) / scale);
   const y = Math.floor((e.offsetY - offsetY) / scale);
-  const key = `${x},${y}`;
-  const regionKey = regionColors[key];
-  if (!regionKey) return;
-
-  maskMap[regionKey] = !maskMap[regionKey];
+  const key = regionMap[`${x},${y}`];
+  if (!key) return;
+  if (selectedRegions.has(key)) {
+    selectedRegions.delete(key);
+  } else {
+    selectedRegions.add(key);
+  }
   draw();
 });
 
-// ズーム
-canvas.addEventListener('wheel', e => {
+// Zoom
+canvas.addEventListener("wheel", e => {
   e.preventDefault();
   const zoom = e.deltaY < 0 ? 1.1 : 0.9;
   const mx = e.offsetX, my = e.offsetY;
@@ -121,28 +122,28 @@ canvas.addEventListener('wheel', e => {
   draw();
 });
 
-// パン
-canvas.addEventListener('mousedown', e => {
+// Pan
+canvas.addEventListener("mousedown", e => {
   dragging = true;
   dragStart = { x: e.clientX, y: e.clientY };
   canvas.style.cursor = 'grabbing';
 });
-canvas.addEventListener('mousemove', e => {
+canvas.addEventListener("mousemove", e => {
   if (!dragging) return;
   offsetX += e.clientX - dragStart.x;
   offsetY += e.clientY - dragStart.y;
   dragStart = { x: e.clientX, y: e.clientY };
   draw();
 });
-canvas.addEventListener('mouseup', () => {
+canvas.addEventListener("mouseup", () => {
   dragging = false;
   canvas.style.cursor = 'grab';
 });
-canvas.addEventListener('mouseleave', () => {
+canvas.addEventListener("mouseleave", () => {
   dragging = false;
   canvas.style.cursor = 'grab';
 });
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   draw();
