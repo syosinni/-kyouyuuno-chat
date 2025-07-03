@@ -1,153 +1,216 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>マスク不要！白地図ステートクリック塗り分け</title>
-  <style>
-    html, body { margin: 0; overflow: hidden; background: #87CEFA; }
-    canvas { display: block; cursor: grab; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブな世界地図</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* スクロールバーを非表示 */
+            background-color: #87CEEB; /* 水色（海を表現） */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #map-container {
+            position: relative;
+            /* 画像のアスペクト比に合わせて幅と高さを調整 */
+            width: 800px; /* 例として幅を設定、画像のアスペクト比に合わせて調整してください */
+            height: auto; /* 高さは自動調整 */
+            max-width: 95vw; /* ビューポートの幅を超えないように */
+            max-height: 95vh; /* ビューポートの高さを超えないように */
+        }
+
+        #map-image {
+            display: block;
+            width: 100%;
+            height: auto;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; /* 画像をCanvasの下に配置 */
+        }
+
+        #map-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2; /* Canvasを画像の上に配置 */
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-<canvas id="canvas"></canvas>
-<script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+    <div id="map-container">
+        <img id="map-image" src="https://kyouyuuno-to.f5.si/img/0001.png" alt="世界地図">
+        <canvas id="map-canvas"></canvas>
+    </div>
 
-const img = new Image();
-img.crossOrigin = "anonymous";
-img.src = "https://kyouyuuno-to.f5.si/img/0001.png";
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapImage = document.getElementById('map-image');
+            const mapCanvas = document.getElementById('map-canvas');
+            const ctx = mapCanvas.getContext('2d');
+            let originalImageData = null; // 元の画像データを保存
 
-let scale = 1, offsetX = 0, offsetY = 0;
-let dragging = false, dragStart = {x:0, y:0};
-const selectedRegions = new Set();
-let regionMap = {}; // x,y -> regionKey
-let maskReady = false;
+            // 画像がロードされたらCanvasのサイズを設定し、画像を描画する
+            mapImage.onload = () => {
+                const container = document.getElementById('map-container');
+                const aspectRatio = mapImage.naturalWidth / mapImage.naturalHeight;
 
-img.onload = () => {
-  const w = img.width, h = img.height;
-  const tempCanvas = document.createElement("canvas");
-  tempCanvas.width = w;
-  tempCanvas.height = h;
-  const tempCtx = tempCanvas.getContext("2d");
-  tempCtx.drawImage(img, 0, 0);
-  const data = tempCtx.getImageData(0, 0, w, h).data;
+                // コンテナのサイズを画像のアスペクト比に合わせて設定
+                // ここでは、高さがビューポートの高さに合わせるように調整
+                const maxWidth = window.innerWidth * 0.95;
+                const maxHeight = window.innerHeight * 0.95;
 
-  const visited = new Uint8Array(w * h);
-  const dirs = [1, -1, w, -w];
-  let regionId = 1;
+                let calculatedWidth = mapImage.naturalWidth;
+                let calculatedHeight = mapImage.naturalHeight;
 
-  function pickColor(i) {
-    return [ (i*83)%255, (i*47)%255, (i*193)%255 ];
-  }
+                if (calculatedWidth > maxWidth) {
+                    calculatedWidth = maxWidth;
+                    calculatedHeight = calculatedWidth / aspectRatio;
+                }
+                if (calculatedHeight > maxHeight) {
+                    calculatedHeight = maxHeight;
+                    calculatedWidth = calculatedHeight * aspectRatio;
+                }
 
-  for (let i = 0; i < w * h; i++) {
-    if (visited[i]) continue;
-    const idx = i * 4;
-    if (data[idx] === 255 && data[idx+1] === 255 && data[idx+2] === 255) {
-      const key = pickColor(regionId).join(',');
-      const stack = [i];
-      while (stack.length) {
-        const cur = stack.pop();
-        if (visited[cur]) continue;
-        visited[cur] = 1;
-        const x = cur % w, y = Math.floor(cur / w);
-        regionMap[`${x},${y}`] = key;
-        for (const d of dirs) {
-          const ni = cur + d;
-          if (ni < 0 || ni >= w * h) continue;
-          const ni4 = ni * 4;
-          if (!visited[ni] &&
-              data[ni4] === 255 &&
-              data[ni4+1] === 255 &&
-              data[ni4+2] === 255) {
-            stack.push(ni);
-          }
-        }
-      }
-      regionId++;
-    } else {
-      visited[i] = 1;
-    }
-  }
+                container.style.width = `${calculatedWidth}px`;
+                container.style.height = `${calculatedHeight}px`;
 
-  maskReady = true;
-  draw();
-};
+                mapCanvas.width = mapImage.naturalWidth; // Canvasの内部解像度は画像のオリジナルサイズ
+                mapCanvas.height = mapImage.naturalHeight;
 
-function draw() {
-  if (!maskReady) return;
+                // Canvasに画像を一度描画して、ピクセルデータを取得する
+                ctx.drawImage(mapImage, 0, 0);
+                originalImageData = ctx.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
+                // Canvasをクリアして透明にする (クリックしたピクセルを塗るため)
+                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+            };
 
-  ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
-  ctx.clearRect(-offsetX/scale, -offsetY/scale, canvas.width/scale, canvas.height/scale);
-  ctx.drawImage(img, 0, 0);
+            // 画像の読み込みエラー処理
+            mapImage.onerror = () => {
+                console.error("画像の読み込みに失敗しました。画像URLを確認してください。");
+                alert("地図画像の読み込みに失敗しました。URLが正しいか確認してください。");
+            };
 
-  const overlay = ctx.createImageData(img.width, img.height);
-  for (const [xy, region] of Object.entries(regionMap)) {
-    if (!selectedRegions.has(region)) continue;
-    const [x, y] = xy.split(',').map(Number);
-    const i = (y * img.width + x) * 4;
-    overlay.data[i] = 255;
-    overlay.data[i+1] = 0;
-    overlay.data[i+2] = 0;
-    overlay.data[i+3] = 128;
-  }
-  ctx.putImageData(overlay, 0, 0);
-}
+            mapCanvas.addEventListener('click', (event) => {
+                if (!originalImageData) {
+                    console.warn("画像データがまだロードされていません。");
+                    return;
+                }
 
-canvas.addEventListener("click", e => {
-  if (!maskReady) return;
-  const x = Math.floor((e.offsetX - offsetX) / scale);
-  const y = Math.floor((e.offsetY - offsetY) / scale);
-  const key = regionMap[`${x},${y}`];
-  if (!key) return;
-  if (selectedRegions.has(key)) {
-    selectedRegions.delete(key);
-  } else {
-    selectedRegions.add(key);
-  }
-  draw();
-});
+                // マップコンテナに対するクリック位置を計算
+                const rect = mapCanvas.getBoundingClientRect();
+                const scaleX = mapCanvas.width / rect.width;    // 拡大率を考慮
+                const scaleY = mapCanvas.height / rect.height; // 拡大率を考慮
 
-// Zoom
-canvas.addEventListener("wheel", e => {
-  e.preventDefault();
-  const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-  const mx = e.offsetX, my = e.offsetY;
-  offsetX = mx - (mx - offsetX) * zoom;
-  offsetY = my - (my - offsetY) * zoom;
-  scale *= zoom;
-  draw();
-});
+                const clickedX = Math.floor((event.clientX - rect.left) * scaleX);
+                const clickedY = Math.floor((event.clientY - rect.top) * scaleY);
 
-// Pan
-canvas.addEventListener("mousedown", e => {
-  dragging = true;
-  dragStart = { x: e.clientX, y: e.clientY };
-  canvas.style.cursor = 'grabbing';
-});
-canvas.addEventListener("mousemove", e => {
-  if (!dragging) return;
-  offsetX += e.clientX - dragStart.x;
-  offsetY += e.clientY - dragStart.y;
-  dragStart = { x: e.clientX, y: e.clientY };
-  draw();
-});
-canvas.addEventListener("mouseup", () => {
-  dragging = false;
-  canvas.style.cursor = 'grab';
-});
-canvas.addEventListener("mouseleave", () => {
-  dragging = false;
-  canvas.style.cursor = 'grab';
-});
-window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  draw();
-});
-</script>
+                // ピクセルデータを操作してバケツ塗りつぶし
+                fillColor(clickedX, clickedY, { r: 255, g: 0, b: 0, a: 255 }); // 赤色で塗りつぶす
+            });
+
+            // バケツ塗りつぶしアルゴリズム
+            function fillColor(startX, startY, fillColor) {
+                const imageData = ctx.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
+                const data = imageData.data; // 現在Canvasに描画されているピクセルデータ
+
+                // 元の画像のピクセルデータを参照
+                const originalData = originalImageData.data;
+
+                const width = mapCanvas.width;
+                const height = mapCanvas.height;
+
+                // クリックされたピクセルが既に塗りつぶす色と同じか、または黒い境界線の場合、何もしない
+                const getPixelOriginalColor = (x, y) => {
+                    const index = (y * width + x) * 4;
+                    return {
+                        r: originalData[index],
+                        g: originalData[index + 1],
+                        b: originalData[index + 2],
+                        a: originalData[index + 3]
+                    };
+                };
+
+                const getPixelCurrentColor = (x, y) => {
+                    const index = (y * width + x) * 4;
+                    return {
+                        r: data[index],
+                        g: data[index + 1],
+                        b: data[index + 2],
+                        a: data[index + 3]
+                    };
+                };
+
+                const setPixelColor = (x, y, color) => {
+                    const index = (y * width + x) * 4;
+                    data[index] = color.r;
+                    data[index + 1] = color.g;
+                    data[index + 2] = color.b;
+                    data[index + 3] = color.a;
+                };
+
+                const startColor = getPixelOriginalColor(startX, startY);
+
+                // クリックされた点が黒（境界線）または既に赤色の場合は何もしない
+                if ((startColor.r === 0 && startColor.g === 0 && startColor.b === 0) ||
+                    (getPixelCurrentColor(startX, startY).r === fillColor.r &&
+                     getPixelCurrentColor(startX, startY).g === fillColor.g &&
+                     getPixelCurrentColor(startX, startY).b === fillColor.b &&
+                     getPixelCurrentColor(startX, startY).a === fillColor.a)) {
+                    return;
+                }
+
+                // すべての赤い塗りつぶしをリセットする (クリックごとに1つの州だけを赤くするため)
+                // この部分は最適化できますが、ここでは単純にすべて白に戻します。
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i] === 255 && data[i+1] === 0 && data[i+2] === 0 && data[i+3] === 255) { // もし赤色なら
+                         data[i+3] = 0; // 透明にする (元の画像が白いので透明にするのが適切)
+                    }
+                }
+
+
+                const stack = [{ x: startX, y: startY }];
+
+                while (stack.length > 0) {
+                    const { x, y } = stack.pop();
+
+                    // 範囲外チェック
+                    if (x < 0 || x >= width || y < 0 || y >= height) {
+                        continue;
+                    }
+
+                    const originalPxColor = getPixelOriginalColor(x, y);
+                    const currentPxColor = getPixelCurrentColor(x, y);
+
+                    // クリックした初期の色と同じ色（元の画像で白）で、かつ現在塗られていないか、
+                    // 黒い境界線ではない場合のみ塗りつぶし対象
+                    if (originalPxColor.r === startColor.r && originalPxColor.g === startColor.g && originalPxColor.b === startColor.b &&
+                        (currentPxColor.a === 0 || // 現在透明（未塗りつぶし）
+                         (currentPxColor.r !== fillColor.r || currentPxColor.g !== fillColor.g || currentPxColor.b !== fillColor.b))) { // または既に違う色で塗られている場合
+
+                        // ただし、元の画像が黒い境界線である場合は塗りつぶさない
+                        if (originalPxColor.r === 0 && originalPxColor.g === 0 && originalPxColor.b === 0) {
+                            continue;
+                        }
+
+                        setPixelColor(x, y, fillColor);
+
+                        // 隣接するピクセルをスタックに追加
+                        stack.push({ x: x + 1, y: y });
+                        stack.push({ x: x - 1, y: y });
+                        stack.push({ x: x, y: y + 1 });
+                        stack.push({ x: x, y: y - 1 });
+                    }
+                }
+                ctx.putImageData(imageData, 0, 0); // Canvasに新しいピクセルデータを反映
+            }
+        });
+    </script>
 </body>
 </html>
