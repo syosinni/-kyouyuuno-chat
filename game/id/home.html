@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>インタラクティブな世界地図</title>
+    <title>インタラクティブな世界地図 (PNG)</title>
     <style>
         body {
             margin: 0;
@@ -13,21 +13,27 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            font-family: sans-serif;
         }
 
         #map-container {
             position: relative;
-            /* 画像のアスペクト比に合わせて幅と高さを調整 */
-            width: 800px; /* 例として幅を設定、画像のアスペクト比に合わせて調整してください */
-            height: auto; /* 高さは自動調整 */
-            max-width: 95vw; /* ビューポートの幅を超えないように */
-            max-height: 95vh; /* ビューポートの高さを超えないように */
+            /* 画像のアスペクト比に合わせて幅と高さを調整する基準 */
+            width: 90vw; /* 例としてビューポートの幅の90% */
+            height: 90vh; /* 例としてビューポートの高さの90% */
+            max-width: 1000px; /* 最大幅を設定（画像のオリジナルサイズに合わせるのが理想） */
+            max-height: 600px; /* 最大高さを設定 */
+            background-color: transparent; /* コンテナ自体は透明 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #map-image {
             display: block;
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: contain; /* 画像がコンテナに収まるように */
             position: absolute;
             top: 0;
             left: 0;
@@ -40,6 +46,8 @@
             left: 0;
             z-index: 2; /* Canvasを画像の上に配置 */
             cursor: pointer;
+            /* Canvasは内部解像度を画像のオリジナルサイズに設定し、
+               CSSでコンテナにフィットさせることで、拡大・縮小に対応する */
         }
     </style>
 </head>
@@ -53,81 +61,102 @@
         document.addEventListener('DOMContentLoaded', () => {
             const mapImage = document.getElementById('map-image');
             const mapCanvas = document.getElementById('map-canvas');
-            const ctx = mapCanvas.getContext('2d');
-            let originalImageData = null; // 元の画像データを保存
+            const ctx = mapCanvas.getContext('2d', { willReadFrequently: true }); // パフォーマンス改善のため
 
-            // 画像がロードされたらCanvasのサイズを設定し、画像を描画する
+            let originalImageData = null; // 元の画像データを保持
+
+            // 画像がロードされたらCanvasのサイズを設定し、元の画像データを取得
             mapImage.onload = () => {
+                // コンテナのサイズを画像のアスペクト比に合わせて調整
                 const container = document.getElementById('map-container');
-                const aspectRatio = mapImage.naturalWidth / mapImage.naturalHeight;
+                const imgNaturalWidth = mapImage.naturalWidth;
+                const imgNaturalHeight = mapImage.naturalHeight;
+                const imgAspectRatio = imgNaturalWidth / imgNaturalHeight;
 
-                // コンテナのサイズを画像のアスペクト比に合わせて設定
-                // ここでは、高さがビューポートの高さに合わせるように調整
-                const maxWidth = window.innerWidth * 0.95;
-                const maxHeight = window.innerHeight * 0.95;
+                const containerWidth = container.offsetWidth;
+                const containerHeight = container.offsetHeight;
+                const containerAspectRatio = containerWidth / containerHeight;
 
-                let calculatedWidth = mapImage.naturalWidth;
-                let calculatedHeight = mapImage.naturalHeight;
+                let finalWidth, finalHeight;
 
-                if (calculatedWidth > maxWidth) {
-                    calculatedWidth = maxWidth;
-                    calculatedHeight = calculatedWidth / aspectRatio;
+                if (imgAspectRatio > containerAspectRatio) {
+                    // 画像の方が横長
+                    finalWidth = containerWidth;
+                    finalHeight = containerWidth / imgAspectRatio;
+                } else {
+                    // 画像の方が縦長または同じ比率
+                    finalHeight = containerHeight;
+                    finalWidth = containerHeight * imgAspectRatio;
                 }
-                if (calculatedHeight > maxHeight) {
-                    calculatedHeight = maxHeight;
-                    calculatedWidth = calculatedHeight * aspectRatio;
+
+                // map-imageとmap-canvasの実際の表示サイズを設定
+                mapImage.style.width = `${finalWidth}px`;
+                mapImage.style.height = `${finalHeight}px`;
+                mapCanvas.style.width = `${finalWidth}px`;
+                mapCanvas.style.height = `${finalHeight}px`;
+
+                // Canvasの内部解像度を画像のオリジナルサイズに設定（描画用）
+                mapCanvas.width = imgNaturalWidth;
+                mapCanvas.height = imgNaturalHeight;
+
+                // Canvasに画像を一度描画して、ピクセルデータを取得
+                // CORS制約がある場合、ここでエラーが発生する可能性があります。
+                // Uncaught DOMException: Failed to execute 'getImageData' on 'CanvasRenderingContext2D'
+                // : The canvas has been tainted by cross-origin data.
+                try {
+                    ctx.drawImage(mapImage, 0, 0);
+                    originalImageData = ctx.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
+                    // Canvasをクリアして透明にする (クリックしたピクセルを塗るため)
+                    ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
+                } catch (e) {
+                    console.error("Canvasの画像データ取得に失敗しました。CORSエラーの可能性があります。", e);
+                    alert("地図の読み込みに失敗しました。画像が外部ドメインにあるため、ブラウザのセキュリティ制約（CORS）によりインタラクションが機能しない可能性があります。画像を同じドメインに配置してみてください。");
+                    originalImageData = null; // エラー時は処理を中断
                 }
-
-                container.style.width = `${calculatedWidth}px`;
-                container.style.height = `${calculatedHeight}px`;
-
-                mapCanvas.width = mapImage.naturalWidth; // Canvasの内部解像度は画像のオリジナルサイズ
-                mapCanvas.height = mapImage.naturalHeight;
-
-                // Canvasに画像を一度描画して、ピクセルデータを取得する
-                ctx.drawImage(mapImage, 0, 0);
-                originalImageData = ctx.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
-                // Canvasをクリアして透明にする (クリックしたピクセルを塗るため)
-                ctx.clearRect(0, 0, mapCanvas.width, mapCanvas.height);
             };
 
             // 画像の読み込みエラー処理
             mapImage.onerror = () => {
-                console.error("画像の読み込みに失敗しました。画像URLを確認してください。");
+                console.error("地図画像の読み込みに失敗しました。URLを確認してください。");
                 alert("地図画像の読み込みに失敗しました。URLが正しいか確認してください。");
             };
 
+
             mapCanvas.addEventListener('click', (event) => {
                 if (!originalImageData) {
-                    console.warn("画像データがまだロードされていません。");
+                    console.warn("画像データがまだロードされていないか、CORSエラーのため処理できません。");
                     return;
                 }
 
-                // マップコンテナに対するクリック位置を計算
+                // Canvasの表示サイズと内部解像度の比率を計算
                 const rect = mapCanvas.getBoundingClientRect();
-                const scaleX = mapCanvas.width / rect.width;    // 拡大率を考慮
-                const scaleY = mapCanvas.height / rect.height; // 拡大率を考慮
+                const scaleX = mapCanvas.width / rect.width;
+                const scaleY = mapCanvas.height / rect.height;
 
+                // クリックされた点（Canvasの内部解像度に基づく座標）
                 const clickedX = Math.floor((event.clientX - rect.left) * scaleX);
                 const clickedY = Math.floor((event.clientY - rect.top) * scaleY);
 
                 // ピクセルデータを操作してバケツ塗りつぶし
-                fillColor(clickedX, clickedY, { r: 255, g: 0, b: 0, a: 255 }); // 赤色で塗りつぶす
+                // 赤色 (R:255, G:0, B:0, A:255) で塗りつぶす
+                fillColor(clickedX, clickedY, { r: 255, g: 0, b: 0, a: 255 });
             });
 
-            // バケツ塗りつぶしアルゴリズム
-            function fillColor(startX, startY, fillColor) {
+            // バケツ塗りつぶしアルゴリズム (Flood Fill)
+            function fillColor(startX, startY, newColor) {
                 const imageData = ctx.getImageData(0, 0, mapCanvas.width, mapCanvas.height);
-                const data = imageData.data; // 現在Canvasに描画されているピクセルデータ
-
-                // 元の画像のピクセルデータを参照
-                const originalData = originalImageData.data;
+                const data = imageData.data; // 現在のCanvasのピクセルデータ（書き込み用）
+                const originalData = originalImageData.data; // 元の画像のピクセルデータ（読み取り専用）
 
                 const width = mapCanvas.width;
                 const height = mapCanvas.height;
 
-                // クリックされたピクセルが既に塗りつぶす色と同じか、または黒い境界線の場合、何もしない
-                const getPixelOriginalColor = (x, y) => {
+                // ピクセル座標が有効範囲内かチェック
+                const isValid = (x, y) => x >= 0 && x < width && y >= 0 && y < height;
+
+                // 指定された座標の元の画像のピクセル色を取得
+                const getOriginalPixelColor = (x, y) => {
+                    if (!isValid(x, y)) return null;
                     const index = (y * width + x) * 4;
                     return {
                         r: originalData[index],
@@ -137,7 +166,9 @@
                     };
                 };
 
-                const getPixelCurrentColor = (x, y) => {
+                // 指定された座標の現在のCanvasのピクセル色を取得
+                const getCurrentPixelColor = (x, y) => {
+                    if (!isValid(x, y)) return null;
                     const index = (y * width + x) * 4;
                     return {
                         r: data[index],
@@ -147,7 +178,9 @@
                     };
                 };
 
+                // 指定された座標のピクセル色を設定
                 const setPixelColor = (x, y, color) => {
+                    if (!isValid(x, y)) return;
                     const index = (y * width + x) * 4;
                     data[index] = color.r;
                     data[index + 1] = color.g;
@@ -155,60 +188,59 @@
                     data[index + 3] = color.a;
                 };
 
-                const startColor = getPixelOriginalColor(startX, startY);
+                const startOriginalColor = getOriginalPixelColor(startX, startY);
 
-                // クリックされた点が黒（境界線）または既に赤色の場合は何もしない
-                if ((startColor.r === 0 && startColor.g === 0 && startColor.b === 0) ||
-                    (getPixelCurrentColor(startX, startY).r === fillColor.r &&
-                     getPixelCurrentColor(startX, startY).g === fillColor.g &&
-                     getPixelCurrentColor(startX, startY).b === fillColor.b &&
-                     getPixelCurrentColor(startX, startY).a === fillColor.a)) {
+                // クリックされた点が黒（境界線）の場合、または透明でない場合、何もしない
+                // 黒い線(R:0,G:0,B:0)と、透明度0のピクセル(A:0)を判別する
+                if (!startOriginalColor ||
+                    (startOriginalColor.r === 0 && startOriginalColor.g === 0 && startOriginalColor.b === 0) || // 黒い線
+                    getCurrentPixelColor(startX, startY).a !== 0 // 既に透明でない（何か色がついている）
+                   ) {
                     return;
                 }
 
-                // すべての赤い塗りつぶしをリセットする (クリックごとに1つの州だけを赤くするため)
-                // この部分は最適化できますが、ここでは単純にすべて白に戻します。
+                // 現在描画されているすべての赤色のピクセルを透明に戻す
+                // これにより、常に1つのステートだけが赤くなる
                 for (let i = 0; i < data.length; i += 4) {
-                    if (data[i] === 255 && data[i+1] === 0 && data[i+2] === 0 && data[i+3] === 255) { // もし赤色なら
-                         data[i+3] = 0; // 透明にする (元の画像が白いので透明にするのが適切)
+                    if (data[i] === newColor.r && data[i+1] === newColor.g && data[i+2] === newColor.b && data[i+3] === newColor.a) {
+                        data[i+3] = 0; // 透明にする
                     }
                 }
-
+                // ここでいったん透明に戻したデータをCanvasに反映 (putImageData) する必要はない。
+                // この後のFlood Fillで新しい赤を上書きするから。
 
                 const stack = [{ x: startX, y: startY }];
 
                 while (stack.length > 0) {
                     const { x, y } = stack.pop();
 
-                    // 範囲外チェック
-                    if (x < 0 || x >= width || y < 0 || y >= height) {
+                    // 範囲外チェックと既に塗りつぶされているか、境界線かどうかのチェック
+                    if (!isValid(x, y)) continue;
+
+                    const currentPxColor = getCurrentPixelColor(x, y);
+                    const originalPxColor = getOriginalPixelColor(x, y);
+
+                    // もし現在のピクセルが既に新しい色で塗られているか、
+                    // または元の画像で黒い境界線である、
+                    // または元の画像でクリック開始時の色と異なる場合はスキップ
+                    if ((currentPxColor.r === newColor.r && currentPxColor.g === newColor.g && currentPxColor.b === newColor.b && currentPxColor.a === newColor.a) || // 既に赤
+                        (originalPxColor.r === 0 && originalPxColor.g === 0 && originalPxColor.b === 0) || // 黒い境界線
+                        (originalPxColor.r !== startOriginalColor.r || originalPxColor.g !== startOriginalColor.g || originalPxColor.b !== startOriginalColor.b)) { // クリック開始時の色と違う（別の色やグラデーションなど）
                         continue;
                     }
 
-                    const originalPxColor = getPixelOriginalColor(x, y);
-                    const currentPxColor = getPixelCurrentColor(x, y);
+                    // ピクセルを新しい色で設定
+                    setPixelColor(x, y, newColor);
 
-                    // クリックした初期の色と同じ色（元の画像で白）で、かつ現在塗られていないか、
-                    // 黒い境界線ではない場合のみ塗りつぶし対象
-                    if (originalPxColor.r === startColor.r && originalPxColor.g === startColor.g && originalPxColor.b === startColor.b &&
-                        (currentPxColor.a === 0 || // 現在透明（未塗りつぶし）
-                         (currentPxColor.r !== fillColor.r || currentPxColor.g !== fillColor.g || currentPxColor.b !== fillColor.b))) { // または既に違う色で塗られている場合
-
-                        // ただし、元の画像が黒い境界線である場合は塗りつぶさない
-                        if (originalPxColor.r === 0 && originalPxColor.g === 0 && originalPxColor.b === 0) {
-                            continue;
-                        }
-
-                        setPixelColor(x, y, fillColor);
-
-                        // 隣接するピクセルをスタックに追加
-                        stack.push({ x: x + 1, y: y });
-                        stack.push({ x: x - 1, y: y });
-                        stack.push({ x: x, y: y + 1 });
-                        stack.push({ x: x, y: y - 1 });
-                    }
+                    // 隣接ピクセルをスタックに追加
+                    stack.push({ x: x + 1, y: y });
+                    stack.push({ x: x - 1, y: y });
+                    stack.push({ x: x, y: y + 1 });
+                    stack.push({ x: x, y: y - 1 });
                 }
-                ctx.putImageData(imageData, 0, 0); // Canvasに新しいピクセルデータを反映
+
+                // 変更されたピクセルデータをCanvasに反映
+                ctx.putImageData(imageData, 0, 0);
             }
         });
     </script>
