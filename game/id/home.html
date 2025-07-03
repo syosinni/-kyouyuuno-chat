@@ -1,116 +1,100 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>世界ステートマップ</title>
+  <meta charset="UTF-8" />
+  <title>世界ステート地図</title>
   <style>
-    html, body {
+    body, html {
       margin: 0;
+      padding: 0;
       overflow: hidden;
     }
-    #canvasContainer {
+    #map-container {
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
-      background: #87CEFA; /* 海の色 */
-      position: relative;
     }
-    canvas {
-      display: block;
-      cursor: pointer;
-      image-rendering: pixelated;
+    svg {
+      width: 100%;
+      height: 100%;
+      background-color: #87CEFA; /* 海の色 */
+      cursor: grab;
+    }
+    path {
+      fill: white;
+      stroke: black;
+      stroke-width: 0.5;
+    }
+    .selected {
+      fill: red !important;
     }
   </style>
 </head>
 <body>
-<div id="canvasContainer">
-  <canvas id="mapCanvas"></canvas>
+
+<div id="map-container">
+  <!-- SVG地図（一部のみ例示） -->
+  <svg id="worldMap" viewBox="0 0 2000 1001" xmlns="http://www.w3.org/2000/svg">
+    <!-- 仮のパス: 実際には各ステートのパスをここに配置 -->
+    <path d="M100,100 L200,100 L200,200 L100,200 Z" />
+    <path d="M300,100 L400,100 L400,200 L300,200 Z" />
+    <!-- ここに各国・各州のパス（ステート）が続く -->
+  </svg>
 </div>
 
 <script>
-const imageSrc = "https://kyouyuuno-to.f5.si/img/0001.png";
+const svg = document.getElementById('worldMap');
 
-const canvas = document.getElementById('mapCanvas');
-const ctx = canvas.getContext('2d');
-let scale = 1;
-let offsetX = 0;
-let offsetY = 0;
-let dragging = false;
-let dragStart = { x: 0, y: 0 };
-let selectedRegions = [];
-
-const img = new Image();
-img.crossOrigin = "anonymous";
-img.src = imageSrc;
-
-img.onload = () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  draw();
-};
-
-function draw() {
-  ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
-  ctx.clearRect(-offsetX/scale, -offsetY/scale, canvas.width/scale, canvas.height/scale);
-  ctx.drawImage(img, 0, 0);
-
-  // 塗りつぶしステートを赤で表示
-  for (const pixel of selectedRegions) {
-    ctx.fillStyle = "rgba(255,0,0,0.5)";
-    ctx.fillRect(pixel.x, pixel.y, 1, 1);
-  }
-}
-
-// クリック位置を確認して白ピクセルか判定
-canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const x = (e.clientX - rect.left - offsetX) / scale;
-  const y = (e.clientY - rect.top - offsetY) / scale;
-
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = img.width;
-  tempCanvas.height = img.height;
-  const tempCtx = tempCanvas.getContext('2d');
-  tempCtx.drawImage(img, 0, 0);
-  const imageData = tempCtx.getImageData(x, y, 1, 1).data;
-
-  // RGBが(255,255,255)なら白 = ステート
-  if (imageData[0] === 255 && imageData[1] === 255 && imageData[2] === 255) {
-    selectedRegions.push({ x: Math.floor(x), y: Math.floor(y) });
-    draw();
+// ステートを赤く塗る処理
+svg.addEventListener('click', (e) => {
+  if (e.target.tagName === 'path' || e.target.tagName === 'PATH') {
+    e.target.classList.toggle('selected');
   }
 });
 
-// ズーム処理（ホイール）
-canvas.addEventListener('wheel', (e) => {
-  e.preventDefault();
-  const zoom = e.deltaY < 0 ? 1.1 : 0.9;
-  const mouseX = e.offsetX;
-  const mouseY = e.offsetY;
+// 拡大・縮小のためのスケーリング
+let viewBox = [0, 0, 2000, 1001];
 
-  offsetX = mouseX - (mouseX - offsetX) * zoom;
-  offsetY = mouseY - (mouseY - offsetY) * zoom;
-  scale *= zoom;
-  draw();
+svg.addEventListener("wheel", function (event) {
+  event.preventDefault();
+  const zoomAmount = 100;
+  const direction = event.deltaY > 0 ? 1 : -1;
+
+  viewBox[2] += zoomAmount * direction;
+  viewBox[3] += (zoomAmount * direction) * (1001 / 2000);
+  svg.setAttribute("viewBox", viewBox.join(" "));
 });
 
-// ドラッグ移動
-canvas.addEventListener('mousedown', (e) => {
-  dragging = true;
-  dragStart = { x: e.clientX, y: e.clientY };
+// ドラッグで移動
+let isPanning = false;
+let startPoint = { x: 0, y: 0 };
+
+svg.addEventListener('mousedown', function (event) {
+  isPanning = true;
+  startPoint = { x: event.clientX, y: event.clientY };
+  svg.style.cursor = 'grabbing';
 });
 
-canvas.addEventListener('mousemove', (e) => {
-  if (dragging) {
-    offsetX += e.clientX - dragStart.x;
-    offsetY += e.clientY - dragStart.y;
-    dragStart = { x: e.clientX, y: e.clientY };
-    draw();
+svg.addEventListener('mousemove', function (event) {
+  if (isPanning) {
+    const dx = (startPoint.x - event.clientX) * (viewBox[2] / svg.clientWidth);
+    const dy = (startPoint.y - event.clientY) * (viewBox[3] / svg.clientHeight);
+    viewBox[0] += dx;
+    viewBox[1] += dy;
+    startPoint = { x: event.clientX, y: event.clientY };
+    svg.setAttribute('viewBox', viewBox.join(' '));
   }
 });
 
-canvas.addEventListener('mouseup', () => dragging = false);
-canvas.addEventListener('mouseleave', () => dragging = false);
+svg.addEventListener('mouseup', function () {
+  isPanning = false;
+  svg.style.cursor = 'grab';
+});
+
+svg.addEventListener('mouseleave', function () {
+  isPanning = false;
+  svg.style.cursor = 'grab';
+});
 </script>
+
 </body>
 </html>
