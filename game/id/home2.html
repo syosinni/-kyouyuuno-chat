@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>クリックで色を塗るマップ</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background: #f0f0f0;
+    }
+
+    #map-container {
+      border: 2px solid #333;
+      width: 90vw;
+      height: 80vh;
+      overflow: auto;
+      background: white;
+    }
+
+    #colorPicker {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Hearts of Iron IV マップに色を塗る</h1>
+  <label for="colorPicker">色を選んでクリック：</label>
+  <input type="color" id="colorPicker" value="#ff0000">
+
+  <div id="map-container">
+    <object id="svgMap" type="image/svg+xml" data="map.svg"></object>
+  </div>
+
+  <script>
+    const colorInput = document.getElementById("colorPicker");
+
+    document.getElementById("svgMap").addEventListener("load", function () {
+      const svgDoc = this.contentDocument;
+      const paths = svgDoc.querySelectorAll("path");
+
+      paths.forEach((path) => {
+        path.style.cursor = "pointer";
+        path.addEventListener("click", () => {
+          path.style.fill = colorInput.value;
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
