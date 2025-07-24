@@ -1,47 +1,138 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <title>空想建物マップ</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <style>
-    #map {
-      height: 100vh;
-      width: 100%;
-    }
-    .leaflet-popup-content {
-      text-align: center;
-    }
-  </style>
+<meta charset="UTF-8" />
+<title>空想都市マップ（GSI地図＋建物・要塞・JSON保存）</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+<style>
+  body { margin:0; display:flex; height:100vh; font-family:sans-serif; }
+  #sidebar { width:250px; background:#f4f4f4; overflow-y:auto; padding:10px; box-sizing:border-box; }
+  #map { flex:1; }
+  .building-btn { display:block; padding:6px; margin:3px 0; background:#fff; border:1px solid #ccc; cursor:pointer; border-radius:4px; }
+  .building-btn.active { background:#4287f5; color:white; }
+  #controls { position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.8); padding:6px; border-radius:4px; z-index:1000; }
+  button { margin:2px; padding:6px; }
+  #jsonData { width:100%; height:100px; }
+</style>
 </head>
 <body>
-  <div id="map"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cyberjapandata.gsi.go.jp/xyz/std/leaflet.js"></script>
-  <script>
-    const map = L.map('map').setView([35.681236, 139.767125], 15); // 東京駅周辺
+<div id="sidebar">
+  <h3>建物選択</h3>
+  <div id="buildingList"></div>
+  <hr>
+  <button id="drawFortBtn">要塞（線描画モード）</button><br>
+  <button id="exportBtn">JSON保存</button><br>
+  <textarea id="jsonData" placeholder="ここにJSON表示"></textarea><br>
+  <button id="loadBtn">JSON読み込み</button>
+</div>
+<div id="map"></div>
 
-    // 国土地理院地図（標準地図）
-    const gsiLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-      attribution: '<a href="https://maps.gsi.go.jp/">国土地理院</a>'
-    }).addTo(map);
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cyberjapandata.gsi.go.jp/xyz/std/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script>
+(() => {
+  // 建物リスト（30種＋自由用）
+  const buildingTypes = [
+    "要塞", "海軍基地", "陸軍基地", "国会", "空港", "病院", "学校", "消防署", "警察署",
+    "図書館", "劇場", "市場", "公園", "博物館", "墓地", "発電所", "水処理場", "工場", "倉庫",
+    "駅", "灯台", "ホテル", "ショッピングモール", "体育館", "競技場", "映画館", "モスク", "教会",
+    "仙台城", "自由記念碑"
+  ];
+  let selectedBuild = null;
+  let drawMode = false;
 
-    // 建物追加イベント
-    map.on('click', function (e) {
-      const latlng = e.latlng;
-      const name = prompt("建物名を入力してください:");
-      if (name) {
-        L.marker(latlng)
-          .addTo(map)
-          .bindPopup(`<strong>${name}</strong>`)
-          .openPopup();
-      }
+  // Leaflet設定
+  const map = L.map('map').setView([35.681236, 139.767125], 14);
+  L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',{
+    attribution:'<a href="https://maps.gsi.go.jp/">国土地理院</a>'}).addTo(map);
+
+  // レイヤー管理
+  const buildLayer = L.layerGroup().addTo(map);
+  const drawLayer = new L.FeatureGroup().addTo(map);
+
+  // Leaflet.draw用
+  const drawControl = new L.Control.Draw({
+    draw: { polyline: {shapeOptions:{color:'red'}}, polygon:false, rectangle:false, circle:false, marker:false, circlemarker:false },
+    edit: { featureGroup: drawLayer }
+  });
+  map.addControl(drawControl);
+
+  // サイドバーにボタン生成
+  const listDiv = document.getElementById('buildingList');
+  buildingTypes.concat("自由建物").forEach(name => {
+    const btn = document.createElement('button');
+    btn.textContent = name;
+    btn.className = 'building-btn';
+    btn.onclick = () => {
+      document.querySelectorAll('.building-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedBuild = name;
+      drawMode = (name==="要塞");
+    };
+    listDiv.appendChild(btn);
+  });
+
+  // マーカー設置
+  map.on('click', e => {
+    if(drawMode) return;
+    if(!selectedBuild) return alert("建物種類を選んでください！");
+    const name = prompt(`建物名（初期：${selectedBuild}）:`, selectedBuild);
+    if(!name) return;
+    const m = L.marker(e.latlng, {title:name})
+      .addTo(buildLayer)
+      .bindPopup(`<strong>${name}</strong><br><button onclick="deleteMe()">削除</button>`);
+    m.options.myName = name;
+    m.on('popupopen', () => {
+      window.deleteMe = () => { buildLayer.removeLayer(m); map.closePopup(); };
     });
-  </script>
+  });
+
+  // 要塞（線描画）トグル
+  document.getElementById('drawFortBtn').onclick = () => {
+    drawMode = !drawMode;
+    selectedBuild = null;
+    alert(drawMode ? "線描画モード ON" : "線描画モード OFF");
+  };
+
+  // 描画完了イベント
+  map.on(L.Draw.Event.CREATED, e => {
+    drawLayer.addLayer(e.layer);
+  });
+
+  // JSON保存
+  document.getElementById('exportBtn').onclick = () => {
+    const data = { buildings:[], forts:[] };
+    buildLayer.eachLayer(m => {
+      data.buildings.push({name:m.options.myName,lat:m.getLatLng().lat,lng:m.getLatLng().lng});
+    });
+    drawLayer.eachLayer(l => {
+      data.forts.push(l.getLatLngs()[0].map(p => ({lat:p.lat,lng:p.lng})));
+    });
+    document.getElementById('jsonData').value = JSON.stringify(data,null,2);
+  };
+
+  // JSON読み込み
+  document.getElementById('loadBtn').onclick = () => {
+    const txt = document.getElementById('jsonData').value;
+    try {
+      const data = JSON.parse(txt);
+      buildLayer.clearLayers(); drawLayer.clearLayers();
+      data.buildings.forEach(b=>{
+        const m = L.marker([b.lat,b.lng],{title:b.name}).addTo(buildLayer)
+          .bindPopup(`<strong>${b.name}</strong><br><button onclick="deleteMe()">削除</button>`);
+        m.options.myName=b.name;
+        m.on('popupopen', ()=>{window.deleteMe=()=>{buildLayer.removeLayer(m);map.closePopup();};});
+      });
+      data.forts.forEach(arr=>{
+        const poly = L.polyline(arr.map(p=>[p.lat,p.lng]),{color:'red'}).addTo(drawLayer);
+      });
+    } catch(e){ alert("JSONが正しくありません"); }
+  };
+})();
+</script>
+
 </body>
 </html>
