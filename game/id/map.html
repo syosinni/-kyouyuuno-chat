@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>空想建物マップ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <style>
+    #map {
+      height: 100vh;
+      width: 100%;
+    }
+    .leaflet-popup-content {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cyberjapandata.gsi.go.jp/xyz/std/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([35.681236, 139.767125], 15); // 東京駅周辺
+
+    // 国土地理院地図（標準地図）
+    const gsiLayer = L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+      attribution: '<a href="https://maps.gsi.go.jp/">国土地理院</a>'
+    }).addTo(map);
+
+    // 建物追加イベント
+    map.on('click', function (e) {
+      const latlng = e.latlng;
+      const name = prompt("建物名を入力してください:");
+      if (name) {
+        L.marker(latlng)
+          .addTo(map)
+          .bindPopup(`<strong>${name}</strong>`)
+          .openPopup();
+      }
+    });
+  </script>
+</body>
+</html>
