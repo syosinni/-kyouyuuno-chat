@@ -1,108 +1,287 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>攻撃防衛支援システム</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; background: #f2f2f2; }
-    h1 { color: #333; }
-    .section { margin-bottom: 20px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 4px #ccc; }
-    input, button, select { padding: 5px; margin: 5px 0; }
-    .log { background: #eee; padding: 10px; border-radius: 5px; height: 150px; overflow-y: scroll; }
-  </style>
+<meta charset="UTF-8" />
+<title>戦略ゲーム 戦闘シミュレーション</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background:#f0f0f0; }
+  h1 { text-align:center; }
+  .tab {
+    display: inline-block; padding: 10px 20px; cursor: pointer;
+    background: #ddd; margin-right: 5px; border-radius: 5px 5px 0 0;
+    user-select:none;
+  }
+  .tab.active { background: white; border-bottom: 2px solid white; font-weight: bold; }
+  .container { background: white; padding: 15px; border-radius: 0 5px 5px 5px; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+  .battle-section { display: flex; gap: 20px; margin-top: 10px; }
+  .side {
+    flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 5px; background:#fafafa;
+  }
+  .side h3 { margin-top: 0; }
+  .unit-row {
+    display: flex; gap: 8px; margin-bottom: 6px; align-items:center;
+  }
+  select, input[type=number] { padding: 4px; font-size: 14px; width: 130px; }
+  input[type=number] { width: 60px; }
+  button.add-unit, button.remove-unit, button.fight-btn {
+    cursor: pointer; padding: 5px 10px; font-size: 14px; border:none; border-radius: 3px;
+  }
+  button.add-unit { background: #4caf50; color: white; }
+  button.remove-unit { background: #e74c3c; color: white; }
+  button.fight-btn { background: #007bff; color: white; margin-top: 10px; width: 100%; }
+  #result {
+    margin-top: 15px; padding: 10px; background: #222; color: #fff; white-space: pre-wrap; border-radius: 5px; min-height: 140px; font-family: monospace;
+  }
+</style>
 </head>
 <body>
-  <h1>攻撃防衛支援システム</h1>
 
-  <div class="section">
-    <h2>① 資金システム</h2>
-    <p>現在の資金: <span id="money">1000</span>円</p>
-    <button onclick="addMoney(500)">資金 +500</button>
-    <button onclick="spendMoney(300)">部隊購入（300円）</button>
+<h1>戦略ゲーム 戦闘シミュレーション</h1>
+
+<div>
+  <div id="tabs">
+    <div class="tab active" data-tab="land">陸戦シミュレーション</div>
+    <div class="tab" data-tab="sea">海戦シミュレーション</div>
+    <div class="tab" data-tab="air">空戦シミュレーション</div>
   </div>
 
-  <div class="section">
-    <h2>② 戦闘システム</h2>
-    <label>自軍攻撃力: <input type="number" id="atk" value="100"></label><br>
-    <label>敵軍防御力: <input type="number" id="def" value="80"></label><br>
-    <button onclick="battle()">戦闘開始</button>
-    <div class="log" id="battleLog"></div>
+  <!-- 陸戦 -->
+  <div id="land" class="container tab-content">
+    <div class="battle-section">
+      <div class="side" id="land-attacker">
+        <h3>攻撃側（陸戦師団）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">師団追加</button>
+      </div>
+      <div class="side" id="land-defender">
+        <h3>防衛側（陸戦師団）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">師団追加</button>
+      </div>
+    </div>
+    <button class="fight-btn" onclick="simulateBattle('land')">戦闘開始</button>
+    <pre id="result-land" class="result"></pre>
   </div>
 
-  <div class="section">
-    <h2>③ 制海権・制空権システム</h2>
-    <label>地域: 
-      <select id="region">
-        <option value="A">地域A</option>
-        <option value="B">地域B</option>
-      </select>
-    </label><br>
-    <button onclick="setControl('sea')">制海権獲得</button>
-    <button onclick="setControl('air')">制空権獲得</button>
-    <button onclick="removeControl()">権利喪失</button>
-    <p id="controlStatus">現在の権利: なし</p>
+  <!-- 海戦 -->
+  <div id="sea" class="container tab-content" style="display:none;">
+    <div class="battle-section">
+      <div class="side" id="sea-attacker">
+        <h3>攻撃側（海軍艦隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">艦隊追加</button>
+      </div>
+      <div class="side" id="sea-defender">
+        <h3>防衛側（海軍艦隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">艦隊追加</button>
+      </div>
+    </div>
+    <button class="fight-btn" onclick="simulateBattle('sea')">戦闘開始</button>
+    <pre id="result-sea" class="result"></pre>
   </div>
 
-  <script>
-    // --- 資金 ---
-    let money = 1000;
-    function updateMoney() {
-      document.getElementById("money").innerText = money;
+  <!-- 空戦 -->
+  <div id="air" class="container tab-content" style="display:none;">
+    <div class="battle-section">
+      <div class="side" id="air-attacker">
+        <h3>攻撃側（航空部隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">部隊追加</button>
+      </div>
+      <div class="side" id="air-defender">
+        <h3>防衛側（航空部隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">部隊追加</button>
+      </div>
+    </div>
+    <button class="fight-btn" onclick="simulateBattle('air')">戦闘開始</button>
+    <pre id="result-air" class="result"></pre>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ユニット定義
+  const unitsData = {
+    land: {
+      infantry: { name: '歩兵', attack: 30, defense: 30 },
+      tank: { name: '戦車', attack: 70, defense: 60 },
+      mech: { name: '歩兵戦車', attack: 50, defense: 40 },
+      marine: { name: '海兵隊', attack: 40, defense: 35 },
+      airborne: { name: '空挺団', attack: 45, defense: 35 },
+      mountain: { name: '山岳兵', attack: 35, defense: 40 },
+      heavy: { name: '重装備兵', attack: 60, defense: 70 },
+      heli: { name: 'ヘリ部隊', attack: 55, defense: 40 },
+    },
+    sea: {
+      destroyer: { name: '駆逐艦', attack: 55, defense: 50 },
+      light_cruiser: { name: '軽巡洋艦', attack: 65, defense: 55 },
+      heavy_cruiser: { name: '重巡洋艦', attack: 80, defense: 70 },
+      battleship: { name: '戦艦', attack: 100, defense: 90 },
+      missile_ship: { name: 'ミサイル艦', attack: 85, defense: 60 },
+      aegis: { name: 'イージス艦', attack: 70, defense: 75 },
+      transport: { name: '輸送艦', attack: 10, defense: 30 },
+      landing_ship: { name: '強襲上陸艦', attack: 40, defense: 50 },
+      aircraft_carrier: { name: '空母', attack: 110, defense: 80 },
+    },
+    air: {
+      fighter: { name: '戦闘機', attack: 90, defense: 50 },
+      bomber: { name: '爆撃機', attack: 110, defense: 40 },
+      helicopter: { name: 'ヘリコプター', attack: 50, defense: 45 },
+      transport_aircraft: { name: '輸送機', attack: 20, defense: 60 },
     }
-    function addMoney(amount) {
-      money += amount;
-      updateMoney();
-    }
-    function spendMoney(amount) {
-      if (money >= amount) {
-        money -= amount;
-        updateMoney();
-      } else {
-        alert("資金が足りません！");
-      }
+  };
+
+  // タブ切り替え
+  const tabs = document.querySelectorAll('.tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      tabContents.forEach(c => {
+        c.style.display = (c.id === tab.dataset.tab) ? 'block' : 'none';
+      });
+    });
+  });
+
+  // ユニット行作成
+  function createUnitRow(type, selectedKey = null, count = 1) {
+    const div = document.createElement('div');
+    div.className = 'unit-row';
+
+    const select = document.createElement('select');
+    Object.entries(unitsData[type]).forEach(([key, data]) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = data.name;
+      if (key === selectedKey) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = 1;
+    input.value = count;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'remove-unit';
+    btn.textContent = '削除';
+    btn.onclick = () => div.remove();
+
+    div.appendChild(select);
+    div.appendChild(input);
+    div.appendChild(btn);
+
+    return div;
+  }
+
+  // 初期行追加
+  function addInitialUnits(sideElem, type) {
+    sideElem.querySelector('.units-list').appendChild(createUnitRow(type));
+  }
+
+  // 「師団追加」ボタン処理
+  document.querySelectorAll('.add-unit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sideElem = btn.parentNode;
+      let type = 'land';
+      if (sideElem.id.startsWith('sea')) type = 'sea';
+      else if (sideElem.id.startsWith('air')) type = 'air';
+      sideElem.querySelector('.units-list').appendChild(createUnitRow(type));
+    });
+  });
+
+  // 全タブ左右に初期師団１つずつ追加
+  ['land', 'sea', 'air'].forEach(type => {
+    addInitialUnits(document.getElementById(type + '-attacker'), type);
+    addInitialUnits(document.getElementById(type + '-defender'), type);
+  });
+
+  // 戦闘シミュレーション
+  window.simulateBattle = function(type) {
+    const atkSide = document.getElementById(type + '-attacker');
+    const defSide = document.getElementById(type + '-defender');
+    const resultEl = document.getElementById('result-' + type);
+
+    // 攻撃側合計計算
+    let atkTotalAttack = 0;
+    let atkTotalDefense = 0;
+    let atkTotalCount = 0;
+
+    const atkUnits = atkSide.querySelectorAll('.unit-row');
+    let atkDesc = '【攻撃側】\n';
+    atkUnits.forEach(unit => {
+      const key = unit.querySelector('select').value;
+      const count = parseInt(unit.querySelector('input').value) || 0;
+      if (count < 1) return;
+      const data = unitsData[type][key];
+      atkDesc += `${data.name} x ${count}人\n`;
+      atkTotalAttack += data.attack * count;
+      atkTotalDefense += data.defense * count;
+      atkTotalCount += count;
+    });
+
+    // 防御側合計計算
+    let defTotalAttack = 0;
+    let defTotalDefense = 0;
+    let defTotalCount = 0;
+
+    const defUnits = defSide.querySelectorAll('.unit-row');
+    let defDesc = '【防衛側】\n';
+    defUnits.forEach(unit => {
+      const key = unit.querySelector('select').value;
+      const count = parseInt(unit.querySelector('input').value) || 0;
+      if (count < 1) return;
+      const data = unitsData[type][key];
+      defDesc += `${data.name} x ${count}人\n`;
+      defTotalAttack += data.attack * count;
+      defTotalDefense += data.defense * count;
+      defTotalCount += count;
+    });
+
+    // 戦闘計算ロジック（シンプル）
+    // 勝敗は攻撃側攻撃力vs防御側防御力の比較で決定
+    // 死亡者は乱数で双方それぞれ最大5～15%の損害率に勝敗補正をかけて決定
+
+    const atkPower = atkTotalAttack;
+    const defPower = defTotalDefense;
+
+    let outcome = '';
+    if(atkPower > defPower) {
+      outcome = '⚔️ 攻撃側の勝利！\n';
+    } else {
+      outcome = '🛡️ 防衛側の勝利！\n';
     }
 
-    // --- 戦闘 ---
-    function battle() {
-      const atk = parseInt(document.getElementById("atk").value);
-      const def = parseInt(document.getElementById("def").value);
-      const result = atk - def;
-      const log = document.getElementById("battleLog");
-
-      if (result > 0) {
-        log.innerHTML += `<p>勝利！差: ${result}</p>`;
-      } else if (result === 0) {
-        log.innerHTML += `<p>引き分け！</p>`;
-      } else {
-        log.innerHTML += `<p>敗北…差: ${Math.abs(result)}</p>`;
-      }
-      log.scrollTop = log.scrollHeight;
+    // 損害率（%）
+    // 勝者は低めの損害(5%〜10%)
+    // 敗者は高めの損害(10%〜15%)
+    function getLosses(count, isWinner) {
+      if(count === 0) return 0;
+      let min = isWinner ? 0.05 : 0.10;
+      let max = isWinner ? 0.10 : 0.15;
+      let rate = min + Math.random() * (max - min);
+      return Math.min(count, Math.floor(count * rate));
     }
 
-    // --- 制海権・制空権 ---
-    const controlMap = {}; // 地域ごとの権利管理
-    function updateControlStatus() {
-      const region = document.getElementById("region").value;
-      const status = controlMap[region] || "なし";
-      document.getElementById("controlStatus").innerText = `現在の権利: ${status}`;
-    }
+    const atkWin = atkPower > defPower;
+    const atkLoss = getLosses(atkTotalCount, atkWin);
+    const defLoss = getLosses(defTotalCount, !atkWin);
 
-    function setControl(type) {
-      const region = document.getElementById("region").value;
-      if (type === 'sea') controlMap[region] = "制海権";
-      if (type === 'air') controlMap[region] = "制空権";
-      updateControlStatus();
-    }
+    let resultText =
+`${atkDesc}\n${defDesc}\n` +
+`攻撃側 攻撃力合計: ${atkPower}\n防衛側 防御力合計: ${defPower}\n\n` +
+outcome +
+`攻撃側 死亡者数: ${atkLoss}\n防衛側 死亡者数: ${defLoss}\n`;
 
-    function removeControl() {
-      const region = document.getElementById("region").value;
-      delete controlMap[region];
-      updateControlStatus();
-    }
+    resultEl.textContent = resultText;
+  };
 
-    // 初期表示
-    updateMoney();
-    updateControlStatus();
-  </script>
+})();
+</script>
+
 </body>
 </html>
