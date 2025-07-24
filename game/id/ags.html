@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>戦闘系支援システム</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
+    h2 { margin-top: 30px; }
+    .unit, .log { margin-bottom: 10px; }
+    select, input, button { margin: 5px; padding: 5px; }
+    #battle-log { white-space: pre-wrap; background: #fff; border: 1px solid #ccc; padding: 10px; height: 150px; overflow-y: scroll; }
+  </style>
+</head>
+<body>
+  <h1>戦闘系支援システム</h1>
+
+  <h2>💰 資金システム</h2>
+  <div>
+    <p>現在資金: <span id="funds">10000</span></p>
+    <select id="unit-select">
+      <option value="infantry">歩兵 (30)</option>
+      <option value="tank">戦車 (300)</option>
+      <option value="destroyer">駆逐艦 (2500)</option>
+      <option value="carrier">空母 (12000)</option>
+    </select>
+    <button onclick="purchaseUnit()">購入</button>
+    <p>保有ユニット: <span id="owned-units"></span></p>
+  </div>
+
+  <h2>⚔️ 戦闘システム</h2>
+  <div>
+    <select id="attacker">
+      <option value="infantry">歩兵</option>
+      <option value="tank">戦車</option>
+      <option value="destroyer">駆逐艦</option>
+      <option value="carrier">空母</option>
+    </select>
+    vs
+    <select id="defender">
+      <option value="infantry">歩兵</option>
+      <option value="tank">戦車</option>
+      <option value="destroyer">駆逐艦</option>
+      <option value="carrier">空母</option>
+    </select>
+    <button onclick="battle()">戦闘開始</button>
+    <div id="battle-log"></div>
+  </div>
+
+  <h2>🌊 制海権・制空権システム</h2>
+  <div>
+    <p>制海値: <span id="sea-power">0</span> / 敵: <span id="enemy-sea">0</span></p>
+    <p>制空値: <span id="air-power">0</span> / 敵: <span id="enemy-air">0</span></p>
+    <button onclick="calculatePower()">制圧状況更新</button>
+    <p id="control-result"></p>
+  </div>
+
+  <script>
+    let funds = 10000;
+    let units = { infantry: 0, tank: 0, destroyer: 0, carrier: 0 };
+    const unitCost = { infantry: 30, tank: 300, destroyer: 2500, carrier: 12000 };
+    const unitStats = {
+      infantry: { attack: 30, defense: 30, sea: 0, air: 0 },
+      tank: { attack: 70, defense: 60, sea: 0, air: 0 },
+      destroyer: { attack: 55, defense: 50, sea: 10, air: 0 },
+      carrier: { attack: 90, defense: 70, sea: 20, air: 25 },
+    };
+
+    function purchaseUnit() {
+      const type = document.getElementById("unit-select").value;
+      if (funds >= unitCost[type]) {
+        funds -= unitCost[type];
+        units[type]++;
+        document.getElementById("funds").textContent = funds;
+        updateOwnedUnits();
+      } else {
+        alert("資金が足りません！");
+      }
+    }
+
+    function updateOwnedUnits() {
+      let text = Object.keys(units).map(u => `${u}: ${units[u]}`).join(", ");
+      document.getElementById("owned-units").textContent = text;
+    }
+
+    function battle() {
+      const atk = document.getElementById("attacker").value;
+      const def = document.getElementById("defender").value;
+      const aStat = unitStats[atk];
+      const dStat = unitStats[def];
+      const damage = Math.max(1, aStat.attack - dStat.defense + Math.floor(Math.random() * 10));
+      const log = document.getElementById("battle-log");
+      log.textContent += `\n${atk}が${def}に${damage}ダメージを与えた！`;
+    }
+
+    function calculatePower() {
+      const seaPower = units.destroyer * 10 + units.carrier * 20;
+      const airPower = units.carrier * 25;
+      document.getElementById("sea-power").textContent = seaPower;
+      document.getElementById("air-power").textContent = airPower;
+      const enemySea = 30;
+      const enemyAir = 20;
+      document.getElementById("enemy-sea").textContent = enemySea;
+      document.getElementById("enemy-air").textContent = enemyAir;
+
+      let controlText = "";
+      controlText += seaPower > enemySea ? "制海権確保！\n" : "制海権喪失中...\n";
+      controlText += airPower > enemyAir ? "制空権確保！" : "制空権喪失中...";
+      document.getElementById("control-result").textContent = controlText;
+    }
+  </script>
+</body>
+</html>
