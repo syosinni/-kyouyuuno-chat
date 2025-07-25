@@ -1,43 +1,45 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>空想地図エディタ｜共有ノート</title>
+  <meta charset="UTF-8" />
+  <title>空想地図エディタ</title>
   <style>
     body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; }
     #sidebar {
-      width: 260px; background: #f0f0f0; padding: 10px; overflow-y: auto;
+      width: 250px; background: #f4f4f4; padding: 10px; overflow-y: auto;
     }
     #map-container {
       flex: 1; position: relative;
     }
     iframe {
-      width: 100%; height: 100%; border: none;
+      width: 100%; height: 100%;
+      border: none;
+      pointer-events: none; /* 初期は操作無効（建築モード） */
     }
     canvas {
-      position: absolute; top: 0; left: 0;
-      z-index: 100; pointer-events: auto;
+      position: absolute;
+      top: 0; left: 0; z-index: 100;
+      pointer-events: auto;
     }
-    button, select, input { margin: 5px 0; width: 100%; box-sizing: border-box; }
+    button, select, input {
+      width: 100%; margin-top: 5px;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 <body>
   <div id="sidebar">
-    <h3>建物管理</h3>
+    <h3>ツール</h3>
+    <button onclick="toggleMapMode()">🗺️ <span id="modeLabel">建築モード</span></button>
     <select id="buildingType">
       <option value="要塞">要塞</option>
       <option value="海軍基地">海軍基地</option>
       <option value="陸軍基地">陸軍基地</option>
       <option value="空軍基地">空軍基地</option>
       <option value="国会">国会</option>
-      <option value="研究所">研究所</option>
-      <option value="港湾">港湾</option>
-      <option value="空港">空港</option>
-      <option value="兵站基地">兵站基地</option>
-      <option value="司令部">司令部</option>
     </select>
-    <input type="text" id="customName" placeholder="名前（空白で自動）"/>
-    <button onclick="setMode('single')">📍 建物配置</button>
+    <input type="text" id="customName" placeholder="名前（空白で自動）">
+    <button onclick="setMode('single')">🏗 建物配置</button>
     <button onclick="setMode('fortLine')">🧱 要塞 線配置</button>
     <button onclick="setMode('delete')">🗑️ 建物削除</button>
     <hr>
@@ -46,16 +48,19 @@
   </div>
 
   <div id="map-container">
-    <iframe src="https://maps.gsi.go.jp/?hc=hic#5/36.104611/140.084556/&base=std&ls=std&disp=1&vs=c1g1j0h0k0l0u0t0z0r0s0m0f1"></iframe>
+    <iframe id="mapFrame" src="https://maps.gsi.go.jp/?hc=hic#5/36.104611/140.084556/&base=std&ls=std&disp=1&vs=c1g1j0h0k0l0u0t0z0r0s0m0f1"></iframe>
     <canvas id="overlayCanvas"></canvas>
   </div>
 
   <script>
     const canvas = document.getElementById("overlayCanvas");
     const ctx = canvas.getContext("2d");
+    const mapFrame = document.getElementById("mapFrame");
+    const modeLabel = document.getElementById("modeLabel");
 
     let buildings = [];
     let mode = "single";
+    let isMapMode = false;
     let linePoints = [];
 
     function resizeCanvas() {
@@ -66,12 +71,21 @@
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas();
 
+    function toggleMapMode() {
+      isMapMode = !isMapMode;
+      mapFrame.style.pointerEvents = isMapMode ? "auto" : "none";
+      canvas.style.pointerEvents = isMapMode ? "none" : "auto";
+      modeLabel.textContent = isMapMode ? "マップ移動モード" : "建築モード";
+    }
+
     function setMode(newMode) {
       mode = newMode;
       if (mode !== "fortLine") linePoints = [];
     }
 
     canvas.addEventListener("click", (e) => {
+      if (isMapMode) return;
+
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
