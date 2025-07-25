@@ -1,138 +1,149 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<title>空想都市マップ｜共有ノート</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
-<style>
-  body { margin:0; display:flex; height:100vh; font-family:sans-serif; }
-  #sidebar { width:250px; background:#f4f4f4; overflow-y:auto; padding:10px; box-sizing:border-box; }
-  #map { flex:1; }
-  .building-btn { display:block; padding:6px; margin:3px 0; background:#fff; border:1px solid #ccc; cursor:pointer; border-radius:4px; }
-  .building-btn.active { background:#4287f5; color:white; }
-  #controls { position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.8); padding:6px; border-radius:4px; z-index:1000; }
-  button { margin:2px; padding:6px; }
-  #jsonData { width:100%; height:100px; }
-</style>
+  <meta charset="UTF-8">
+  <title>空想地図エディタ｜共有ノート</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; }
+    #sidebar {
+      width: 260px; background: #f0f0f0; padding: 10px; overflow-y: auto;
+    }
+    #map-container {
+      flex: 1; position: relative;
+    }
+    iframe {
+      width: 100%; height: 100%; border: none;
+    }
+    canvas {
+      position: absolute; top: 0; left: 0;
+      z-index: 100; pointer-events: auto;
+    }
+    button, select, input { margin: 5px 0; width: 100%; box-sizing: border-box; }
+  </style>
 </head>
 <body>
+  <div id="sidebar">
+    <h3>建物管理</h3>
+    <select id="buildingType">
+      <option value="要塞">要塞</option>
+      <option value="海軍基地">海軍基地</option>
+      <option value="陸軍基地">陸軍基地</option>
+      <option value="空軍基地">空軍基地</option>
+      <option value="国会">国会</option>
+      <option value="研究所">研究所</option>
+      <option value="港湾">港湾</option>
+      <option value="空港">空港</option>
+      <option value="兵站基地">兵站基地</option>
+      <option value="司令部">司令部</option>
+    </select>
+    <input type="text" id="customName" placeholder="名前（空白で自動）"/>
+    <button onclick="setMode('single')">📍 建物配置</button>
+    <button onclick="setMode('fortLine')">🧱 要塞 線配置</button>
+    <button onclick="setMode('delete')">🗑️ 建物削除</button>
+    <hr>
+    <button onclick="downloadJSON()">💾 JSON保存</button>
+    <input type="file" onchange="loadJSON(event)">
+  </div>
 
-<div id="sidebar">
-  <h3>建物選択</h3>
-  <div id="buildingList"></div>
-  <hr>
-  <button id="drawFortBtn">要塞（線描画モード）</button><br>
-  <button id="exportBtn">JSON保存</button><br>
-  <textarea id="jsonData" placeholder="ここにJSON表示"></textarea><br>
-  <button id="loadBtn">JSON読み込み</button>
-</div>
-<div id="map"></div>
+  <div id="map-container">
+    <iframe src="https://maps.gsi.go.jp/?hc=hic#5/36.104611/140.084556/&base=std&ls=std&disp=1&vs=c1g1j0h0k0l0u0t0z0r0s0m0f1"></iframe>
+    <canvas id="overlayCanvas"></canvas>
+  </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cyberjapandata.gsi.go.jp/xyz/std/leaflet.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-<script>
-(() => {
-  // 建物リスト（30種＋自由用）
-  const buildingTypes = [
-    "要塞", "海軍基地", "陸軍基地", "国会", "空港", "病院", "学校", "消防署", "警察署",
-    "図書館", "劇場", "市場", "省庁", "博物館", "墓地", "発電所", "水処理場", "工場", "倉庫",
-    "空軍基地", "灯台", "ホテル", "ショッピングモール", "体育館", "競技場", "映画館", "モスク", "教会",
-    "城", "自由記念碑"
-  ];
-  let selectedBuild = null;
-  let drawMode = false;
+  <script>
+    const canvas = document.getElementById("overlayCanvas");
+    const ctx = canvas.getContext("2d");
 
-  // Leaflet設定
-  const map = L.map('map').setView([35.681236, 139.767125], 14);
-  L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',{
-    attribution:'<a href="https://maps.gsi.go.jp/">国土地理院</a>'}).addTo(map);
+    let buildings = [];
+    let mode = "single";
+    let linePoints = [];
 
-  // レイヤー管理
-  const buildLayer = L.layerGroup().addTo(map);
-  const drawLayer = new L.FeatureGroup().addTo(map);
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      draw();
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
 
-  // Leaflet.draw用
-  const drawControl = new L.Control.Draw({
-    draw: { polyline: {shapeOptions:{color:'red'}}, polygon:false, rectangle:false, circle:false, marker:false, circlemarker:false },
-    edit: { featureGroup: drawLayer }
-  });
-  map.addControl(drawControl);
+    function setMode(newMode) {
+      mode = newMode;
+      if (mode !== "fortLine") linePoints = [];
+    }
 
-  // サイドバーにボタン生成
-  const listDiv = document.getElementById('buildingList');
-  buildingTypes.concat("自由建物").forEach(name => {
-    const btn = document.createElement('button');
-    btn.textContent = name;
-    btn.className = 'building-btn';
-    btn.onclick = () => {
-      document.querySelectorAll('.building-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedBuild = name;
-      drawMode = (name==="要塞");
-    };
-    listDiv.appendChild(btn);
-  });
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-  // マーカー設置
-  map.on('click', e => {
-    if(drawMode) return;
-    if(!selectedBuild) return alert("建物種類を選んでください！");
-    const name = prompt(`建物名（初期：${selectedBuild}）:`, selectedBuild);
-    if(!name) return;
-    const m = L.marker(e.latlng, {title:name})
-      .addTo(buildLayer)
-      .bindPopup(`<strong>${name}</strong><br><button onclick="deleteMe()">削除</button>`);
-    m.options.myName = name;
-    m.on('popupopen', () => {
-      window.deleteMe = () => { buildLayer.removeLayer(m); map.closePopup(); };
+      if (mode === "single") {
+        const type = document.getElementById("buildingType").value;
+        const name = document.getElementById("customName").value || type;
+        buildings.push({ x, y, type, name });
+      }
+
+      if (mode === "fortLine") {
+        linePoints.push({ x, y });
+        if (linePoints.length >= 2) {
+          const p1 = linePoints[linePoints.length - 2];
+          const p2 = linePoints[linePoints.length - 1];
+          const name = document.getElementById("customName").value || "要塞線";
+          buildings.push({ type: "要塞線", name, x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y });
+        }
+      }
+
+      if (mode === "delete") {
+        buildings = buildings.filter(b => {
+          const bx = b.x ?? ((b.x1 + b.x2) / 2);
+          const by = b.y ?? ((b.y1 + b.y2) / 2);
+          return Math.hypot(bx - x, by - y) > 10;
+        });
+      }
+
+      draw();
     });
-  });
 
-  // 要塞（線描画）トグル
-  document.getElementById('drawFortBtn').onclick = () => {
-    drawMode = !drawMode;
-    selectedBuild = null;
-    alert(drawMode ? "線描画モード ON" : "線描画モード OFF");
-  };
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // 描画完了イベント
-  map.on(L.Draw.Event.CREATED, e => {
-    drawLayer.addLayer(e.layer);
-  });
+      for (const b of buildings) {
+        if (b.type === "要塞線") {
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(b.x1, b.y1);
+          ctx.lineTo(b.x2, b.y2);
+          ctx.stroke();
+          ctx.fillStyle = "black";
+          ctx.fillText(b.name, (b.x1 + b.x2) / 2 + 5, (b.y1 + b.y2) / 2);
+        } else {
+          ctx.fillStyle = "blue";
+          ctx.fillRect(b.x - 5, b.y - 5, 10, 10);
+          ctx.fillStyle = "black";
+          ctx.fillText(b.name, b.x + 7, b.y);
+        }
+      }
+    }
 
-  // JSON保存
-  document.getElementById('exportBtn').onclick = () => {
-    const data = { buildings:[], forts:[] };
-    buildLayer.eachLayer(m => {
-      data.buildings.push({name:m.options.myName,lat:m.getLatLng().lat,lng:m.getLatLng().lng});
-    });
-    drawLayer.eachLayer(l => {
-      data.forts.push(l.getLatLngs()[0].map(p => ({lat:p.lat,lng:p.lng})));
-    });
-    document.getElementById('jsonData').value = JSON.stringify(data,null,2);
-  };
+    function downloadJSON() {
+      const blob = new Blob([JSON.stringify({ buildings }, null, 2)], { type: "application/json" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "map_data.json";
+      link.click();
+    }
 
-  // JSON読み込み
-  document.getElementById('loadBtn').onclick = () => {
-    const txt = document.getElementById('jsonData').value;
-    try {
-      const data = JSON.parse(txt);
-      buildLayer.clearLayers(); drawLayer.clearLayers();
-      data.buildings.forEach(b=>{
-        const m = L.marker([b.lat,b.lng],{title:b.name}).addTo(buildLayer)
-          .bindPopup(`<strong>${b.name}</strong><br><button onclick="deleteMe()">削除</button>`);
-        m.options.myName=b.name;
-        m.on('popupopen', ()=>{window.deleteMe=()=>{buildLayer.removeLayer(m);map.closePopup();};});
-      });
-      data.forts.forEach(arr=>{
-        const poly = L.polyline(arr.map(p=>[p.lat,p.lng]),{color:'red'}).addTo(drawLayer);
-      });
-    } catch(e){ alert("JSONが正しくありません"); }
-  };
-})();
-</script>
-
+    function loadJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const data = JSON.parse(e.target.result);
+        buildings = data.buildings || [];
+        draw();
+      };
+      reader.readAsText(file);
+    }
+  </script>
 </body>
 </html>
