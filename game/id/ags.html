@@ -1,149 +1,287 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>空想地図エディタ｜共有ノート</title>
-  <style>
-    body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; }
-    #sidebar {
-      width: 260px; background: #f0f0f0; padding: 10px; overflow-y: auto;
-    }
-    #map-container {
-      flex: 1; position: relative;
-    }
-    iframe {
-      width: 100%; height: 100%; border: none;
-    }
-    canvas {
-      position: absolute; top: 0; left: 0;
-      z-index: 100; pointer-events: auto;
-    }
-    button, select, input { margin: 5px 0; width: 100%; box-sizing: border-box; }
-  </style>
+<meta charset="UTF-8" />
+<title>攻撃防衛計算システム｜共有ノート</title>
+<style>
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background:#f0f0f0; }
+  h1 { text-align:center; }
+  .tab {
+    display: inline-block; padding: 10px 20px; cursor: pointer;
+    background: #ddd; margin-right: 5px; border-radius: 5px 5px 0 0;
+    user-select:none;
+  }
+  .tab.active { background: white; border-bottom: 2px solid white; font-weight: bold; }
+  .container { background: white; padding: 15px; border-radius: 0 5px 5px 5px; box-shadow: 0 3px 8px rgba(0,0,0,0.2); }
+  .battle-section { display: flex; gap: 20px; margin-top: 10px; }
+  .side {
+    flex: 1; border: 1px solid #ccc; padding: 10px; border-radius: 5px; background:#fafafa;
+  }
+  .side h3 { margin-top: 0; }
+  .unit-row {
+    display: flex; gap: 8px; margin-bottom: 6px; align-items:center;
+  }
+  select, input[type=number] { padding: 4px; font-size: 14px; width: 130px; }
+  input[type=number] { width: 60px; }
+  button.add-unit, button.remove-unit, button.fight-btn {
+    cursor: pointer; padding: 5px 10px; font-size: 14px; border:none; border-radius: 3px;
+  }
+  button.add-unit { background: #4caf50; color: white; }
+  button.remove-unit { background: #e74c3c; color: white; }
+  button.fight-btn { background: #007bff; color: white; margin-top: 10px; width: 100%; }
+  #result {
+    margin-top: 15px; padding: 10px; background: #222; color: #fff; white-space: pre-wrap; border-radius: 5px; min-height: 140px; font-family: monospace;
+  }
+</style>
 </head>
 <body>
-  <div id="sidebar">
-    <h3>建物管理</h3>
-    <select id="buildingType">
-      <option value="要塞">要塞</option>
-      <option value="海軍基地">海軍基地</option>
-      <option value="陸軍基地">陸軍基地</option>
-      <option value="空軍基地">空軍基地</option>
-      <option value="国会">国会</option>
-      <option value="研究所">研究所</option>
-      <option value="港湾">港湾</option>
-      <option value="空港">空港</option>
-      <option value="兵站基地">兵站基地</option>
-      <option value="司令部">司令部</option>
-    </select>
-    <input type="text" id="customName" placeholder="名前（空白で自動）"/>
-    <button onclick="setMode('single')">📍 建物配置</button>
-    <button onclick="setMode('fortLine')">🧱 要塞 線配置</button>
-    <button onclick="setMode('delete')">🗑️ 建物削除</button>
-    <hr>
-    <button onclick="downloadJSON()">💾 JSON保存</button>
-    <input type="file" onchange="loadJSON(event)">
+
+<h1>攻撃防衛計算システム｜共有ノート</h1>
+
+<div>
+  <div id="tabs">
+    <div class="tab active" data-tab="land">陸戦シミュレーション</div>
+    <div class="tab" data-tab="sea">海戦シミュレーション</div>
+    <div class="tab" data-tab="air">空戦シミュレーション</div>
   </div>
 
-  <div id="map-container">
-    <iframe src="https://maps.gsi.go.jp/?hc=hic#5/36.104611/140.084556/&base=std&ls=std&disp=1&vs=c1g1j0h0k0l0u0t0z0r0s0m0f1"></iframe>
-    <canvas id="overlayCanvas"></canvas>
+  <!-- 陸戦 -->
+  <div id="land" class="container tab-content">
+    <div class="battle-section">
+      <div class="side" id="land-attacker">
+        <h3>攻撃側（陸戦師団）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">師団追加</button>
+      </div>
+      <div class="side" id="land-defender">
+        <h3>防衛側（陸戦師団）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">師団追加</button>
+      </div>
+    </div>
+    <button class="fight-btn" onclick="simulateBattle('land')">戦闘開始</button>
+    <pre id="result-land" class="result"></pre>
   </div>
 
-  <script>
-    const canvas = document.getElementById("overlayCanvas");
-    const ctx = canvas.getContext("2d");
+  <!-- 海戦 -->
+  <div id="sea" class="container tab-content" style="display:none;">
+    <div class="battle-section">
+      <div class="side" id="sea-attacker">
+        <h3>攻撃側（海軍艦隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">艦隊追加</button>
+      </div>
+      <div class="side" id="sea-defender">
+        <h3>防衛側（海軍艦隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">艦隊追加</button>
+      </div>
+    </div>
+    <button class="fight-btn" onclick="simulateBattle('sea')">戦闘開始</button>
+    <pre id="result-sea" class="result"></pre>
+  </div>
 
-    let buildings = [];
-    let mode = "single";
-    let linePoints = [];
+  <!-- 空戦 -->
+  <div id="air" class="container tab-content" style="display:none;">
+    <div class="battle-section">
+      <div class="side" id="air-attacker">
+        <h3>攻撃側（航空部隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">部隊追加</button>
+      </div>
+      <div class="side" id="air-defender">
+        <h3>防衛側（航空部隊）</h3>
+        <div class="units-list"></div>
+        <button class="add-unit">部隊追加</button>
+      </div>
+    </div>
+    <button class="fight-btn" onclick="simulateBattle('air')">戦闘開始</button>
+    <pre id="result-air" class="result"></pre>
+  </div>
+</div>
 
-    function resizeCanvas() {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      draw();
+<script>
+(() => {
+  // ユニット定義
+  const unitsData = {
+    land: {
+      infantry: { name: '歩兵', attack: 30, defense: 30 },
+      tank: { name: '戦車', attack: 70, defense: 60 },
+      mech: { name: '歩兵戦車', attack: 50, defense: 40 },
+      marine: { name: '海兵隊', attack: 40, defense: 35 },
+      airborne: { name: '空挺団', attack: 45, defense: 35 },
+      mountain: { name: '山岳兵', attack: 35, defense: 40 },
+      heavy: { name: '重装備兵', attack: 60, defense: 70 },
+      heli: { name: 'ヘリ部隊', attack: 55, defense: 40 },
+    },
+    sea: {
+      destroyer: { name: '駆逐艦', attack: 55, defense: 50 },
+      light_cruiser: { name: '軽巡洋艦', attack: 65, defense: 55 },
+      heavy_cruiser: { name: '重巡洋艦', attack: 80, defense: 70 },
+      battleship: { name: '戦艦', attack: 100, defense: 90 },
+      missile_ship: { name: 'ミサイル艦', attack: 85, defense: 60 },
+      aegis: { name: 'イージス艦', attack: 70, defense: 75 },
+      transport: { name: '輸送艦', attack: 10, defense: 30 },
+      landing_ship: { name: '強襲上陸艦', attack: 40, defense: 50 },
+      aircraft_carrier: { name: '空母', attack: 110, defense: 80 },
+    },
+    air: {
+      fighter: { name: '戦闘機', attack: 90, defense: 50 },
+      bomber: { name: '爆撃機', attack: 110, defense: 40 },
+      helicopter: { name: 'ヘリコプター', attack: 50, defense: 45 },
+      transport_aircraft: { name: '輸送機', attack: 20, defense: 60 },
     }
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+  };
 
-    function setMode(newMode) {
-      mode = newMode;
-      if (mode !== "fortLine") linePoints = [];
-    }
+  // タブ切り替え
+  const tabs = document.querySelectorAll('.tab');
+  const tabContents = document.querySelectorAll('.tab-content');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      tabContents.forEach(c => {
+        c.style.display = (c.id === tab.dataset.tab) ? 'block' : 'none';
+      });
+    });
+  });
 
-    canvas.addEventListener("click", (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+  // ユニット行作成
+  function createUnitRow(type, selectedKey = null, count = 1) {
+    const div = document.createElement('div');
+    div.className = 'unit-row';
 
-      if (mode === "single") {
-        const type = document.getElementById("buildingType").value;
-        const name = document.getElementById("customName").value || type;
-        buildings.push({ x, y, type, name });
-      }
-
-      if (mode === "fortLine") {
-        linePoints.push({ x, y });
-        if (linePoints.length >= 2) {
-          const p1 = linePoints[linePoints.length - 2];
-          const p2 = linePoints[linePoints.length - 1];
-          const name = document.getElementById("customName").value || "要塞線";
-          buildings.push({ type: "要塞線", name, x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y });
-        }
-      }
-
-      if (mode === "delete") {
-        buildings = buildings.filter(b => {
-          const bx = b.x ?? ((b.x1 + b.x2) / 2);
-          const by = b.y ?? ((b.y1 + b.y2) / 2);
-          return Math.hypot(bx - x, by - y) > 10;
-        });
-      }
-
-      draw();
+    const select = document.createElement('select');
+    Object.entries(unitsData[type]).forEach(([key, data]) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = data.name;
+      if (key === selectedKey) opt.selected = true;
+      select.appendChild(opt);
     });
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = 1;
+    input.value = count;
 
-      for (const b of buildings) {
-        if (b.type === "要塞線") {
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(b.x1, b.y1);
-          ctx.lineTo(b.x2, b.y2);
-          ctx.stroke();
-          ctx.fillStyle = "black";
-          ctx.fillText(b.name, (b.x1 + b.x2) / 2 + 5, (b.y1 + b.y2) / 2);
-        } else {
-          ctx.fillStyle = "blue";
-          ctx.fillRect(b.x - 5, b.y - 5, 10, 10);
-          ctx.fillStyle = "black";
-          ctx.fillText(b.name, b.x + 7, b.y);
-        }
-      }
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'remove-unit';
+    btn.textContent = '削除';
+    btn.onclick = () => div.remove();
+
+    div.appendChild(select);
+    div.appendChild(input);
+    div.appendChild(btn);
+
+    return div;
+  }
+
+  // 初期行追加
+  function addInitialUnits(sideElem, type) {
+    sideElem.querySelector('.units-list').appendChild(createUnitRow(type));
+  }
+
+  // 「師団追加」ボタン処理
+  document.querySelectorAll('.add-unit').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const sideElem = btn.parentNode;
+      let type = 'land';
+      if (sideElem.id.startsWith('sea')) type = 'sea';
+      else if (sideElem.id.startsWith('air')) type = 'air';
+      sideElem.querySelector('.units-list').appendChild(createUnitRow(type));
+    });
+  });
+
+  // 全タブ左右に初期師団１つずつ追加
+  ['land', 'sea', 'air'].forEach(type => {
+    addInitialUnits(document.getElementById(type + '-attacker'), type);
+    addInitialUnits(document.getElementById(type + '-defender'), type);
+  });
+
+  // 戦闘シミュレーション
+  window.simulateBattle = function(type) {
+    const atkSide = document.getElementById(type + '-attacker');
+    const defSide = document.getElementById(type + '-defender');
+    const resultEl = document.getElementById('result-' + type);
+
+    // 攻撃側合計計算
+    let atkTotalAttack = 0;
+    let atkTotalDefense = 0;
+    let atkTotalCount = 0;
+
+    const atkUnits = atkSide.querySelectorAll('.unit-row');
+    let atkDesc = '【攻撃側】\n';
+    atkUnits.forEach(unit => {
+      const key = unit.querySelector('select').value;
+      const count = parseInt(unit.querySelector('input').value) || 0;
+      if (count < 1) return;
+      const data = unitsData[type][key];
+      atkDesc += `${data.name} x ${count}人\n`;
+      atkTotalAttack += data.attack * count;
+      atkTotalDefense += data.defense * count;
+      atkTotalCount += count;
+    });
+
+    // 防御側合計計算
+    let defTotalAttack = 0;
+    let defTotalDefense = 0;
+    let defTotalCount = 0;
+
+    const defUnits = defSide.querySelectorAll('.unit-row');
+    let defDesc = '【防衛側】\n';
+    defUnits.forEach(unit => {
+      const key = unit.querySelector('select').value;
+      const count = parseInt(unit.querySelector('input').value) || 0;
+      if (count < 1) return;
+      const data = unitsData[type][key];
+      defDesc += `${data.name} x ${count}人\n`;
+      defTotalAttack += data.attack * count;
+      defTotalDefense += data.defense * count;
+      defTotalCount += count;
+    });
+
+    // 戦闘計算ロジック（シンプル）
+    // 勝敗は攻撃側攻撃力vs防御側防御力の比較で決定
+    // 死亡者は乱数で双方それぞれ最大5～15%の損害率に勝敗補正をかけて決定
+
+    const atkPower = atkTotalAttack;
+    const defPower = defTotalDefense;
+
+    let outcome = '';
+    if(atkPower > defPower) {
+      outcome = '⚔️ 攻撃側の勝利！\n';
+    } else {
+      outcome = '🛡️ 防衛側の勝利！\n';
     }
 
-    function downloadJSON() {
-      const blob = new Blob([JSON.stringify({ buildings }, null, 2)], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "map_data.json";
-      link.click();
+    // 損害率（%）
+    // 勝者は低めの損害(5%〜10%)
+    // 敗者は高めの損害(10%〜15%)
+    function getLosses(count, isWinner) {
+      if(count === 0) return 0;
+      let min = isWinner ? 0.05 : 0.10;
+      let max = isWinner ? 0.10 : 0.15;
+      let rate = min + Math.random() * (max - min);
+      return Math.min(count, Math.floor(count * rate));
     }
 
-    function loadJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const data = JSON.parse(e.target.result);
-        buildings = data.buildings || [];
-        draw();
-      };
-      reader.readAsText(file);
-    }
-  </script>
+    const atkWin = atkPower > defPower;
+    const atkLoss = getLosses(atkTotalCount, atkWin);
+    const defLoss = getLosses(defTotalCount, !atkWin);
+
+    let resultText =
+`${atkDesc}\n${defDesc}\n` +
+`攻撃側 攻撃力合計: ${atkPower}\n防衛側 防御力合計: ${defPower}\n\n` +
+outcome +
+`攻撃側 死亡者数: ${atkLoss}\n防衛側 死亡者数: ${defLoss}\n`;
+
+    resultEl.textContent = resultText;
+  };
+
+})();
+</script>
+
 </body>
 </html>
