@@ -1,47 +1,29 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>空想地図エディタ</title>
+  <meta charset="UTF-8">
+  <title>空想地図エディタ（ver 1.2.5）</title>
   <style>
-    body { margin: 0; font-family: sans-serif; display: flex; height: 100vh; }
-    #sidebar {
-      width: 250px; background: #f4f4f4; padding: 10px; overflow-y: auto;
-    }
-    #map-container {
-      flex: 1; position: relative;
-    }
-    iframe {
-      width: 100%; height: 100%;
-      border: none;
-      pointer-events: none; /* 初期は操作無効（建築モード） */
-    }
-    canvas {
-      position: absolute;
-      top: 0; left: 0; z-index: 100;
-      pointer-events: auto;
-    }
-    button, select, input {
-      width: 100%; margin-top: 5px;
-      box-sizing: border-box;
-    }
+    body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; }
+    #sidebar { width: 250px; background: #f4f4f4; padding: 10px; overflow-y: auto; }
+    #map-container { flex: 1; position: relative; }
+    iframe { width: 100%; height: 100%; border: none; }
+    canvas { position: absolute; top: 0; left: 0; z-index: 100; pointer-events: auto; }
+    button, select, input { width: 100%; margin-top: 5px; }
   </style>
 </head>
 <body>
   <div id="sidebar">
-    <h3>ツール</h3>
     <button onclick="toggleMapMode()">🗺️ <span id="modeLabel">建築モード</span></button>
     <select id="buildingType">
       <option value="要塞">要塞</option>
       <option value="海軍基地">海軍基地</option>
       <option value="陸軍基地">陸軍基地</option>
-      <option value="空軍基地">空軍基地</option>
-      <option value="国会">国会</option>
     </select>
     <input type="text" id="customName" placeholder="名前（空白で自動）">
-    <button onclick="setMode('single')">🏗 建物配置</button>
+    <button onclick="setMode('single')">📍 建物配置</button>
     <button onclick="setMode('fortLine')">🧱 要塞 線配置</button>
-    <button onclick="setMode('delete')">🗑️ 建物削除</button>
+    <button onclick="setMode('delete')">🗑️ 削除</button>
     <hr>
     <button onclick="downloadJSON()">💾 JSON保存</button>
     <input type="file" onchange="loadJSON(event)">
@@ -55,13 +37,15 @@
   <script>
     const canvas = document.getElementById("overlayCanvas");
     const ctx = canvas.getContext("2d");
-    const mapFrame = document.getElementById("mapFrame");
     const modeLabel = document.getElementById("modeLabel");
-
     let buildings = [];
-    let mode = "single";
     let isMapMode = false;
+    let mode = "single";
     let linePoints = [];
+
+    // ===== ズームと中心を管理 =====
+    let mapCenter = { lat: 36.104611, lon: 140.084556 };
+    let zoom = 5;
 
     function resizeCanvas() {
       canvas.width = canvas.parentElement.clientWidth;
@@ -73,7 +57,7 @@
 
     function toggleMapMode() {
       isMapMode = !isMapMode;
-      mapFrame.style.pointerEvents = isMapMode ? "auto" : "none";
+      document.getElementById("mapFrame").style.pointerEvents = isMapMode ? "auto" : "none";
       canvas.style.pointerEvents = isMapMode ? "none" : "auto";
       modeLabel.textContent = isMapMode ? "マップ移動モード" : "建築モード";
     }
@@ -83,58 +67,76 @@
       if (mode !== "fortLine") linePoints = [];
     }
 
-    canvas.addEventListener("click", (e) => {
-      if (isMapMode) return;
+    // ==== 緯度経度変換（擬似的な正距円筒投影）====
+    function screenToLatLon(x, y) {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scale = Math.pow(2, zoom);
+      const lon = mapCenter.lon + (x - w / 2) / (256 * scale) * 360;
+      const lat = mapCenter.lat - (y - h / 2) / (256 * scale) * 180;
+      return { lat, lon };
+    }
 
+    function latLonToScreen(lat, lon) {
+      const w = canvas.width;
+      const h = canvas.height;
+      const scale = Math.pow(2, zoom);
+      const x = (lon - mapCenter.lon) / 360 * (256 * scale) + w / 2;
+      const y = (mapCenter.lat - lat) / 180 * (256 * scale) + h / 2;
+      return { x, y };
+    }
+
+    canvas.addEventListener("click", e => {
+      if (isMapMode) return;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
+      const { lat, lon } = screenToLatLon(x, y);
 
       if (mode === "single") {
         const type = document.getElementById("buildingType").value;
         const name = document.getElementById("customName").value || type;
-        buildings.push({ x, y, type, name });
+        buildings.push({ lat, lon, type, name });
       }
 
       if (mode === "fortLine") {
-        linePoints.push({ x, y });
+        linePoints.push({ lat, lon });
         if (linePoints.length >= 2) {
           const p1 = linePoints[linePoints.length - 2];
           const p2 = linePoints[linePoints.length - 1];
           const name = document.getElementById("customName").value || "要塞線";
-          buildings.push({ type: "要塞線", name, x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y });
+          buildings.push({ type: "要塞線", name, lat1: p1.lat, lon1: p1.lon, lat2: p2.lat, lon2: p2.lon });
         }
       }
 
       if (mode === "delete") {
         buildings = buildings.filter(b => {
-          const bx = b.x ?? ((b.x1 + b.x2) / 2);
-          const by = b.y ?? ((b.y1 + b.y2) / 2);
-          return Math.hypot(bx - x, by - y) > 10;
+          const point = b.lat ? latLonToScreen(b.lat, b.lon) :
+            latLonToScreen((b.lat1 + b.lat2) / 2, (b.lon1 + b.lon2) / 2);
+          return Math.hypot(point.x - x, point.y - y) > 10;
         });
       }
-
       draw();
     });
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       for (const b of buildings) {
         if (b.type === "要塞線") {
+          const p1 = latLonToScreen(b.lat1, b.lon1);
+          const p2 = latLonToScreen(b.lat2, b.lon2);
           ctx.strokeStyle = "red";
           ctx.lineWidth = 2;
           ctx.beginPath();
-          ctx.moveTo(b.x1, b.y1);
-          ctx.lineTo(b.x2, b.y2);
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
           ctx.stroke();
-          ctx.fillStyle = "black";
-          ctx.fillText(b.name, (b.x1 + b.x2) / 2 + 5, (b.y1 + b.y2) / 2);
         } else {
+          const p = latLonToScreen(b.lat, b.lon);
           ctx.fillStyle = "blue";
-          ctx.fillRect(b.x - 5, b.y - 5, 10, 10);
+          ctx.fillRect(p.x - 5, p.y - 5, 10, 10);
           ctx.fillStyle = "black";
-          ctx.fillText(b.name, b.x + 7, b.y);
+          ctx.fillText(b.name, p.x + 7, p.y);
         }
       }
     }
