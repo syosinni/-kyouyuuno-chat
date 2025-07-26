@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>兵器研究システム（ver.1.0.2）</title>
+  <title>兵器研究システム（ber 1.0.5）</title>
   <style>
     body { display:flex; height:100vh; margin:0; font-family:sans-serif; }
     #left, #right { flex:1; padding:10px; overflow:auto; border-right:1px solid #ccc; }
@@ -10,7 +10,7 @@
     h2 { margin-top:0; }
     input, button, select { margin:5px 0; padding:5px; width:100%; }
     .list { background:#f4f4f4; padding:5px; margin:5px 0; }
-    #dayCounter { font-weight:bold; font-size:16px; }
+    #yearCounter { font-weight:bold; font-size:16px; }
   </style>
 </head>
 <body>
@@ -20,8 +20,8 @@
     <input type="text" id="weaponName" placeholder="兵器名">
     <input type="number" id="devPoints" placeholder="必要研究ポイント">
     <button onclick="addWeapon()">兵器を追加</button>
-    <button onclick="progressDay()">📅 1日進行</button>
-    <p id="dayCounter">現在の日数: 0日</p>
+    <button onclick="progressYear()">📅 1年進行</button>
+    <p id="yearCounter">現在の年: 1961年</p>
     <button onclick="downloadWeapons()">💾 兵器JSON保存</button>
     <input type="file" onchange="loadWeapons(event)">
     <div id="weaponList"></div>
@@ -31,7 +31,7 @@
   <div id="right">
     <h2>🏢 研究所</h2>
     <input type="text" id="labName" placeholder="研究所名">
-    <input type="number" id="labPoints" placeholder="1日あたり研究ポイント">
+    <input type="number" id="labPoints" placeholder="1年あたり研究ポイント">
     <button onclick="addLab()">研究所を追加</button>
     <button onclick="downloadLabs()">💾 研究所JSON保存</button>
     <input type="file" onchange="loadLabs(event)">
@@ -41,7 +41,7 @@
   <script>
     let weapons = [];
     let labs = [];
-    let currentDay = 0;
+    let currentYear = 1961; // 初期年
 
     // === 兵器 ===
     function addWeapon(){
@@ -50,7 +50,7 @@
       if(!name||points<=0){ alert("兵器名と必要ポイントを入力してください"); return; }
       weapons.push({id:Date.now(), name, points, progress:0, complete:false});
       updateWeaponList();
-      updateLabList(); // 研究対象の選択肢を更新
+      updateLabList(); 
     }
 
     function updateWeaponList(){
@@ -91,10 +91,10 @@
       }).join("");
     }
 
-    // === 進行 ===
-    function progressDay(){
-      currentDay++;
-      document.getElementById("dayCounter").textContent=`現在の日数: ${currentDay}日`;
+    // === 年進行 ===
+    function progressYear(){
+      currentYear++;
+      document.getElementById("yearCounter").textContent=`現在の年: ${currentYear}年`;
 
       labs.forEach(lab=>{
         if(lab.target){
@@ -114,7 +114,7 @@
 
     // === JSON保存 ===
     function downloadWeapons(){
-      const blob=new Blob([JSON.stringify({weapons},null,2)],{type:"application/json"});
+      const blob=new Blob([JSON.stringify({weapons, currentYear},null,2)],{type:"application/json"});
       const link=document.createElement("a");
       link.href=URL.createObjectURL(blob);
       link.download="weapons.json";
@@ -125,7 +125,10 @@
       const file=event.target.files[0]; if(!file)return;
       const reader=new FileReader();
       reader.onload=e=>{
-        weapons=JSON.parse(e.target.result).weapons||[];
+        const data=JSON.parse(e.target.result);
+        weapons=data.weapons||[];
+        currentYear=data.currentYear||1961;
+        document.getElementById("yearCounter").textContent=`現在の年: ${currentYear}年`;
         updateWeaponList();
         updateLabList();
       };
