@@ -2,161 +2,109 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>空想地図エディタ（ver 1.2.5）</title>
+  <title>空想地図エディタ（ver 1.2.6）</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    body { margin: 0; display: flex; height: 100vh; font-family: sans-serif; }
-    #sidebar { width: 250px; background: #f4f4f4; padding: 10px; overflow-y: auto; }
-    #map-container { flex: 1; position: relative; }
-    iframe { width: 100%; height: 100%; border: none; }
-    canvas { position: absolute; top: 0; left: 0; z-index: 100; pointer-events: auto; }
-    button, select, input { width: 100%; margin-top: 5px; }
+    body { margin:0; display:flex; height:100vh; font-family:sans-serif; }
+    #sidebar { width:250px; background:#f4f4f4; padding:10px; overflow-y:auto; }
+    #map { flex:1; }
+    button, select, input { width:100%; margin-top:5px; }
+    #buildingList { font-size:12px; margin-top:10px; max-height:200px; overflow:auto; }
   </style>
 </head>
 <body>
   <div id="sidebar">
-    <button onclick="toggleMapMode()">🗺️ <span id="modeLabel">建築モード</span></button>
+    <h3>ツール</h3>
     <select id="buildingType">
       <option value="要塞">要塞</option>
       <option value="海軍基地">海軍基地</option>
       <option value="陸軍基地">陸軍基地</option>
+      <option value="空軍基地">空軍基地</option>
+      <option value="国会">国会</option>
     </select>
     <input type="text" id="customName" placeholder="名前（空白で自動）">
-    <button onclick="setMode('single')">📍 建物配置</button>
-    <button onclick="setMode('fortLine')">🧱 要塞 線配置</button>
+    <button onclick="setMode('place')">📍 建物配置</button>
+    <button onclick="setMode('fortLine')">🧱 要塞線</button>
     <button onclick="setMode('delete')">🗑️ 削除</button>
     <hr>
     <button onclick="downloadJSON()">💾 JSON保存</button>
     <input type="file" onchange="loadJSON(event)">
+    <hr>
+    <div id="buildingList"></div>
   </div>
 
-  <div id="map-container">
-    <iframe id="mapFrame" src="https://maps.gsi.go.jp/?hc=hic#5/36.104611/140.084556/&base=std&ls=std&disp=1&vs=c1g1j0h0k0l0u0t0z0r0s0m0f1"></iframe>
-    <canvas id="overlayCanvas"></canvas>
-  </div>
+  <div id="map"></div>
 
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script>
-    const canvas = document.getElementById("overlayCanvas");
-    const ctx = canvas.getContext("2d");
-    const modeLabel = document.getElementById("modeLabel");
+    // === Leafletマップ作成 ===
+    const map = L.map('map').setView([36.104611, 140.084556], 5);
+    L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
+      attribution: '地理院地図',
+      maxZoom: 18
+    }).addTo(map);
+
     let buildings = [];
-    let isMapMode = false;
-    let mode = "single";
+    let mode = "place";
     let linePoints = [];
 
-    // ===== ズームと中心を管理 =====
-    let mapCenter = { lat: 36.104611, lon: 140.084556 };
-    let zoom = 5;
+    function setMode(m){ mode = m; if(mode!=="fortLine") linePoints=[]; }
 
-    function resizeCanvas() {
-      canvas.width = canvas.parentElement.clientWidth;
-      canvas.height = canvas.parentElement.clientHeight;
-      draw();
-    }
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+    map.on('click', e=>{
+      const lat = e.latlng.lat;
+      const lon = e.latlng.lng;
 
-    function toggleMapMode() {
-      isMapMode = !isMapMode;
-      document.getElementById("mapFrame").style.pointerEvents = isMapMode ? "auto" : "none";
-      canvas.style.pointerEvents = isMapMode ? "none" : "auto";
-      modeLabel.textContent = isMapMode ? "マップ移動モード" : "建築モード";
-    }
-
-    function setMode(newMode) {
-      mode = newMode;
-      if (mode !== "fortLine") linePoints = [];
-    }
-
-    // ==== 緯度経度変換（擬似的な正距円筒投影）====
-    function screenToLatLon(x, y) {
-      const w = canvas.width;
-      const h = canvas.height;
-      const scale = Math.pow(2, zoom);
-      const lon = mapCenter.lon + (x - w / 2) / (256 * scale) * 360;
-      const lat = mapCenter.lat - (y - h / 2) / (256 * scale) * 180;
-      return { lat, lon };
-    }
-
-    function latLonToScreen(lat, lon) {
-      const w = canvas.width;
-      const h = canvas.height;
-      const scale = Math.pow(2, zoom);
-      const x = (lon - mapCenter.lon) / 360 * (256 * scale) + w / 2;
-      const y = (mapCenter.lat - lat) / 180 * (256 * scale) + h / 2;
-      return { x, y };
-    }
-
-    canvas.addEventListener("click", e => {
-      if (isMapMode) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const { lat, lon } = screenToLatLon(x, y);
-
-      if (mode === "single") {
+      if(mode==="place"){
         const type = document.getElementById("buildingType").value;
         const name = document.getElementById("customName").value || type;
-        buildings.push({ lat, lon, type, name });
+        const marker = L.marker([lat,lon]).addTo(map).bindTooltip(name,{permanent:true});
+        buildings.push({type,name,lat,lon});
+        marker._data = {type,name,lat,lon};
+        marker.on('click', ()=>{ if(mode==="delete"){ map.removeLayer(marker); buildings=buildings.filter(b=>b!==marker._data); updateList(); }});
       }
 
-      if (mode === "fortLine") {
-        linePoints.push({ lat, lon });
-        if (linePoints.length >= 2) {
-          const p1 = linePoints[linePoints.length - 2];
-          const p2 = linePoints[linePoints.length - 1];
-          const name = document.getElementById("customName").value || "要塞線";
-          buildings.push({ type: "要塞線", name, lat1: p1.lat, lon1: p1.lon, lat2: p2.lat, lon2: p2.lon });
+      if(mode==="fortLine"){
+        linePoints.push([lat,lon]);
+        if(linePoints.length>=2){
+          const p1=linePoints[linePoints.length-2], p2=linePoints[linePoints.length-1];
+          const name=document.getElementById("customName").value || "要塞線";
+          const line=L.polyline([p1,p2],{color:"red"}).addTo(map);
+          buildings.push({type:"要塞線",name,lat1:p1[0],lon1:p1[1],lat2:p2[0],lon2:p2[1]});
+          line.on('click',()=>{ if(mode==="delete"){ map.removeLayer(line); buildings=buildings.filter(b=>!(b.lat1===p1[0]&&b.lon1===p1[1])); updateList(); }});
         }
       }
 
-      if (mode === "delete") {
-        buildings = buildings.filter(b => {
-          const point = b.lat ? latLonToScreen(b.lat, b.lon) :
-            latLonToScreen((b.lat1 + b.lat2) / 2, (b.lon1 + b.lon2) / 2);
-          return Math.hypot(point.x - x, point.y - y) > 10;
-        });
-      }
-      draw();
+      updateList();
     });
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (const b of buildings) {
-        if (b.type === "要塞線") {
-          const p1 = latLonToScreen(b.lat1, b.lon1);
-          const p2 = latLonToScreen(b.lat2, b.lon2);
-          ctx.strokeStyle = "red";
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(p1.x, p1.y);
-          ctx.lineTo(p2.x, p2.y);
-          ctx.stroke();
-        } else {
-          const p = latLonToScreen(b.lat, b.lon);
-          ctx.fillStyle = "blue";
-          ctx.fillRect(p.x - 5, p.y - 5, 10, 10);
-          ctx.fillStyle = "black";
-          ctx.fillText(b.name, p.x + 7, p.y);
-        }
-      }
+    function updateList(){
+      const div=document.getElementById("buildingList");
+      div.innerHTML = buildings.map((b,i)=>`${i+1}. ${b.name} (${b.type})`).join("<br>");
     }
 
-    function downloadJSON() {
-      const blob = new Blob([JSON.stringify({ buildings }, null, 2)], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "map_data.json";
+    function downloadJSON(){
+      const blob=new Blob([JSON.stringify({buildings},null,2)],{type:"application/json"});
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="map_data.json";
       link.click();
     }
 
-    function loadJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const data = JSON.parse(e.target.result);
-        buildings = data.buildings || [];
-        draw();
+    function loadJSON(event){
+      const file=event.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        const data=JSON.parse(e.target.result);
+        buildings=data.buildings||[];
+        map.eachLayer(l=>{ if(l instanceof L.Marker||l instanceof L.Polyline) map.removeLayer(l); });
+        buildings.forEach(b=>{
+          if(b.type==="要塞線"){
+            L.polyline([[b.lat1,b.lon1],[b.lat2,b.lon2]],{color:"red"}).addTo(map);
+          }else{
+            L.marker([b.lat,b.lon]).addTo(map).bindTooltip(b.name,{permanent:true});
+          }
+        });
+        updateList();
       };
       reader.readAsText(file);
     }
