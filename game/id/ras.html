@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>兵器研究管理システム</title>
+  <style>
+    body { display:flex; height:100vh; margin:0; font-family:sans-serif; }
+    #left, #right { flex:1; padding:10px; overflow:auto; border-right:1px solid #ccc; }
+    #right { border:none; }
+    h2 { margin-top:0; }
+    input, button { margin:5px 0; padding:5px; width:100%; }
+    .list { background:#f4f4f4; padding:5px; margin:5px 0; }
+  </style>
+</head>
+<body>
+  <!-- 兵器研究パネル -->
+  <div id="left">
+    <h2>🔧 兵器研究開発</h2>
+    <input type="text" id="weaponName" placeholder="兵器名">
+    <input type="number" id="devDays" placeholder="開発にかかる日数">
+    <button onclick="addWeapon()">兵器を追加</button>
+    <button onclick="downloadWeapons()">💾 兵器JSON保存</button>
+    <input type="file" onchange="loadWeapons(event)">
+    <div id="weaponList"></div>
+  </div>
+
+  <!-- 研究所パネル -->
+  <div id="right">
+    <h2>🏢 研究所管理</h2>
+    <input type="text" id="labName" placeholder="研究所名">
+    <input type="number" id="labPoints" placeholder="研究ポイント">
+    <button onclick="addLab()">研究所を追加</button>
+    <button onclick="downloadLabs()">💾 研究所JSON保存</button>
+    <input type="file" onchange="loadLabs(event)">
+    <div id="labList"></div>
+  </div>
+
+  <script>
+    let weapons = [];
+    let labs = [];
+
+    // ==== 兵器開発 ====
+    function addWeapon(){
+      const name=document.getElementById("weaponName").value.trim();
+      const days=parseInt(document.getElementById("devDays").value)||0;
+      if(!name||days<=0){ alert("兵器名と日数を入力してください"); return; }
+      weapons.push({name, days, progress:0});
+      updateWeaponList();
+    }
+
+    function updateWeaponList(){
+      const div=document.getElementById("weaponList");
+      div.innerHTML=weapons.map((w,i)=>`
+        <div class="list">
+          <b>${w.name}</b><br>
+          開発日数: ${w.days}日<br>
+          進捗: ${w.progress}/${w.days}日
+        </div>
+      `).join("");
+    }
+
+    function downloadWeapons(){
+      const blob=new Blob([JSON.stringify({weapons},null,2)],{type:"application/json"});
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="weapons.json";
+      link.click();
+    }
+
+    function loadWeapons(event){
+      const file=event.target.files[0]; if(!file)return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        weapons=JSON.parse(e.target.result).weapons||[];
+        updateWeaponList();
+      };
+      reader.readAsText(file);
+    }
+
+    // ==== 研究所 ====
+    function addLab(){
+      const name=document.getElementById("labName").value.trim();
+      const points=parseInt(document.getElementById("labPoints").value)||0;
+      if(!name||points<=0){ alert("研究所名とポイントを入力してください"); return; }
+      labs.push({name, points});
+      updateLabList();
+    }
+
+    function updateLabList(){
+      const div=document.getElementById("labList");
+      div.innerHTML=labs.map((l,i)=>`
+        <div class="list">
+          <b>${l.name}</b><br>
+          研究ポイント: ${l.points}
+        </div>
+      `).join("");
+    }
+
+    function downloadLabs(){
+      const blob=new Blob([JSON.stringify({labs},null,2)],{type:"application/json"});
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(blob);
+      link.download="labs.json";
+      link.click();
+    }
+
+    function loadLabs(event){
+      const file=event.target.files[0]; if(!file)return;
+      const reader=new FileReader();
+      reader.onload=e=>{
+        labs=JSON.parse(e.target.result).labs||[];
+        updateLabList();
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
