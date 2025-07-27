@@ -2,52 +2,171 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>クリックで色を塗るマップ</title>
+  <title>統合型 戦略ゲームシステム</title>
   <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      background: #f0f0f0;
-    }
-
-    #map-container {
-      border: 2px solid #333;
-      width: 90vw;
-      height: 80vh;
-      overflow: auto;
-      background: white;
-    }
-
-    #colorPicker {
-      margin: 10px 0;
-    }
+    body { display:flex; margin:0; height:100vh; font-family:sans-serif; }
+    #leftPanel { width:400px; overflow:auto; background:#f8f8f8; padding:10px; border-right:1px solid #ccc; }
+    #mapPanel { flex:1; display:flex; flex-direction:column; }
+    iframe { flex:1; border:none; }
+    h2 { margin-top:0; }
+    input, button, select { margin:3px 0; padding:5px; width:100%; }
+    .list { background:#f4f4f4; padding:5px; margin:5px 0; }
+    #yearCounter { font-weight:bold; font-size:16px; }
+    #buildingList { max-height:200px; overflow:auto; background:#fff; border:1px solid #ccc; }
   </style>
 </head>
 <body>
+  <div id="leftPanel">
+    <h2>📅 年度管理</h2>
+    <p id="yearCounter">現在の年: 1961年</p>
+    <button onclick="progressYear()">1年進行</button>
 
-  <h1>Hearts of Iron IV マップに色を塗る</h1>
-  <label for="colorPicker">色を選んでクリック：</label>
-  <input type="color" id="colorPicker" value="#ff0000">
+    <h2>🔧 研究システム</h2>
+    <input type="text" id="weaponName" placeholder="兵器名">
+    <input type="number" id="devPoints" placeholder="必要研究ポイント">
+    <button onclick="addWeapon()">兵器を追加</button>
+    <div id="weaponList"></div>
 
-  <div id="map-container">
-    <object id="svgMap" type="image/svg+xml" data="map.svg"></object>
+    <h3>研究所</h3>
+    <input type="text" id="labName" placeholder="研究所名">
+    <input type="number" id="labPoints" placeholder="1年あたり研究ポイント">
+    <button onclick="addLab()">研究所を追加</button>
+    <div id="labList"></div>
+
+    <h2>⚔️ 戦闘システム</h2>
+    <select id="attackerType">
+      <option value="infantry">歩兵</option>
+      <option value="tank">戦車</option>
+    </select>
+    数: <input type="number" id="attackerCount" value="10">
+    <select id="defenderType">
+      <option value="infantry">歩兵</option>
+      <option value="tank">戦車</option>
+    </select>
+    数: <input type="number" id="defenderCount" value="10">
+    <button onclick="simulateBattle()">戦闘開始</button>
+    <div id="battleLog" class="list"></div>
+
+    <h2>🏙️ 建物管理</h2>
+    <input type="text" id="buildingName" placeholder="建物名">
+    <button onclick="addBuilding()">建物を設置</button>
+    <div id="buildingList"></div>
+    <button onclick="downloadBuildings()">JSON保存</button>
+    <input type="file" onchange="loadBuildings(event)">
+  </div>
+
+  <div id="mapPanel">
+    <iframe src="https://www.mapchart.net/hearts-of-iron-iv.html"></iframe>
   </div>
 
   <script>
-    const colorInput = document.getElementById("colorPicker");
+    let currentYear = 1961;
+    let weapons = [];
+    let labs = [];
+    let buildings = [];
 
-    document.getElementById("svgMap").addEventListener("load", function () {
-      const svgDoc = this.contentDocument;
-      const paths = svgDoc.querySelectorAll("path");
-
-      paths.forEach((path) => {
-        path.style.cursor = "pointer";
-        path.addEventListener("click", () => {
-          path.style.fill = colorInput.value;
-        });
+    function progressYear(){
+      currentYear++;
+      document.getElementById("yearCounter").textContent = "現在の年: "+currentYear+"年";
+      labs.forEach(lab=>{
+        if(lab.target){
+          const w = weapons.find(x=>x.id==lab.target);
+          if(w && !w.complete){
+            w.progress += lab.points;
+            if(w.progress >= w.points){ w.progress = w.points; w.complete = true; }
+          }
+        }
       });
-    });
-  </script>
+      updateWeaponList();
+    }
 
+    // 研究
+    function addWeapon(){
+      const name=document.getElementById("weaponName").value;
+      const points=parseInt(document.getElementById("devPoints").value)||0;
+      if(!name||points<=0)return;
+      weapons.push({id:Date.now(), name, points, progress:0, complete:false});
+      updateWeaponList(); updateLabList();
+    }
+
+    function updateWeaponList(){
+      document.getElementById("weaponList").innerHTML = weapons.map(w=>{
+        const s=w.complete?"✅ 完了":`進捗:${w.progress}/${w.points}`;
+        return `<div class="list"><b>${w.name}</b><br>${s}</div>`;
+      }).join("");
+    }
+
+    function addLab(){
+      const name=document.getElementById("labName").value;
+      const points=parseInt(document.getElementById("labPoints").value)||0;
+      if(!name||points<=0)return;
+      labs.push({id:Date.now(), name, points, target:""});
+      updateLabList();
+    }
+
+    function changeLabTarget(id, val){
+      const lab=labs.find(l=>l.id==id); if(lab)lab.target=val;
+    }
+
+    function updateLabList(){
+      document.getElementById("labList").innerHTML = labs.map(l=>{
+        let opts=`<option value="">研究なし</option>`;
+        weapons.forEach(w=>{
+          const sel=(w.id==l.target)?"selected":"";
+          opts+=`<option value="${w.id}" ${sel}>${w.name}</option>`;
+        });
+        return `<div class="list"><b>${l.name}</b><br>ポイント:${l.points}<br>
+        <select onchange="changeLabTarget(${l.id}, this.value)">${opts}</select></div>`;
+      }).join("");
+    }
+
+    // 戦闘
+    function simulateBattle(){
+      const atkType=document.getElementById("attackerType").value;
+      const defType=document.getElementById("defenderType").value;
+      const atk=parseInt(document.getElementById("attackerCount").value)||0;
+      const def=parseInt(document.getElementById("defenderCount").value)||0;
+      const atkPower=atk*(atkType=="tank"?70:30);
+      const defPower=def*(defType=="tank"?60:30);
+      let result = `攻撃 ${atkType}:${atk} vs 防衛 ${defType}:${def}\n攻:${atkPower} 防:${defPower}\n`;
+      result += atkPower>defPower?"攻撃側勝利":"防衛側勝利";
+      document.getElementById("battleLog").textContent=result;
+    }
+
+    // 建物
+    function addBuilding(){
+      const name=document.getElementById("buildingName").value;
+      if(!name)return;
+      buildings.push({id:Date.now(), name});
+      updateBuildingList();
+    }
+
+    function updateBuildingList(){
+      document.getElementById("buildingList").innerHTML = buildings.map(b=>{
+        return `<div class="list">${b.name}</div>`;
+      }).join("");
+    }
+
+    function downloadBuildings(){
+      const blob=new Blob([JSON.stringify({year:currentYear, buildings},null,2)],{type:"application/json"});
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob);
+      a.download="buildings.json";
+      a.click();
+    }
+
+    function loadBuildings(ev){
+      const file=ev.target.files[0]; if(!file)return;
+      const r=new FileReader();
+      r.onload=e=>{
+        const data=JSON.parse(e.target.result);
+        buildings=data.buildings||[];
+        currentYear=data.year||1961;
+        document.getElementById("yearCounter").textContent = "現在の年: "+currentYear+"年";
+        updateBuildingList();
+      };
+      r.readAsText(file);
+    }
+  </script>
 </body>
 </html>
