@@ -2,31 +2,40 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>高度議会システム</title>
+  <title>高度議会システムv2</title>
   <style>
     body { font-family:sans-serif; padding:10px; }
     input, button, select { margin:5px; padding:5px; }
     #partyList, #billLog, #parliamentList { background:#f4f4f4; padding:10px; margin:10px 0; max-height:200px; overflow:auto; }
+    .ruling { color: red; font-weight:bold; }
   </style>
 </head>
 <body>
-  <h1>🏛️ 高度議会システム</h1>
+  <h1>🏛️ 高度議会システムv2</h1>
 
-  <h2>議会作成</h2>
+  <h2>議会管理</h2>
   議会名: <input type="text" id="parliamentName">
+  最大議席数: <input type="number" id="maxSeats" value="100">
   <button onclick="createParliament()">議会を追加</button>
+  <button onclick="deleteParliament()">選択議会を削除</button>
   <div id="parliamentList"></div>
 
-  <h2>党を作成（選択中の議会に追加）</h2>
+  <h2>党作成（選択中の議会）</h2>
   名前: <input type="text" id="partyName">
   党首: <input type="text" id="leader">
   議席数: <input type="number" id="seats" value="10">
-  支持率(0-100): <input type="number" id="support" value="50">
-  独裁度(0-100): <input type="number" id="dict" value="50">
-  経済自由度(0-100): <input type="number" id="eco" value="50"><br>
-  軍拡賛成(0-100): <input type="number" id="military" value="50">
-  原子力賛成(0-100): <input type="number" id="nuclear" value="50">
-  社会自由度(0-100): <input type="number" id="social" value="50">
+  <br>
+  軍拡: <input type="number" id="military" value="50"> 
+  原子力: <input type="number" id="nuclear" value="50">
+  外交: <input type="number" id="diplomacy" value="50">
+  福祉: <input type="number" id="welfare" value="50">
+  税制: <input type="number" id="tax" value="50">
+  宗教: <input type="number" id="religion" value="50">
+  環境: <input type="number" id="environment" value="50">
+  産業: <input type="number" id="industry" value="50">
+  社会自由度: <input type="number" id="social" value="50">
+  経済自由度: <input type="number" id="eco" value="50">
+  <br>
   <button onclick="addParty()">党を追加</button>
   <button onclick="deleteParty()">選択した党を削除</button>
 
@@ -34,21 +43,15 @@
 
   <h2>法案提出</h2>
   法案名: <input type="text" id="billName">
-  カテゴリ: 
-  <select id="billType">
-    <option value="軍事">軍事</option>
-    <option value="原子力">原子力</option>
-    <option value="経済">経済</option>
-    <option value="社会">社会</option>
-  </select>
+  カテゴリ:
+  <select id="billType"></select>
   政策値(0-100): <input type="number" id="billValue" value="50">
   <button onclick="voteBill()">投票</button>
 
   <h3>法案履歴</h3>
   <div id="billLog"></div>
 
-  <h2>議会管理</h2>
-  <button onclick="dissolve()">議会解散</button>
+  <h2>議会操作</h2>
   <button onclick="election()">選挙</button>
 
   <h2>データ管理</h2>
@@ -56,20 +59,32 @@
   <input type="file" id="fileInput" onchange="loadJSON()">
 
   <script>
+    const billCategories = ["軍事","防衛","外交","経済","社会","福祉","教育","医療","原子力","環境",
+    "科学技術","エネルギー","農業","産業","交通","通信","労働","移民","治安","宗教",
+    "文化","宇宙開発","サイバー防衛","金融","税制","司法","地方自治","都市計画","災害対策","インフラ"];
+
+    billCategories.forEach(c=>{
+      const opt=document.createElement("option");
+      opt.value=c; opt.textContent=c;
+      document.getElementById("billType").appendChild(opt);
+    });
+
     let parliaments = [];
     let currentParliament = null;
 
     function createParliament(){
       const name = document.getElementById("parliamentName").value;
+      const maxSeats = parseInt(document.getElementById("maxSeats").value)||100;
       if(!name)return;
-      parliaments.push({name, parties:[], bills:[]});
+      parliaments.push({name, maxSeats, parties:[], bills:[], rulingParty:null});
       currentParliament = parliaments[parliaments.length-1];
       updateParliamentList();
     }
 
     function updateParliamentList(){
       document.getElementById("parliamentList").innerHTML = parliaments.map((p,i)=>
-        `<div onclick="selectParliament(${i})" style="cursor:pointer;${currentParliament===parliaments[i]?'background:#ddd;':''}">${p.name}</div>`
+        `<div onclick="selectParliament(${i})" style="cursor:pointer;${currentParliament===parliaments[i]?'background:#ddd;':''}">
+          ${p.name} (最大議席:${p.maxSeats})</div>`
       ).join("");
       updatePartyList();
       renderBills();
@@ -80,25 +95,41 @@
       updateParliamentList();
     }
 
+    function deleteParliament(){
+      if(!currentParliament)return alert("議会を選択してください");
+      const idx=parliaments.indexOf(currentParliament);
+      parliaments.splice(idx,1);
+      currentParliament = parliaments[0]||null;
+      updateParliamentList();
+    }
+
     function addParty(){
       if(!currentParliament)return alert("議会を選択してください");
       const name=document.getElementById("partyName").value;
       const leader=document.getElementById("leader").value;
       const seats=parseInt(document.getElementById("seats").value)||0;
-      const support=parseInt(document.getElementById("support").value)||50;
-      const dict=parseInt(document.getElementById("dict").value)||50;
-      const eco=parseInt(document.getElementById("eco").value)||50;
-      const military=parseInt(document.getElementById("military").value)||50;
-      const nuclear=parseInt(document.getElementById("nuclear").value)||50;
-      const social=parseInt(document.getElementById("social").value)||50;
-      currentParliament.parties.push({name, leader, seats, support, dict, eco, military, nuclear, social});
+      const p = {
+        name, leader, seats,
+        military:+document.getElementById("military").value,
+        nuclear:+document.getElementById("nuclear").value,
+        diplomacy:+document.getElementById("diplomacy").value,
+        welfare:+document.getElementById("welfare").value,
+        tax:+document.getElementById("tax").value,
+        religion:+document.getElementById("religion").value,
+        environment:+document.getElementById("environment").value,
+        industry:+document.getElementById("industry").value,
+        social:+document.getElementById("social").value,
+        eco:+document.getElementById("eco").value
+      };
+      currentParliament.parties.push(p);
       updatePartyList();
     }
 
     function updatePartyList(){
       if(!currentParliament){document.getElementById("partyList").innerHTML="";return;}
       document.getElementById("partyList").innerHTML = currentParliament.parties.map((p,i)=>
-        `<div><input type="radio" name="partySelect" value="${i}"><b>${p.name}</b>(${p.leader}) 議席:${p.seats} 独裁:${p.dict} 軍拡:${p.military} 原子力:${p.nuclear}</div>`
+        `<div><input type="radio" name="partySelect" value="${i}">
+        <b class="${currentParliament.rulingParty===p.name?'ruling':''}">${p.name}</b>(${p.leader}) 議席:${p.seats}</div>`
       ).join("");
     }
 
@@ -108,8 +139,6 @@
       if(idx){
         currentParliament.parties.splice(idx.value,1);
         updatePartyList();
-      } else {
-        alert("削除する党を選択してください");
       }
     }
 
@@ -125,8 +154,14 @@
         let policy=50;
         if(type==="軍事")policy=p.military;
         else if(type==="原子力")policy=p.nuclear;
-        else if(type==="経済")policy=p.eco;
+        else if(type==="外交")policy=p.diplomacy;
+        else if(type==="福祉")policy=p.welfare;
+        else if(type==="税制")policy=p.tax;
+        else if(type==="宗教")policy=p.religion;
+        else if(type==="環境")policy=p.environment;
+        else if(type==="産業")policy=p.industry;
         else if(type==="社会")policy=p.social;
+        else if(type==="経済")policy=p.eco;
         let score=100-Math.abs(policy-value);
         if(score>50)approve+=p.seats;
       });
@@ -143,21 +178,22 @@
       ).join("");
     }
 
-    function dissolve(){
-      if(!currentParliament)return;
-      currentParliament.parties.forEach(p=>p.seats=Math.floor(p.seats*0.5));
-      updatePartyList();
-      alert("議会を解散しました。次の選挙で再編されます。");
-    }
-
     function election(){
       if(!currentParliament)return;
+      const max = currentParliament.maxSeats;
+      let total = 0;
       currentParliament.parties.forEach(p=>{
-        let variation=Math.floor((p.support-50)/10);
-        p.seats=Math.max(1, Math.floor(Math.random()*20)+variation);
+        p.seats=Math.max(1,Math.floor(Math.random()*max/2));
+        total+=p.seats;
       });
+      if(total>max){
+        const ratio = max/total;
+        currentParliament.parties.forEach(p=>p.seats=Math.floor(p.seats*ratio));
+      }
+      let ruling = currentParliament.parties.reduce((a,b)=>a.seats>b.seats?a:b,null);
+      currentParliament.rulingParty=ruling? ruling.name : null;
       updatePartyList();
-      alert("選挙が行われました。議席数が更新されました。");
+      alert("選挙完了。与党: "+(ruling? ruling.name : "なし"));
     }
 
     function saveJSON(){
@@ -166,7 +202,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href=url;
-      a.download="parliament_system.json";
+      a.download="parliament_system_v2.json";
       a.click();
       URL.revokeObjectURL(url);
     }
