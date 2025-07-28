@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>貿易システム</title>
+  <style>
+    body { font-family:sans-serif; padding:10px; }
+    #countryList, #tradeList { margin:10px 0; padding:5px; background:#f8f8f8; border:1px solid #ccc; }
+    input, select, button { margin:5px; padding:5px; }
+  </style>
+</head>
+<body>
+  <h1>🌐 貿易システム</h1>
+
+  <h2>国の管理</h2>
+  <input type="text" id="countryName" placeholder="国名">
+  <input type="number" id="iron" placeholder="鉄" value="100">
+  <input type="number" id="oil" placeholder="石油" value="100">
+  <input type="number" id="food" placeholder="食料" value="100">
+  <button onclick="addCountry()">国を追加</button>
+  <div id="countryList"></div>
+
+  <h2>貿易交渉</h2>
+  輸出国:
+  <select id="exporter"></select>
+  輸入国:
+  <select id="importer"></select>
+  資源:
+  <select id="resource">
+    <option value="iron">鉄</option>
+    <option value="oil">石油</option>
+    <option value="food">食料</option>
+  </select>
+  数量: <input type="number" id="amount" value="10">
+  <button onclick="addTrade()">貿易を設定</button>
+  <div id="tradeList"></div>
+
+  <h2>年進行</h2>
+  <button onclick="progressYear()">1年進行</button>
+  <p id="log"></p>
+
+  <script>
+    let countries = [];
+    let trades = [];
+    let year = 1961;
+
+    function addCountry(){
+      const name=document.getElementById("countryName").value;
+      const iron=parseInt(document.getElementById("iron").value)||0;
+      const oil=parseInt(document.getElementById("oil").value)||0;
+      const food=parseInt(document.getElementById("food").value)||0;
+      if(!name)return;
+      countries.push({name, iron, oil, food});
+      updateCountryList();
+      updateCountrySelect();
+    }
+
+    function updateCountryList(){
+      document.getElementById("countryList").innerHTML = countries.map(c=>
+        `<div><b>${c.name}</b> 鉄:${c.iron} 石油:${c.oil} 食料:${c.food}</div>`
+      ).join("");
+    }
+
+    function updateCountrySelect(){
+      const opts=countries.map(c=>`<option value="${c.name}">${c.name}</option>`).join("");
+      document.getElementById("exporter").innerHTML=opts;
+      document.getElementById("importer").innerHTML=opts;
+    }
+
+    function addTrade(){
+      const exp=document.getElementById("exporter").value;
+      const imp=document.getElementById("importer").value;
+      const res=document.getElementById("resource").value;
+      const amt=parseInt(document.getElementById("amount").value)||0;
+      if(exp==imp||amt<=0)return alert("無効な貿易設定");
+      trades.push({exporter:exp, importer:imp, resource:res, amount:amt});
+      updateTradeList();
+    }
+
+    function updateTradeList(){
+      document.getElementById("tradeList").innerHTML = trades.map(t=>
+        `<div>${t.exporter} → ${t.importer} : ${t.resource} ${t.amount}</div>`
+      ).join("");
+    }
+
+    function progressYear(){
+      let log=`${year}年の貿易結果:\n`;
+      trades.forEach(t=>{
+        const exp=countries.find(c=>c.name==t.exporter);
+        const imp=countries.find(c=>c.name==t.importer);
+        if(exp && imp && exp[t.resource]>=t.amount){
+          exp[t.resource]-=t.amount;
+          imp[t.resource]+=t.amount;
+          log+=`${t.exporter} → ${t.importer} : ${t.resource} ${t.amount}\n`;
+        } else {
+          log+=`${t.exporter}の資源不足で失敗\n`;
+        }
+      });
+      document.getElementById("log").textContent=log;
+      year++;
+      updateCountryList();
+    }
+  </script>
+</body>
+</html>
