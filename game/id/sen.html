@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>拡張議会システム</title>
+  <style>
+    body { font-family:sans-serif; padding:10px; }
+    input, button, select { margin:5px; padding:5px; }
+    #partyList, #billLog { background:#f4f4f4; padding:10px; margin:10px 0; max-height:200px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h1>🏛️ 議会システム</h1>
+
+  <h2>党を作成</h2>
+  名前: <input type="text" id="partyName">
+  党首: <input type="text" id="leader">
+  議席数: <input type="number" id="seats" value="10">
+  支持率(0-100): <input type="number" id="support" value="50">
+  独裁度(0-100): <input type="number" id="dict" value="50">
+  経済政策(左-右 0-100): <input type="number" id="eco" value="50">
+  <button onclick="addParty()">党を追加</button>
+
+  <div id="partyList"></div>
+
+  <h2>法案提出</h2>
+  法案名: <input type="text" id="billName">
+  カテゴリ: 
+  <select id="billType">
+    <option value="軍事">軍事</option>
+    <option value="経済">経済</option>
+    <option value="社会">社会</option>
+  </select>
+  独裁度: <input type="number" id="billDict" value="50">
+  資金使用度: <input type="number" id="billMoney" value="50">
+  <button onclick="voteBill()">投票</button>
+
+  <h3>法案履歴</h3>
+  <div id="billLog"></div>
+
+  <h2>議会管理</h2>
+  <button onclick="dissolve()">議会解散</button>
+  <button onclick="election()">選挙</button>
+
+  <h2>データ管理</h2>
+  <button onclick="saveJSON()">JSON保存</button>
+  <input type="file" id="fileInput" onchange="loadJSON()">
+
+  <script>
+    let parties = [];
+    let bills = [];
+
+    function addParty(){
+      const name=document.getElementById("partyName").value;
+      const leader=document.getElementById("leader").value;
+      const seats=parseInt(document.getElementById("seats").value)||0;
+      const support=parseInt(document.getElementById("support").value)||50;
+      const dict=parseInt(document.getElementById("dict").value)||50;
+      const eco=parseInt(document.getElementById("eco").value)||50;
+      parties.push({name, leader, seats, support, dict, eco});
+      updatePartyList();
+    }
+
+    function updatePartyList(){
+      document.getElementById("partyList").innerHTML = parties.map(p=>
+        `<div><b>${p.name}</b> (${p.leader}) 議席:${p.seats} 支持率:${p.support}% 独裁度:${p.dict} 経済:${p.eco}</div>`
+      ).join("");
+    }
+
+    function voteBill(){
+      const bill=document.getElementById("billName").value;
+      const type=document.getElementById("billType").value;
+      const billDict=parseInt(document.getElementById("billDict").value)||50;
+      const billMoney=parseInt(document.getElementById("billMoney").value)||50;
+
+      let totalSeats=parties.reduce((sum,p)=>sum+p.seats,0);
+      let approve=0;
+      parties.forEach(p=>{
+        let score=100-Math.abs(p.dict-billDict);
+        if(score > 50) approve+=p.seats;
+      });
+      let result = approve > totalSeats/2 ? "可決" : "否決";
+      bills.unshift({name:bill, type, result});
+      renderBills();
+    }
+
+    function renderBills(){
+      document.getElementById("billLog").innerHTML = bills.map(b=>
+        `<div>[${b.type}] 法案「${b.name}」 → ${b.result}</div>`
+      ).join("");
+    }
+
+    function dissolve(){
+      parties.forEach(p=>p.seats=Math.floor(p.seats*0.5));
+      updatePartyList();
+      alert("議会を解散しました。次の選挙で再編されます。");
+    }
+
+    function election(){
+      parties.forEach(p=>{
+        let variation=Math.floor((p.support-50)/10);
+        p.seats=Math.max(1, Math.floor(Math.random()*20)+variation);
+      });
+      updatePartyList();
+      alert("選挙が行われました。議席数が更新されました。");
+    }
+
+    function saveJSON(){
+      const data = {parties, bills};
+      const blob = new Blob([JSON.stringify(data,null,2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href=url;
+      a.download="parliament.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadJSON(){
+      const file=document.getElementById("fileInput").files[0];
+      const reader=new FileReader();
+      reader.onload=function(e){
+        const data=JSON.parse(e.target.result);
+        parties=data.parties||[];
+        bills=data.bills||[];
+        updatePartyList();
+        renderBills();
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
