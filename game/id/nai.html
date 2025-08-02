@@ -2,72 +2,84 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>国家管理＋議会＋イベントシステム</title>
+  <title>国家シミュレーション統合版</title>
   <style>
     body { font-family: sans-serif; background: #f5f5f5; padding: 20px; }
     h2 { margin-top: 30px; }
+    .section { background: #fff; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; }
     button { margin: 5px; }
+    #event-log { background: #fefefe; border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto; }
     textarea { width: 100%; height: 100px; }
-    #event-log { background: #fff; border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: scroll; }
   </style>
 </head>
 <body>
-
-  <h1>国家管理シミュレーション</h1>
-  <p>現在の年月: <span id="year">1961</span>年 <span id="month">1</span>月</p>
+  <h1>国家管理・議会・内閣・イベント統合システム</h1>
+  <p>現在: <span id="year">1961</span>年 <span id="month">1</span>月</p>
   <button onclick="advanceMonth()">1か月進める</button>
   <button onclick="forceEvent()">イベント強制発生</button>
 
-  <h2>人口と税率</h2>
-  人口: <input type="number" id="population" value="50000000"><br>
-  所得税: <input type="number" id="tax_income" value="10">%　
-  法人税: <input type="number" id="tax_corp" value="20">%　
-  消費税: <input type="number" id="tax_consume" value="5">%　
-  資産税: <input type="number" id="tax_asset" value="2">%　
-  輸出税: <input type="number" id="tax_export" value="3">%　
-  輸入税: <input type="number" id="tax_import" value="3">%　
-  <p>年間税収: <span id="revenue">0</span> 円</p>
+  <div class="section">
+    <h2>人口と税率</h2>
+    人口: <input type="number" id="population" value="50000000"><br>
+    所得税:<input type="number" id="tax_income" value="10">%　
+    法人税:<input type="number" id="tax_corp" value="20">%　
+    消費税:<input type="number" id="tax_consume" value="5">%　
+    資産税:<input type="number" id="tax_asset" value="2">%　
+    輸出税:<input type="number" id="tax_export" value="3">%　
+    輸入税:<input type="number" id="tax_import" value="3">%　
+    <p>年間税収: <span id="revenue">0</span> 円</p>
+  </div>
 
-  <h2>国家予算と国債</h2>
-  国家予算: <input type="number" id="budget" value="100000000000"> 円<br>
-  国債残高: <span id="debt">0</span> 円
-  <button onclick="issueDebt()">国債発行</button>
+  <div class="section">
+    <h2>国家予算と国債</h2>
+    国家予算: <input type="number" id="budget" value="100000000000"> 円<br>
+    国債残高: <span id="debt">0</span> 円
+    <button onclick="issueDebt()">国債発行</button>
+  </div>
 
-  <h2>省庁と内閣</h2>
-  <div id="cabinet"></div>
+  <div class="section">
+    <h2>議会</h2>
+    議会名: <input type="text" id="parliament-name" value="国会">
+    議員数: <input type="number" id="parliament-size" value="100">
+    <button onclick="createParliament()">議会作成</button>
+    <div id="parliament-list"></div>
+  </div>
 
-  <h2>イベント</h2>
-  <div id="event-log"></div>
+  <div class="section">
+    <h2>内閣</h2>
+    <div id="cabinet"></div>
+  </div>
 
-  <h2>保存/読み込み</h2>
-  <button onclick="saveJSON()">JSON保存</button>
-  <input type="file" id="loadFile" onchange="loadJSON(event)">
+  <div class="section">
+    <h2>イベント</h2>
+    <div id="event-log"></div>
+  </div>
+
+  <div class="section">
+    <h2>保存と読み込み</h2>
+    <button onclick="saveJSON()">JSON保存</button>
+    <input type="file" id="loadFile" onchange="loadJSON(event)">
+  </div>
 
   <script>
-    let year = 1961, month = 1;
-    let debt = 0;
-    let events = []; // イベントデータ
-    let currentEvent = null;
+    let year = 1961, month = 1, debt = 0;
+    let parliament = null;
+    let events = [];
 
-    const eventList = [
-      {cat:"経済",title:"経済の衰退",choices:[
-        {text:"金融緩和",effect:()=>{addLog("金融緩和実施");}},
-        {text:"緊縮財政",effect:()=>{addLog("緊縮財政を実施");}},
-        {text:"企業救済",effect:()=>{addLog("企業救済を行った");}}
-      ]},
-      {cat:"軍事",title:"国境で戦闘",choices:[
-        {text:"軍を派遣",effect:()=>{addLog("軍を派遣した");}},
-        {text:"外交解決",effect:()=>{addLog("外交解決を模索");}},
-        {text:"無視",effect:()=>{addLog("国境の問題を無視");}}
-      ]},
-      // ここに98個のイベントを用意（カテゴリ＋選択肢）
-    ];
-    while(eventList.length<100){
-      eventList.push({cat:"汎用",title:"ランダムイベント"+eventList.length,choices:[
-        {text:"選択肢A",effect:()=>{addLog("Aを選んだ");}},
-        {text:"選択肢B",effect:()=>{addLog("Bを選んだ");}},
-        {text:"選択肢C",effect:()=>{addLog("Cを選んだ");}}
-      ]});
+    // イベント100件
+    const eventList = [];
+    const categories = ["経済","軍事","外交","社会","科学","災害"];
+    for(let i=1;i<=100;i++){
+      const cat = categories[i % categories.length];
+      eventList.push({
+        cat:cat,
+        title:`${cat}イベント${i}`,
+        choices:[
+          {text:"対応策A",effect:()=>addLog(`${cat}${i}：対応策Aを選択`)},
+          {text:"対応策B",effect:()=>addLog(`${cat}${i}：対応策Bを選択`)},
+          {text:"対応策C",effect:()=>addLog(`${cat}${i}：対応策Cを選択`)}
+        ]
+      });
     }
 
     function advanceMonth(){
@@ -75,38 +87,52 @@
       if(month>12){month=1;year++;}
       document.getElementById("year").textContent=year;
       document.getElementById("month").textContent=month;
-      if(Math.random()<0.3){ triggerEvent(); }
+      if(Math.random()<0.3) triggerEvent();
       updateRevenue();
     }
 
-    function triggerEvent(){
-      currentEvent = eventList[Math.floor(Math.random()*eventList.length)];
-      let log = `[${currentEvent.cat}] ${currentEvent.title}\n`;
-      currentEvent.choices.forEach((c,i)=>log+=`${i+1}. ${c.text}\n`);
-      addLog(log);
-    }
-
     function forceEvent(){ triggerEvent(); }
+
+    function triggerEvent(){
+      const ev = eventList[Math.floor(Math.random()*eventList.length)];
+      let text = `[${ev.cat}] ${ev.title}\n`;
+      ev.choices.forEach((c,i)=>{ text += `${i+1}. ${c.text}\n`; });
+      addLog(text);
+    }
 
     function addLog(msg){
       document.getElementById("event-log").textContent += msg + "\n\n";
     }
 
     function updateRevenue(){
-      let pop = parseInt(document.getElementById("population").value);
-      let totalTax = parseFloat(document.getElementById("tax_income").value) + 
-                     parseFloat(document.getElementById("tax_corp").value) + 
-                     parseFloat(document.getElementById("tax_consume").value) +
-                     parseFloat(document.getElementById("tax_asset").value) +
-                     parseFloat(document.getElementById("tax_export").value) +
-                     parseFloat(document.getElementById("tax_import").value);
-      let rev = pop * totalTax * 10; 
+      const pop = parseInt(document.getElementById("population").value);
+      const taxes = ["tax_income","tax_corp","tax_consume","tax_asset","tax_export","tax_import"]
+        .map(id=>parseFloat(document.getElementById(id).value));
+      const totalTax = taxes.reduce((a,b)=>a+b,0);
+      const rev = pop * totalTax * 10;
       document.getElementById("revenue").textContent = rev.toLocaleString();
     }
 
     function issueDebt(){
       debt += 10000000000;
       document.getElementById("debt").textContent = debt.toLocaleString();
+    }
+
+    function createParliament(){
+      const name = document.getElementById("parliament-name").value;
+      const size = parseInt(document.getElementById("parliament-size").value);
+      parliament = {name,size};
+      document.getElementById("parliament-list").textContent = `${name}（議員数:${size}）`;
+      setupCabinet();
+    }
+
+    function setupCabinet(){
+      const ministries = ["防衛","外務","財務","経済産業","教育","環境","厚生","農林","観光","科学","法務","国土","エネルギー","通信","交通","文化","技術","内務","労働","危機管理"];
+      let html = "";
+      ministries.forEach(m=>{
+        html += `${m}大臣: <input type="text" placeholder="議員名"><br>`;
+      });
+      document.getElementById("cabinet").innerHTML = html;
     }
 
     function saveJSON(){
@@ -120,7 +146,8 @@
           asset:document.getElementById("tax_asset").value,
           export:document.getElementById("tax_export").value,
           import:document.getElementById("tax_import").value
-        }
+        },
+        parliament,
       };
       const blob = new Blob([JSON.stringify(data)],{type:"application/json"});
       const a = document.createElement("a");
@@ -129,19 +156,23 @@
       a.click();
     }
 
-    function loadJSON(evt){
-      const file = evt.target.files[0];
+    function loadJSON(e){
+      const file = e.target.files[0];
       const reader = new FileReader();
-      reader.onload = function(e){
-        const data = JSON.parse(e.target.result);
-        year = data.year; month = data.month; debt = data.debt;
-        document.getElementById("population").value = data.population;
-        document.getElementById("tax_income").value = data.taxes.income;
-        document.getElementById("tax_corp").value = data.taxes.corp;
-        document.getElementById("tax_consume").value = data.taxes.consume;
-        document.getElementById("tax_asset").value = data.taxes.asset;
-        document.getElementById("tax_export").value = data.taxes.export;
-        document.getElementById("tax_import").value = data.taxes.import;
+      reader.onload = function(evt){
+        const data = JSON.parse(evt.target.result);
+        year=data.year;month=data.month;debt=data.debt;
+        document.getElementById("population").value=data.population;
+        document.getElementById("tax_income").value=data.taxes.income;
+        document.getElementById("tax_corp").value=data.taxes.corp;
+        document.getElementById("tax_consume").value=data.taxes.consume;
+        document.getElementById("tax_asset").value=data.taxes.asset;
+        document.getElementById("tax_export").value=data.taxes.export;
+        document.getElementById("tax_import").value=data.taxes.import;
+        if(data.parliament){
+          parliament=data.parliament;
+          document.getElementById("parliament-list").textContent = `${parliament.name}（議員数:${parliament.size}）`;
+        }
         document.getElementById("year").textContent=year;
         document.getElementById("month").textContent=month;
         document.getElementById("debt").textContent=debt.toLocaleString();
