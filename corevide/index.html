@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CoreVIDE</title>
+<style>
+/* リセット */
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:sans-serif;background:#f9f9f9;color:#333;}
+header{background:#ff0000;color:#fff;padding:10px 20px;}
+header h1{font-size:1.5rem;}
+main{max-width:900px;margin:20px auto;padding:0 10px;}
+.input-area{display:flex;gap:8px;margin-bottom:20px;}
+.input-area input{flex:1;padding:8px;border:1px solid #ccc;border-radius:3px;transition:border .3s;}
+.input-area input:focus{border-color:#ff0000;outline:none;}
+.input-area button{padding:8px 16px;background:#ff0000;color:#fff;border:none;border-radius:3px;cursor:pointer;transition:background .3s;}
+.input-area button:hover{background:#e60000;}
+.videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
+.card{background:#fff;border:1px solid #ddd;border-radius:4px;overflow:hidden;position:relative;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:transform .3s;}
+.card:hover{transform:translateY(-4px);box-shadow:0 6px 12px rgba(0,0,0,0.15);}
+.thumb{width:100%;height:0;padding-bottom:56.25%;background:#000;position:relative;}
+.thumb::after{content:'▶';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2.5rem;color:rgba(255,255,255,0.8);}
+.info{padding:10px;}
+.info a{display:block;color:#ff0000;text-decoration:none;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.info .date{font-size:.75rem;color:#999;}
+.del-btn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:24px;height:24px;opacity:0;cursor:pointer;transition:opacity .2s;}
+.card:hover .del-btn{opacity:1;}
+</style>
+</head>
+<body>
+<header><h1>CoreVIDE</h1></header>
+<main>
+<div class="input-area">
+<input id="urlInput" type="text" placeholder="動画リンクを入力">
+<button id="addBtn">追加</button>
+</div>
+<div class="videos" id="list"></div>
+</main>
+
+<script>
+const KEY = 'corevide';
+
+function load(){  
+  return JSON.parse(localStorage.getItem(KEY) || '[]');  
+}  
+
+function save(arr){  
+  localStorage.setItem(KEY, JSON.stringify(arr));  
+}  
+
+function fmtDate(d){  
+  const y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();  
+  return y+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0');  
+}  
+
+function add(){  
+  const url = document.getElementById('urlInput').value.trim();  
+  if(!url) return;  
+  const arr = load();  
+  arr.unshift({url, date:fmtDate(new Date())});  
+  save(arr);  
+  document.getElementById('urlInput').value='';  
+  render();  
+}  
+
+function remove(idx){  
+  const arr = load();  
+  arr.splice(idx,1);  
+  save(arr);  
+  render();  
+}  
+
+function render(){  
+  const container = document.getElementById('list');  
+  container.innerHTML='';  
+  load().forEach((it,i)=>{  
+    const card = document.createElement('div'); card.className='card';  
+    const thumb = document.createElement('div'); thumb.className='thumb';  
+    const info = document.createElement('div'); info.className='info';  
+    const a = document.createElement('a'); a.href=it.url; a.target='_blank'; a.textContent=it.url;  
+    const d = document.createElement('div'); d.className='date'; d.textContent=it.date;  
+    const btn = document.createElement('button'); btn.className='del-btn'; btn.textContent='×';  
+    btn.onclick = ()=>remove(i);  
+    info.append(a,d); card.append(thumb,info,btn); container.append(card);  
+  });  
+}  
+
+document.getElementById('addBtn').addEventListener('click',add);  
+document.getElementById('urlInput').addEventListener('keydown',e=>{if(e.key==='Enter') add();});  
+render();  
+</script>
+</body>
+</html>
