@@ -1,94 +1,181 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>CoreVIDE</title>
-<style>
-/* リセット */
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:sans-serif;background:#f9f9f9;color:#333;}
-header{background:#ff0000;color:#fff;padding:10px 20px;}
-header h1{font-size:1.5rem;}
-main{max-width:900px;margin:20px auto;padding:0 10px;}
-.input-area{display:flex;gap:8px;margin-bottom:20px;}
-.input-area input{flex:1;padding:8px;border:1px solid #ccc;border-radius:3px;transition:border .3s;}
-.input-area input:focus{border-color:#ff0000;outline:none;}
-.input-area button{padding:8px 16px;background:#ff0000;color:#fff;border:none;border-radius:3px;cursor:pointer;transition:background .3s;}
-.input-area button:hover{background:#e60000;}
-.videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px;}
-.card{background:#fff;border:1px solid #ddd;border-radius:4px;overflow:hidden;position:relative;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:transform .3s;}
-.card:hover{transform:translateY(-4px);box-shadow:0 6px 12px rgba(0,0,0,0.15);}
-.thumb{width:100%;height:0;padding-bottom:56.25%;background:#000;position:relative;}
-.thumb::after{content:'▶';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:2.5rem;color:rgba(255,255,255,0.8);}
-.info{padding:10px;}
-.info a{display:block;color:#ff0000;text-decoration:none;font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.info .date{font-size:.75rem;color:#999;}
-.del-btn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;border:none;border-radius:50%;width:24px;height:24px;opacity:0;cursor:pointer;transition:opacity .2s;}
-.card:hover .del-btn{opacity:1;}
-</style>
+  <meta charset="UTF-8">
+  <title>CoreVIDE</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body{font-family:sans-serif;background:#f7f7f7;color:#333;}
+    header{background:#ff0000;color:#fff;padding:12px 20px;}
+    header h1{font-size:1.5rem;}
+    main{max-width:900px;margin:20px auto;padding:0 10px;}
+    .input-area{display:flex;gap:8px;margin-bottom:20px;}
+    .input-area input{flex:1;padding:8px;border:1px solid #ccc;border-radius:3px;transition:border .3s;}
+    .input-area input:focus{border-color:#ff0000;outline:none;}
+    .input-area button{padding:8px 16px;background:#ff0000;color:#fff;border:none;border-radius:3px;cursor:pointer;transition:background .3s;}
+    .input-area button:hover{background:#e60000;}
+    .videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+    .card{background:#fff;border:1px solid #ddd;border-radius:4px;overflow:hidden;position:relative;box-shadow:0 2px 4px rgba(0,0,0,0.1);transition:transform .2s;}
+    .card:hover{transform:translateY(-4px);}
+    .thumb{width:100%;height:0;padding-bottom:56.25%;background:#000 center/cover no-repeat;cursor:pointer;}
+    .info{padding:8px;}
+    .info a{display:block;color:#ff0000;text-decoration:none;font-size:.9rem;
+           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+    .info .date{font-size:.75rem;color:#777;}
+    .del-btn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.5);color:#fff;
+             border:none;border-radius:50%;width:24px;height:24px;opacity:0;cursor:pointer;transition:opacity .2s;}
+    .card:hover .del-btn{opacity:1;}
+    /* モーダル */
+    #modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;}
+    #modal .inner{background:#fff;width:90%;max-width:800px;border-radius:6px;overflow:hidden;position:relative;}
+    #modal iframe{width:100%;height:450px;border:none;}
+    #modal .close{position:absolute;top:8px;right:8px;background:#333;color:#fff;border:none;padding:4px 8px;cursor:pointer;}
+    #modal .embed-code{padding:10px;font-size:.85rem;background:#f0f0f0;border-top:1px solid #ddd;}
+    #modal .embed-code textarea{width:100%;height:60px;font-family:monospace;}
+  </style>
 </head>
 <body>
-<header><h1>CoreVIDE</h1></header>
-<main>
-<div class="input-area">
-<input id="urlInput" type="text" placeholder="動画リンクを入力">
-<button id="addBtn">追加</button>
-</div>
-<div class="videos" id="list"></div>
-</main>
+  <header><h1>CoreVIDE</h1></header>
+  <main>
+    <div class="input-area">
+      <input id="urlInput" type="text" placeholder="YouTubeまたはニコ動のリンクを入力">
+      <button id="addBtn">追加</button>
+    </div>
+    <div class="videos" id="videoList"></div>
+  </main>
 
-<script>
-const KEY = 'corevide';
+  <!-- モーダル -->
+  <div id="modal">
+    <div class="inner">
+      <button class="close" id="modalClose">× 閉じる</button>
+      <iframe id="modalPlayer" src="" allowfullscreen></iframe>
+      <div class="embed-code">
+        <label>埋め込みタグ（iframe）:</label>
+        <textarea id="modalEmbed" readonly></textarea>
+      </div>
+    </div>
+  </div>
 
-function load(){  
-  return JSON.parse(localStorage.getItem(KEY) || '[]');  
-}  
+  <script>
+    const STORAGE_KEY = 'corevide_links';
 
-function save(arr){  
-  localStorage.setItem(KEY, JSON.stringify(arr));  
-}  
+    // 保存・読込
+    function loadLinks(){
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+    function saveLinks(arr){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+    // 日付整形
+    function fmtDate(d){
+      const y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
+      return `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    }
+    // サムネ取得＆埋め込みURL生成
+    function parseVideo(url){
+      let result = {type:null, id:null, thumb:null, embedUrl:null};
+      try {
+        const u = new URL(url);
+        // YouTube
+        if(/youtu\.be|youtube\.com/.test(u.hostname)){
+          let id = '';
+          if(u.hostname==='youtu.be'){
+            id = u.pathname.slice(1);
+          } else {
+            id = u.searchParams.get('v') || u.pathname.split('/').pop();
+          }
+          if(id){
+            result.type='youtube';
+            result.id=id;
+            result.thumb=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+            result.embedUrl=`https://www.youtube.com/embed/${id}?autoplay=1`;
+          }
+        }
+        // ニコ動
+        if(/nicovideo\.jp/.test(u.hostname)){
+          const m = u.pathname.match(/\/watch\/(sm\d+)/);
+          if(m){
+            const id=m[1];
+            result.type='niconico';
+            result.id=id;
+            // ニコニコ動画のサムネイルは oEmbed経由か専用URL だが、ここでは「サムネ簡易URL」を使用
+            result.thumb=`https://tn.smilevideo.jp/smile?i=${id.slice(2)}`;
+            result.embedUrl=`https://embed.nicovideo.jp/watch/${id}?autoplay=1`;
+          }
+        }
+      } catch(e){}
+      return result;
+    }
 
-function fmtDate(d){  
-  const y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();  
-  return y+'-'+String(m).padStart(2,'0')+'-'+String(day).padStart(2,'0');  
-}  
+    // カード生成
+    function createCard(item, idx){
+      const p = parseVideo(item.url);
+      const card = document.createElement('div'); card.className='card';
+      const thumb = document.createElement('div'); thumb.className='thumb';
+      thumb.style.backgroundImage = p.thumb ? `url(${p.thumb})` : '';
+      thumb.addEventListener('click', ()=>{
+        openModal(p.embedUrl, item.url);
+      });
+      const info = document.createElement('div'); info.className='info';
+      const a = document.createElement('a'); a.href=item.url; a.target='_blank';
+      a.textContent=item.url;
+      const d = document.createElement('div'); d.className='date'; d.textContent=item.date;
+      info.append(a,d);
+      const btn = document.createElement('button'); btn.className='del-btn'; btn.textContent='×';
+      btn.addEventListener('click', ()=>{
+        const arr = loadLinks();
+        arr.splice(idx,1);
+        saveLinks(arr);
+        render();
+      });
+      card.append(thumb, info, btn);
+      return card;
+    }
 
-function add(){  
-  const url = document.getElementById('urlInput').value.trim();  
-  if(!url) return;  
-  const arr = load();  
-  arr.unshift({url, date:fmtDate(new Date())});  
-  save(arr);  
-  document.getElementById('urlInput').value='';  
-  render();  
-}  
+    // 描画
+    function render(){
+      const container = document.getElementById('videoList');
+      container.innerHTML='';
+      loadLinks().forEach((it,i)=>{
+        container.appendChild(createCard(it,i));
+      });
+    }
 
-function remove(idx){  
-  const arr = load();  
-  arr.splice(idx,1);  
-  save(arr);  
-  render();  
-}  
+    // 追加
+    function addLink(){
+      const url = document.getElementById('urlInput').value.trim();
+      if(!url) return;
+      const arr = loadLinks();
+      arr.unshift({url, date: fmtDate(new Date())});
+      saveLinks(arr);
+      document.getElementById('urlInput').value='';
+      render();
+    }
 
-function render(){  
-  const container = document.getElementById('list');  
-  container.innerHTML='';  
-  load().forEach((it,i)=>{  
-    const card = document.createElement('div'); card.className='card';  
-    const thumb = document.createElement('div'); thumb.className='thumb';  
-    const info = document.createElement('div'); info.className='info';  
-    const a = document.createElement('a'); a.href=it.url; a.target='_blank'; a.textContent=it.url;  
-    const d = document.createElement('div'); d.className='date'; d.textContent=it.date;  
-    const btn = document.createElement('button'); btn.className='del-btn'; btn.textContent='×';  
-    btn.onclick = ()=>remove(i);  
-    info.append(a,d); card.append(thumb,info,btn); container.append(card);  
-  });  
-}  
+    // モーダル操作
+    const modal = document.getElementById('modal');
+    const iframe = document.getElementById('modalPlayer');
+    const embedArea = document.getElementById('modalEmbed');
+    function openModal(embedUrl, origUrl){
+      iframe.src = embedUrl;
+      // 埋め込みタグ
+      embedArea.value = `<iframe src="${embedUrl.replace('?autoplay=1','')}" width="560" height="315" frameborder="0" allowfullscreen></iframe>`;
+      modal.style.display='flex';
+    }
+    document.getElementById('modalClose').addEventListener('click', ()=>{
+      iframe.src='';
+      modal.style.display='none';
+    });
 
-document.getElementById('addBtn').addEventListener('click',add);  
-document.getElementById('urlInput').addEventListener('keydown',e=>{if(e.key==='Enter') add();});  
-render();  
-</script>
+    // イベント登録
+    document.getElementById('addBtn').addEventListener('click', addLink);
+    document.getElementById('urlInput').addEventListener('keydown', e=>{
+      if(e.key==='Enter') addLink();
+    });
+
+    // 初期描画
+    render();
+  </script>
 </body>
 </html>
