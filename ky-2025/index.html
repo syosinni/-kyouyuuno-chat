@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>神灯祭 — 神社ナイトフェス</title>
+<title>共有ノート祭 — 神灯祭</title>
 <style>
   /* Reset */
   *{box-sizing:border-box;margin:0;padding:0}
@@ -93,10 +93,10 @@
         </div>
 
         <aside class="info3d" id="info3d">
-          <div class="stage-preview" id="stagePreview">ライブ＆花火プレビュー</div>
+          <div class="stage-preview" id="stagePreview">開発中</div>
           <div style="display:flex;justify-content:space-between;gap:10px;margin-top:10px">
-            <div style="flex:1"><strong>花火:</strong><div>21:00 — 21:30</div></div>
-            <div style="flex:1"><strong>屋台:</strong><div>17:00 — 22:00</div></div>
+            <div style="flex:1"><strong>花火:</strong><div>16:00 — 18:30</div></div>
+            <div style="flex:1"><strong>屋台:</strong><div>１日中</div></div>
           </div>
         </aside>
       </div>
@@ -105,7 +105,7 @@
     <section id="about" style="padding:40px 24px">
       <h2 style="font-size:22px;margin-bottom:12px">お祭りのハイライト</h2>
       <div class="features">
-        <div class="card"><h3>ライブステージ</h3><p>夜のメイン。音と光が同期した演出。</p></div>
+        <div class="card"><h3>ライブステージ</h3><p>夜のメイン。音と光が同期した演出かつ動画祭の映像。</p></div>
         <div class="card"><h3>屋台通り</h3><p>定番フード＋ミニゲームで楽しめる屋台群。</p></div>
         <div class="card"><h3>灯籠流し</h3><p>川に流すと光が反応するインタラクティブ演出。</p></div>
       </div>
@@ -114,15 +114,15 @@
     <section id="program" style="padding:24px">
       <h2 style="font-size:22px;margin-bottom:12px">当日のタイムテーブル</h2>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
-        <div class="card"><strong>17:00</strong><p>屋台オープン / 子ども向けワークショップ</p></div>
-        <div class="card"><strong>19:00</strong><p>神楽・奉納演奏</p></div>
-        <div class="card"><strong>21:00</strong><p>花火大会（フィナーレ演出あり）</p></div>
+        <div class="card"><strong>12:00</strong><p>お祭り開催</p></div>
+        <div class="card"><strong>15:00</strong><p>神楽・奉納演奏</p></div>
+        <div class="card"><strong>16:00</strong><p>花火大会（フィナーレ演出あり）</p></div>
       </div>
     </section>
 
     <section id="access" style="padding:24px">
-      <h2 style="font-size:22px;margin-bottom:12px">アクセス</h2>
-      <p style="max-width:780px">島行きのフェリー乗り場情報、会場のマップ画像やVR導線の説明をここに置きます。実運用時はGoogle Mapsや3Dビューを埋め込んでください。</p>
+      <h2 style="font-size:22px;margin-bottom:12px">会場情報</h2>
+      <p style="max-width:780px">ライブブース（動画祭の映像を流します）、ゲームブース（ゲーム限定屋台）<br>屋台ブース（お祭りっぽいものがいっぱいあります）、神社ブース（ストーリーが始まります）。</p>
     </section>
   </main>
 
@@ -164,7 +164,7 @@
   document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth',block:'start'})}))
 
   /* demo enter button */
-  document.getElementById('enterBtn').addEventListener('click',()=>{alert('会場に入場（デモ）：ゲーム実装やVRモードをここに接続できます')})
+  document.getElementById('enterBtn').addEventListener('click',()=>{alert('会場に入場:このリンクを開いてください。未定')})
 
 })();
 </script>
