@@ -1,302 +1,168 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>中1勉強サポート | Study Hub</title>
-<style>
-  :root{
-    --bg:#0b1220;           /* 目立ちにくい落ち着いた背景 */
-    --panel:#111a2b;
-    --panel-2:#0d1726;
-    --text:#e9eef7;
-    --muted:#a9b4c7;
-    --accent:#6ea8fe;
-    --good:#34d399;
-    --warn:#fbbf24;
-    --danger:#f87171;
-    --border:#1d2940;
-    --card:#0f1b2e;
-    --shadow: 0 10px 28px rgba(0,0,0,.28);
-    --radius: 16px;
-  }
-  html,body{
-    margin:0; padding:0; background:var(--bg); color:var(--text);
-    font-family: system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial, "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
-  }
-  a{ color: var(--accent); text-decoration: none; }
-  a:hover{ text-decoration: underline; }
-  .wrap{
-    max-width: 980px; margin: 0 auto; padding: 24px 16px 120px;
-  }
-  header{
-    position: sticky; top:0; z-index: 10; backdrop-filter: blur(6px);
-    background: linear-gradient(180deg, rgba(11,18,32,.9), rgba(11,18,32,.6));
-    border-bottom: 1px solid var(--border);
-  }
-  .head-inner{ max-width:980px; margin:0 auto; padding:14px 16px; display:flex; align-items:center; gap:16px;}
-  .logo{
-    display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.2px;
-  }
-  .logo-badge{
-    width:34px; height:34px; border-radius:10px; background: linear-gradient(135deg,#2b77ff,#32d7b4);
-    display:grid; place-items:center; color:#fff; font-size:18px; box-shadow: var(--shadow);
-  }
-  .pill{
-    border:1px solid var(--border); padding:2px 10px; border-radius:999px; color:var(--muted); font-size:12px;
-  }
-  h1{ font-size: clamp(22px, 3vw, 28px); margin: 18px 0 8px; }
-  h2{ font-size: 20px; margin: 22px 0 10px; }
-  p{ color: var(--muted); line-height: 1.7; }
-  .grid{
-    display:grid; grid-template-columns: repeat(12, 1fr); gap:16px;
-  }
-  .card{
-    background: var(--card); border:1px solid var(--border); border-radius: var(--radius); padding:16px; box-shadow: var(--shadow);
-  }
-  .card h3{ margin:6px 0 8px; font-size: 16px; }
-  .sub{ color: var(--muted); font-size: 13px; }
-  .btn{
-    appearance:none; border:1px solid var(--border); background: var(--panel);
-    padding:10px 14px; color:var(--text); border-radius:12px; cursor:pointer;
-  }
-  .btn:hover{ filter: brightness(1.08); }
-  .btn-quiet{ background: var(--panel-2); }
-  .tag{ font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); }
-  .news{
-    display:grid; gap:12px;
-  }
-  .news-item{
-    border:1px solid var(--border); border-radius:14px; padding:12px 14px; background: linear-gradient(180deg, #0e1a2c, #0c1626);
-  }
-  .news-title{ font-weight:700; }
-  .news-meta{ font-size:12px; color: var(--muted); margin-top:4px; }
-  .hero{
-    padding: 18px 16px; border:1px solid var(--border); border-radius: var(--radius);
-    background: linear-gradient(135deg, rgba(50,215,180,.12), rgba(46,114,255,.08));
-  }
-  /* フッター検索 */
-  footer{
-    position: fixed; left:0; right:0; bottom:0; border-top:1px solid var(--border);
-    background: linear-gradient(0deg, rgba(11,18,32,1), rgba(11,18,32,.92));
-    padding: 12px 16px;
-  }
-  .footer-inner{ max-width:980px; margin:0 auto; display:flex; gap:10px; align-items:center; }
-  .search{
-    flex:1; display:flex; gap:8px; align-items:center; background: var(--panel);
-    border:1px solid var(--border); border-radius: 999px; padding:6px 10px;
-  }
-  .search input{
-    flex:1; background: transparent; border:none; outline:none; color: var(--text); font-size:14px; padding:8px;
-  }
-  .search button{ border-radius: 999px; padding:8px 14px; }
-  .hint{ font-size:12px; color: var(--muted); }
-  .hidden{ display:none !important; }
+  <meta charset="UTF-8">
+  <title>学習支援サービス</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #333;
+      transition: all 0.5s ease;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+    #search-box {
+      margin: 20px;
+      text-align: center;
+    }
+    input[type="text"] {
+      padding: 5px;
+      font-size: 16px;
+    }
+    button {
+      padding: 6px 12px;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-  /* 情報銀行モードの控えめアニメ演出 */
-  .fade-in{ animation: fade .45s ease; }
-  @keyframes fade{ from{ opacity:0; transform: translateY(6px)} to{ opacity:1; transform:none } }
-
-  /* 画面読み上げ向け */
-  .sr-only{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
-</style>
+    /* 情報銀行モード */
+    .bank-mode {
+      background: #0a0a0a;
+      color: #00ff99;
+      font-family: "Courier New", monospace;
+    }
+    .bank-header {
+      text-align: center;
+      font-size: 24px;
+      padding: 20px;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc;
+    }
+    .news-section {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 10px;
+    }
+    .news-item {
+      border-bottom: 1px solid #00ff99;
+      padding: 10px;
+      cursor: pointer;
+    }
+    .hidden {
+      display: none;
+    }
+    .secret-box {
+      text-align: center;
+      margin: 20px;
+    }
+    a {
+      color: #00ccff;
+    }
+    .btn-more {
+      display: block;
+      text-align: center;
+      margin: 20px auto;
+      padding: 10px;
+      background: #00ff99;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+      width: 200px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  <header aria-label="トップバー">
-    <div class="head-inner">
-      <div class="logo">
-        <div class="logo-badge" aria-hidden="true">S</div>
-        <div>Study Hub <span class="pill">中学1年の学習サポート</span></div>
-      </div>
-      <div style="margin-left:auto" class="hint">今日の目標：ワークを1ページ進めよう ✏️</div>
+  <!-- 学習モード -->
+  <header id="header">中1学習支援サービス</header>
+  <div id="content">
+    <div id="search-box">
+      <input type="text" id="search" placeholder="キーワード検索">
+      <button onclick="checkSearch()">検索</button>
     </div>
-  </header>
+    <div id="study-content">
+      <h2>今日の勉強サポート</h2>
+      <p>ここでは中学1年生の学習に役立つ情報を提供します。</p>
+    </div>
+  </div>
 
-  <main class="wrap">
-    <!-- 表向き：勉強支援ビュー -->
-    <section id="study-view" aria-labelledby="study-title">
-      <h1 id="study-title">中1 勉強支援</h1>
-      <p>教科別の要点まとめ・ミニドリル・暗記カードで基礎を固めよう。タイミングよく復習できる軽いツールを集めました。</p>
+  <!-- 情報銀行モード（非表示） -->
+  <div id="bank-content" class="hidden">
+    <div class="bank-header">💠 情報銀行へようこそ 💠</div>
+    <div class="news-section" id="news-list">
+      <div class="news-item" onclick="showTradeNotice('購買に新作パン入荷！')">購買に新作パン入荷！</div>
+      <div class="news-item" onclick="showTradeNotice('来週の体育館使用予定')">来週の体育館使用予定</div>
+      <div class="news-item" onclick="showTradeNotice('テスト範囲のウワサ（未確認）')">テスト範囲のウワサ（未確認）</div>
+    </div>
+    <div class="btn-more" onclick="showMore()">もっと見る</div>
+    <div class="secret-box">
+      <p>🔗 <a href="https://docs.google.com/document/d/1CySvUHVIL0Y61mJFlM_2BI6VL9i1Ukx2TJZiCh1R3so/edit?usp=sharing" target="_blank">個別取引はこちら</a></p>
+    </div>
+  </div>
 
-      <div class="grid" role="list">
-        <div class="card" role="listitem" style="grid-column: span 6;">
-          <span class="tag">数学</span>
-          <h3>正負の数・文字式の要点</h3>
-          <p class="sub">符号のルールと計算のコツを3分で確認。</p>
-          <button class="btn btn-quiet" type="button">要点PDFを見る</button>
-        </div>
-        <div class="card" role="listitem" style="grid-column: span 6;">
-          <span class="tag">英語</span>
-          <h3>be動詞 / 一般動詞の使い分け</h3>
-          <p class="sub">I am / I play… 例文で感覚をつかもう。</p>
-          <button class="btn btn-quiet" type="button">例文カードを開く</button>
-        </div>
-        <div class="card" role="listitem" style="grid-column: span 6;">
-          <span class="tag">理科</span>
-          <h3>観察と記録のコツ</h3>
-          <p class="sub">実験ノートの書き方・考察の型を紹介。</p>
-          <button class="btn btn-quiet" type="button">テンプレートを使う</button>
-        </div>
-        <div class="card" role="listitem" style="grid-column: span 6;">
-          <span class="tag">社会</span>
-          <h3>世界の大陸と海洋</h3>
-          <p class="sub">超基本の地理を地図クイズでチェック。</p>
-          <button class="btn btn-quiet" type="button">クイズを始める</button>
-        </div>
-      </div>
+  <script>
+    const content = document.getElementById("content");
+    const bankContent = document.getElementById("bank-content");
+    const header = document.getElementById("header");
+    const body = document.body;
 
-      <div class="hero" style="margin-top:18px;">
-        <strong>学習ヒント：</strong> 25分勉強 + 5分休憩の「ポモドーロ」で集中を保とう。
-      </div>
-    </section>
-
-    <!-- 隠し：情報銀行ビュー -->
-    <section id="bank-view" class="hidden" aria-labelledby="bank-title">
-      <div class="hero fade-in" role="status" aria-live="polite">
-        <h1 id="bank-title" style="margin:0 0 6px;">情報銀行へようこそ</h1>
-        <p class="sub" style="margin:0;">公開情報をチェックして、必要なら個別取引へ。</p>
-      </div>
-
-      <h2 style="margin-top:22px;">最近の公開情報</h2>
-      <div class="news" role="list" aria-label="最近の公開情報">
-        <article class="news-item fade-in" role="listitem">
-          <div class="news-title">恋愛速報：7Bで一番もててる女子発覚</div>
-          <div class="news-meta">カテゴリ：人間関係 ｜ 信頼度 75% ｜ 更新：今日 12:05</div>
-        </article>
-        <article class="news-item fade-in" role="listitem">
-          <div class="news-title">恋愛速報：7Bで一番もててる男子は？</div>
-          <div class="news-meta">カテゴリ：恋愛 ｜ 信頼度 62% ｜ 更新：今日 11:42</div>
-        </article>
-        <article class="news-item fade-in" role="listitem">
-          <div class="news-title">今週の秘密</div>
-          <div class="news-meta">カテゴリ：秘密 ｜ 信頼度 70% ｜ 更新：昨日 18:20</div>
-        </article>
-      </div>
-
-      <div class="card fade-in" style="margin-top:18px;">
-        <h3 style="margin-top:0;">個別取引及び公開図書の閲覧</h3>
-        <p class="sub" style="margin-bottom:12px;">詳細なやり取りや非公開の情報は、下記ドキュメントへ。</p>
-        <p>
-          <a href="https://docs.google.com/document/d/1CySvUHVIL0Y61mJFlM_2BI6VL9i1Ukx2TJZiCh1R3so/edit?usp=sharing" target="_blank" rel="noopener">個別取引はこちら</a>
-        </p>
-        <div class="hint">※ 外部ドキュメントが新しいタブで開きます。</div>
-      </div>
-
-      <div style="margin-top:14px;">
-        <button id="backToStudy" class="btn" type="button" aria-label="学習モードへ戻る">学習モードに戻る</button>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <form id="searchForm" class="footer-inner" autocomplete="off" aria-label="検索フォーム（学習またはサイト内）">
-      <label for="q" class="sr-only">検索語を入力</label>
-      <div class="search">
-        <input id="q" name="q" type="search" placeholder="キーワードで検索（例：一次方程式）" inputmode="search" />
-        <button class="btn" type="submit" aria-label="検索">検索</button>
-      </div>
-      <div class="hint">ヒント：調べたい単元名を入力してね</div>
-    </form>
-  </footer>
-
-<script>
-/*
-  “rengouinfo” が入力・送信されたときだけ、
-  ページ遷移せずに情報銀行モードへスイッチ。
-  それ以外はダミー検索（見た目だけ）で安全に振る舞います。
-*/
-(function(){
-  const form = document.getElementById('searchForm');
-  const input = document.getElementById('q');
-  const study = document.getElementById('study-view');
-  const bank  = document.getElementById('bank-view');
-  const back  = document.getElementById('backToStudy');
-
-  // 軽い永続化：秘密モード継続（同端末で再訪時に便利）
-  const SECRET_KEY = 'rengouinfo';
-  const STATE_KEY  = 'viewMode'; // 'study' | 'bank'
-
-  function switchTo(mode){
-    if(mode === 'bank'){
-      study.classList.add('hidden');
-      bank.classList.remove('hidden');
-      localStorage.setItem(STATE_KEY, 'bank');
-      // 目立ちすぎない程度の一時的タイトル変更（読み上げにも有効）
-      document.title = 'ダッシュボード | 情報銀行';
-      // トースト風アナウンス（視覚障害配慮）
-      const live = document.createElement('div');
-      live.className = 'sr-only';
-      live.setAttribute('role','status');
-      live.setAttribute('aria-live','polite');
-      live.textContent = '情報銀行へようこそ。最近の公開情報を表示します。';
-      document.body.appendChild(live);
-      setTimeout(()=>live.remove(), 1500);
-    }else{
-      bank.classList.add('hidden');
-      study.classList.remove('hidden');
-      localStorage.setItem(STATE_KEY, 'study');
-      document.title = '中1勉強サポート | Study Hub';
-    }
-  }
-
-  // 初期：前回状態を復元
-  (function init(){
-    const saved = localStorage.getItem(STATE_KEY);
-    if(saved === 'bank'){
-      switchTo('bank');
-    }else{
-      switchTo('study');
-    }
-  })();
-
-  // 検索フォームの制御
-  form.addEventListener('submit', function(ev){
-    ev.preventDefault();
-    const q = (input.value || '').trim();
-
-    if(!q){
-      input.placeholder = 'キーワードを入力してください';
-      input.focus();
-      return;
+    function checkSearch() {
+      const val = document.getElementById("search").value.trim();
+      if (val === "rengouinfo") {
+        activateBankMode();
+      }
     }
 
-    if(q.toLowerCase() === SECRET_KEY){
-      // 秘密キーワード：情報銀行モードへ
-      switchTo('bank');
-      // 入力痕跡を残しにくく
-      input.value = '';
-      input.blur();
-      return;
+    function activateBankMode() {
+      content.classList.add("hidden");
+      bankContent.classList.remove("hidden");
+      body.classList.add("bank-mode");
+      header.innerText = "情報銀行";
     }
 
-    // 通常検索のダミー応答（画面は変えない）
-    // ユーザーには「学習サイトの検索」に見える
-    const toast = document.createElement('div');
-    toast.textContent = '学習用検索： "' + q + '" の教材を準備中…';
-    toast.style.position='fixed';
-    toast.style.left='50%';
-    toast.style.bottom='78px';
-    toast.style.transform='translateX(-50%)';
-    toast.style.padding='10px 14px';
-    toast.style.background='rgba(15,27,46,.95)';
-    toast.style.border='1px solid var(--border)';
-    toast.style.borderRadius='12px';
-    toast.style.boxShadow='var(--shadow)';
-    toast.style.fontSize='13px';
-    toast.style.color='var(--muted)';
-    toast.style.zIndex='999';
-    document.body.appendChild(toast);
-    setTimeout(()=>toast.remove(), 1300);
-  });
+    function activateStudyMode() {
+      content.classList.remove("hidden");
+      bankContent.classList.add("hidden");
+      body.classList.remove("bank-mode");
+      header.innerText = "中1学習支援サービス";
+    }
 
-  // 学習モードへ戻る
-  back.addEventListener('click', () => switchTo('study'));
+    // Zキーで学習モードに戻る
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "z" || e.key === "Z") {
+        activateStudyMode();
+      }
+    });
 
-  // 念のため：ESCで入力欄クリア（バレ対策の小ワザ）
-  document.addEventListener('keydown', (e)=>{
-    if(e.key === 'Escape'){ input.value=''; }
-  });
-})();
-</script>
+    // 情報を押したら取引必要の表示
+    function showTradeNotice(infoTitle) {
+      alert("「" + infoTitle + "」の詳細は取引が必要です。");
+    }
+
+    // もっと見るボタン
+    function showMore() {
+      const newsList = document.getElementById("news-list");
+      const extraNews = [
+        "購買のジュース売り切れ情報",
+        "次回の部活対抗戦の噂",
+        "先生の名言集が更新予定",
+        "校舎裏に謎の掲示あり"
+      ];
+      extraNews.forEach(txt => {
+        const div = document.createElement("div");
+        div.className = "news-item";
+        div.innerText = txt;
+        div.onclick = () => showTradeNotice(txt);
+        newsList.appendChild(div);
+      });
+      alert("これ以降の情報は取引で確認してください。");
+    }
+  </script>
 </body>
 </html>
