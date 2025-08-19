@@ -76,6 +76,23 @@
       width: 200px;
       cursor: pointer;
     }
+    .article {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #00ff99;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #00ff99;
+    }
+    .back-btn {
+      margin-top: 20px;
+      display: inline-block;
+      padding: 8px 15px;
+      background: #00ff99;
+      color: #000;
+      border-radius: 6px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -92,17 +109,22 @@
     </div>
   </div>
 
-  <!-- 情報銀行モード（非表示） -->
+  <!-- 情報銀行モード -->
   <div id="bank-content" class="hidden">
     <div class="bank-header">💠 情報銀行へようこそ 💠</div>
-    <div class="news-section" id="news-list">
-      <div class="news-item" onclick="showTradeNotice('購買に新作パン入荷！')">購買に新作パン入荷！</div>
-      <div class="news-item" onclick="showTradeNotice('来週の体育館使用予定')">来週の体育館使用予定</div>
-      <div class="news-item" onclick="showTradeNotice('テスト範囲のウワサ（未確認）')">テスト範囲のウワサ（未確認）</div>
-    </div>
+    <div id="news-list" class="news-section"></div>
     <div class="btn-more" onclick="showMore()">もっと見る</div>
     <div class="secret-box">
       <p>🔗 <a href="https://docs.google.com/document/d/1CySvUHVIL0Y61mJFlM_2BI6VL9i1Ukx2TJZiCh1R3so/edit?usp=sharing" target="_blank">個別取引はこちら</a></p>
+    </div>
+  </div>
+
+  <!-- 個別記事 -->
+  <div id="article-page" class="hidden">
+    <div class="article">
+      <h2 id="article-title"></h2>
+      <p id="article-text"></p>
+      <span class="back-btn" onclick="backToList()">⬅ 戻る</span>
     </div>
   </div>
 
@@ -111,6 +133,28 @@
     const bankContent = document.getElementById("bank-content");
     const header = document.getElementById("header");
     const body = document.body;
+    const newsList = document.getElementById("news-list");
+    const articlePage = document.getElementById("article-page");
+    const articleTitle = document.getElementById("article-title");
+    const articleText = document.getElementById("article-text");
+
+    // ニュースデータ
+    let newsData = [
+      {title:"購買に新作パン入荷！", text:"購買で本日から新作パンが販売開始。特に人気なのはチョコクリームパンで、昼休み開始5分で売り切れた模様。"},
+      {title:"来週の体育館使用予定", text:"体育館は来週の昼休みに特定の部活が優先使用予定。特に火曜はバスケ部が全面使用予定なので要注意。"},
+      {title:"テスト範囲のウワサ（未確認）", text:"生徒の間で広まっているテスト範囲の噂。数学は教科書p50〜75、英語はUnit3までとの情報。信憑性は不明。"}
+    ];
+
+    function renderNews() {
+      newsList.innerHTML = "";
+      newsData.forEach((n, i) => {
+        const div = document.createElement("div");
+        div.className = "news-item";
+        div.innerText = n.title;
+        div.onclick = () => openArticle(i);
+        newsList.appendChild(div);
+      });
+    }
 
     function checkSearch() {
       const val = document.getElementById("search").value.trim();
@@ -122,13 +166,16 @@
     function activateBankMode() {
       content.classList.add("hidden");
       bankContent.classList.remove("hidden");
+      articlePage.classList.add("hidden");
       body.classList.add("bank-mode");
       header.innerText = "情報銀行";
+      renderNews();
     }
 
     function activateStudyMode() {
       content.classList.remove("hidden");
       bankContent.classList.add("hidden");
+      articlePage.classList.add("hidden");
       body.classList.remove("bank-mode");
       header.innerText = "中1学習支援サービス";
     }
@@ -140,28 +187,28 @@
       }
     });
 
-    // 情報を押したら取引必要の表示
-    function showTradeNotice(infoTitle) {
-      alert("「" + infoTitle + "」の詳細は取引が必要です。");
+    // 記事ページへ
+    function openArticle(index) {
+      const n = newsData[index];
+      articleTitle.innerText = n.title;
+      articleText.innerText = n.text;
+      bankContent.classList.add("hidden");
+      articlePage.classList.remove("hidden");
     }
 
-    // もっと見るボタン
+    // 戻る
+    function backToList() {
+      articlePage.classList.add("hidden");
+      bankContent.classList.remove("hidden");
+    }
+
+    // もっと見る
     function showMore() {
-      const newsList = document.getElementById("news-list");
-      const extraNews = [
-        "購買のジュース売り切れ情報",
-        "次回の部活対抗戦の噂",
-        "先生の名言集が更新予定",
-        "校舎裏に謎の掲示あり"
-      ];
-      extraNews.forEach(txt => {
-        const div = document.createElement("div");
-        div.className = "news-item";
-        div.innerText = txt;
-        div.onclick = () => showTradeNotice(txt);
-        newsList.appendChild(div);
-      });
-      alert("これ以降の情報は取引で確認してください。");
+      newsData.push(
+        {title:"購買のジュース売り切れ情報", text:"自販機と購買で売り切れ続出。特にレモンティーは毎日昼までに完売している。"},
+        {title:"次回の部活対抗戦の噂", text:"次回は予想外の部活が出場予定との噂。詳細は部活関係者の間で広まりつつある。"}
+      );
+      renderNews();
     }
   </script>
 </body>
