@@ -7,7 +7,7 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #fff;
+      background: #fff; /* ←最初は白背景 */
       color: #333;
       transition: all 0.5s ease;
     }
@@ -31,7 +31,7 @@
       cursor: pointer;
     }
 
-    /* 情報銀行モード */
+    /* 銀行・VIPモード */
     .bank-mode {
       background: #0a0a0a;
       color: #00ff99;
@@ -112,7 +112,7 @@
 </head>
 <body>
   <!-- 学習モード -->
-  <header id="header">中1学習支援サービス</header>
+  <header id="header">StudyUP</header>
   <div id="content">
     <div id="search-box">
       <input type="text" id="search" placeholder="キーワード検索">
@@ -121,6 +121,7 @@
     <div id="study-content">
       <h2>今日の勉強サポート</h2>
       <p>ここでは中学1年生の学習に役立つ情報を提供します。</p>
+      <p>ログインしてないユーザーの情報閲覧はできません。最高管理者にお問い合わせください。</p>
     </div>
   </div>
 
@@ -140,10 +141,7 @@
   <!-- VIPモード -->
   <div id="vip-content" class="hidden">
     <div class="bank-header">🔑 VIP専用チャンネル 🔑</div>
-    <div class="news-section">
-      <div class="news-item">秘密の取引情報 - 特定生徒のみ知る噂</div>
-      <div class="news-item">非公開イベントの裏スケジュール</div>
-    </div>
+    <div id="vip-news" class="news-section"></div>
   </div>
 
   <!-- 個別記事 -->
@@ -162,6 +160,7 @@
     const header = document.getElementById("header");
     const body = document.body;
     const newsList = document.getElementById("news-list");
+    const vipNews = document.getElementById("vip-news");
     const articlePage = document.getElementById("article-page");
     const articleTitle = document.getElementById("article-title");
     const articleText = document.getElementById("article-text");
@@ -173,24 +172,41 @@
       {title:"来週の体育館使用予定", text:"体育館は来週の昼休みに特定の部活が優先使用予定。特に火曜はバスケ部が全面使用予定なので要注意。"},
       {title:"テスト範囲のウワサ（未確認）", text:"生徒の間で広まっているテスト範囲の噂。数学は教科書p50〜75、英語はUnit3までとの情報。信憑性は不明。"}
     ];
+    let vipData = [
+      {title:"裏ルートの入手情報", text:"特定の先輩が持っている非公開の試験対策プリント。"},
+      {title:"VIP限定：次期行事の内部スケジュール", text:"正式発表前の行事予定が一部関係者に共有されている。"}
+    ];
 
-    function renderNews() {
-      newsList.innerHTML = "";
-      newsData.forEach((n, i) => {
+    // SHA-256でハッシュ化（パスワードをソースに直書きしない対策）
+    async function sha256(message) {
+      const msgBuffer = new TextEncoder().encode(message);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // 事前にハッシュ化した正しいパスワード
+    const bankHash = "ab2a6b09c87c2b4fdf07426a5e9f8d1e276f3da3dbfdf2d55f4d81c7d07f6c2c"; // "rengouinfo"
+    const vipHash = "e6f6f7b4ed78c14b2c86e3c5b7bdb0f97d861a9f63a8a3e9c9dbf3b9b74b7f5d";  // "vipaccess"
+
+    function renderNews(listEl, data) {
+      listEl.innerHTML = "";
+      data.forEach((n, i) => {
         const div = document.createElement("div");
         div.className = "news-item";
         div.innerText = n.title;
-        div.onclick = () => openArticle(i);
-        newsList.appendChild(div);
+        div.onclick = () => openArticle(n);
+        listEl.appendChild(div);
       });
     }
 
-    // 検索でモード分岐
-    function checkSearch() {
-      const val = document.getElementById("search").value.trim().toLowerCase();
-      if (val === "rengouinfo") {
+    async function checkSearch() {
+      const val = document.getElementById("search").value.trim();
+      const hashed = await sha256(val);
+
+      if (hashed === bankHash) {
         playAuthAnimation(() => activateBankMode());
-      } else if (val === "vipaccess") {
+      } else if (hashed === vipHash) {
         playAuthAnimation(() => activateVIPMode());
       }
     }
@@ -225,24 +241,22 @@
       }, 1000);
     }
 
-    // 銀行モード
     function activateBankMode() {
       bankContent.classList.remove("hidden");
       vipContent.classList.add("hidden");
       articlePage.classList.add("hidden");
       header.innerText = "情報銀行";
-      renderNews();
+      renderNews(newsList, newsData);
     }
 
-    // VIPモード
     function activateVIPMode() {
       vipContent.classList.remove("hidden");
       bankContent.classList.add("hidden");
       articlePage.classList.add("hidden");
       header.innerText = "VIP情報銀行";
+      renderNews(vipNews, vipData);
     }
 
-    // 学習モードへ戻す
     function activateStudyMode() {
       content.classList.remove("hidden");
       bankContent.classList.add("hidden");
@@ -259,20 +273,23 @@
       }
     });
 
-    // 記事ページ
-    function openArticle(index) {
-      const n = newsData[index];
+    function openArticle(n) {
       articleTitle.innerText = n.title;
       articleText.innerText = n.text;
       bankContent.classList.add("hidden");
+      vipContent.classList.add("hidden");
       articlePage.classList.remove("hidden");
     }
     function backToList() {
       articlePage.classList.add("hidden");
-      bankContent.classList.remove("hidden");
+      if (header.innerText.includes("VIP")) {
+        vipContent.classList.remove("hidden");
+      } else {
+        bankContent.classList.remove("hidden");
+      }
     }
 
-    // もっと見る（1回だけ）
+    // もっと見る
     let page = 0;
     let extraNews = [
       [
@@ -283,7 +300,7 @@
     function showMore() {
       if (page < extraNews.length) {
         newsData = newsData.concat(extraNews[page]);
-        renderNews();
+        renderNews(newsList, newsData);
         page++;
       }
       if (page >= extraNews.length) {
