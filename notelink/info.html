@@ -93,6 +93,21 @@
       border-radius: 6px;
       cursor: pointer;
     }
+
+    /* ローディング演出 */
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #000;
+      color: #00ff99;
+      font-family: "Courier New", monospace;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      line-height: 2em;
+    }
   </style>
 </head>
 <body>
@@ -109,6 +124,9 @@
     </div>
   </div>
 
+  <!-- 認証演出 -->
+  <div id="loading-screen" class="hidden"></div>
+
   <!-- 情報銀行モード -->
   <div id="bank-content" class="hidden">
     <div class="bank-header">💠 情報銀行へようこそ 💠</div>
@@ -116,6 +134,15 @@
     <div class="btn-more" onclick="showMore()">もっと見る</div>
     <div class="secret-box">
       <p>🔗 <a href="https://docs.google.com/document/d/1CySvUHVIL0Y61mJFlM_2BI6VL9i1Ukx2TJZiCh1R3so/edit?usp=sharing" target="_blank">個別取引はこちら</a></p>
+    </div>
+  </div>
+
+  <!-- VIPモード -->
+  <div id="vip-content" class="hidden">
+    <div class="bank-header">🔑 VIP専用チャンネル 🔑</div>
+    <div class="news-section">
+      <div class="news-item">秘密の取引情報 - 特定生徒のみ知る噂</div>
+      <div class="news-item">非公開イベントの裏スケジュール</div>
     </div>
   </div>
 
@@ -131,12 +158,14 @@
   <script>
     const content = document.getElementById("content");
     const bankContent = document.getElementById("bank-content");
+    const vipContent = document.getElementById("vip-content");
     const header = document.getElementById("header");
     const body = document.body;
     const newsList = document.getElementById("news-list");
     const articlePage = document.getElementById("article-page");
     const articleTitle = document.getElementById("article-title");
     const articleText = document.getElementById("article-text");
+    const loadingScreen = document.getElementById("loading-screen");
 
     // ニュースデータ
     let newsData = [
@@ -156,25 +185,68 @@
       });
     }
 
+    // 検索でモード分岐
     function checkSearch() {
-      const val = document.getElementById("search").value.trim();
+      const val = document.getElementById("search").value.trim().toLowerCase();
       if (val === "rengouinfo") {
-        activateBankMode();
+        playAuthAnimation(() => activateBankMode());
+      } else if (val === "vipaccess") {
+        playAuthAnimation(() => activateVIPMode());
       }
     }
 
-    function activateBankMode() {
+    // 認証アニメーション
+    function playAuthAnimation(callback) {
       content.classList.add("hidden");
-      bankContent.classList.remove("hidden");
-      articlePage.classList.add("hidden");
+      header.innerText = "";
       body.classList.add("bank-mode");
+      loadingScreen.classList.remove("hidden");
+
+      const steps = [
+        "サーバーの応答まち...",
+        "＞f5.siの信号を検知...",
+        "＞認証中...",
+        "＞IPアドレス確認中...",
+        "＞アクセス承認...",
+        "💠 ようこそ 💠"
+      ];
+      let i = 0;
+      loadingScreen.innerHTML = "";
+      const interval = setInterval(() => {
+        loadingScreen.innerHTML += steps[i] + "<br>";
+        i++;
+        if (i >= steps.length) {
+          clearInterval(interval);
+          setTimeout(() => {
+            loadingScreen.classList.add("hidden");
+            callback();
+          }, 1000);
+        }
+      }, 1000);
+    }
+
+    // 銀行モード
+    function activateBankMode() {
+      bankContent.classList.remove("hidden");
+      vipContent.classList.add("hidden");
+      articlePage.classList.add("hidden");
       header.innerText = "情報銀行";
       renderNews();
     }
 
+    // VIPモード
+    function activateVIPMode() {
+      vipContent.classList.remove("hidden");
+      bankContent.classList.add("hidden");
+      articlePage.classList.add("hidden");
+      header.innerText = "VIP情報銀行";
+    }
+
+    // 学習モードへ戻す
     function activateStudyMode() {
       content.classList.remove("hidden");
       bankContent.classList.add("hidden");
+      vipContent.classList.add("hidden");
       articlePage.classList.add("hidden");
       body.classList.remove("bank-mode");
       header.innerText = "中1学習支援サービス";
@@ -187,7 +259,7 @@
       }
     });
 
-    // 記事ページへ
+    // 記事ページ
     function openArticle(index) {
       const n = newsData[index];
       articleTitle.innerText = n.title;
@@ -195,20 +267,28 @@
       bankContent.classList.add("hidden");
       articlePage.classList.remove("hidden");
     }
-
-    // 戻る
     function backToList() {
       articlePage.classList.add("hidden");
       bankContent.classList.remove("hidden");
     }
 
-    // もっと見る
-    function showMore() {
-      newsData.push(
+    // もっと見る（1回だけ）
+    let page = 0;
+    let extraNews = [
+      [
         {title:"購買のジュース売り切れ情報", text:"自販機と購買で売り切れ続出。特にレモンティーは毎日昼までに完売している。"},
         {title:"次回の部活対抗戦の噂", text:"次回は予想外の部活が出場予定との噂。詳細は部活関係者の間で広まりつつある。"}
-      );
-      renderNews();
+      ]
+    ];
+    function showMore() {
+      if (page < extraNews.length) {
+        newsData = newsData.concat(extraNews[page]);
+        renderNews();
+        page++;
+      }
+      if (page >= extraNews.length) {
+        document.querySelector(".btn-more").style.display = "none";
+      }
     }
   </script>
 </body>
