@@ -7,7 +7,7 @@
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #fff; /* ←最初は白背景 */
+      background: #fff;
       color: #333;
       transition: all 0.5s ease;
     }
@@ -17,206 +17,125 @@
       padding: 10px;
       text-align: center;
     }
-    #search-box {
-      margin: 20px;
-      text-align: center;
-    }
-    input[type="text"] {
-      padding: 5px;
-      font-size: 16px;
-    }
-    button {
-      padding: 6px 12px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    /* 銀行・VIPモード */
     .bank-mode {
-      background: #0a0a0a;
-      color: #00ff99;
+      background: #0a0a0a !important;
+      color: #00ff99 !important;
       font-family: "Courier New", monospace;
     }
-    .bank-header {
-      text-align: center;
-      font-size: 24px;
-      padding: 20px;
-      color: #00ffcc;
-      text-shadow: 0 0 10px #00ffcc;
-    }
-    .news-section {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 10px;
-    }
-    .news-item {
-      border-bottom: 1px solid #00ff99;
-      padding: 10px;
-      cursor: pointer;
-    }
-    .hidden {
-      display: none;
-    }
-    .secret-box {
-      text-align: center;
-      margin: 20px;
-    }
-    a {
-      color: #00ccff;
-    }
-    .btn-more {
-      display: block;
-      text-align: center;
-      margin: 20px auto;
-      padding: 10px;
-      background: #00ff99;
-      color: #000;
-      font-weight: bold;
-      border-radius: 8px;
-      width: 200px;
-      cursor: pointer;
-    }
-    .article {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      border: 1px solid #00ff99;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #00ff99;
-    }
-    .back-btn {
-      margin-top: 20px;
-      display: inline-block;
-      padding: 8px 15px;
-      background: #00ff99;
-      color: #000;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+    .hidden { display: none; }
 
-    /* ローディング演出 */
     #loading-screen {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       background: #000;
       color: #00ff99;
       font-family: "Courier New", monospace;
-      display: flex;
+      display: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       font-size: 18px;
       line-height: 2em;
+      z-index: 1000;
+    }
+    .news-item {
+      border-bottom: 1px solid #444;
+      padding: 8px;
+      cursor: pointer;
+    }
+    .news-item:hover { background: rgba(0,255,150,0.1); }
+
+    /* 詳細表示用モーダル */
+    #modal {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+    #modal-content {
+      background: #111;
+      color: #0f0;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      text-align: center;
+    }
+    #modal button {
+      margin-top: 10px;
+      padding: 6px 12px;
+      background: #0f0;
+      color: #000;
+      border: none;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <!-- 学習モード -->
-  <header id="header">StudyUP</header>
+  <header id="header">中1学習支援サービス</header>
   <div id="content">
-    <div id="search-box">
-      <input type="text" id="search" placeholder="キーワード検索">
-      <button onclick="checkSearch()">検索</button>
-    </div>
-    <div id="study-content">
-      <h2>今日の勉強サポート</h2>
-      <p>ここでは中学1年生の学習に役立つ情報を提供します。</p>
-      <p>ログインしてないユーザーの情報閲覧はできません。最高管理者にお問い合わせください。</p>
-    </div>
+    <h2>今日の勉強サポート</h2>
+    <p>ここでは中学1年生の学習に役立つ情報を提供します。</p>
+    <input type="text" id="search" placeholder="キーワード検索">
+    <button onclick="checkSearch()">検索</button>
   </div>
 
   <!-- 認証演出 -->
-  <div id="loading-screen" class="hidden"></div>
+  <div id="loading-screen"></div>
 
-  <!-- 情報銀行モード -->
-  <div id="bank-content" class="hidden">
-    <div class="bank-header">💠 情報銀行へようこそ 💠</div>
-    <div id="news-list" class="news-section"></div>
-    <div class="btn-more" onclick="showMore()">もっと見る</div>
-    <div class="secret-box">
-      <p>🔗 <a href="https://docs.google.com/document/d/1CySvUHVIL0Y61mJFlM_2BI6VL9i1Ukx2TJZiCh1R3so/edit?usp=sharing" target="_blank">個別取引はこちら</a></p>
-    </div>
-  </div>
-
-  <!-- VIPモード -->
-  <div id="vip-content" class="hidden">
-    <div class="bank-header">🔑 VIP専用チャンネル 🔑</div>
-    <div id="vip-news" class="news-section"></div>
-  </div>
-
-  <!-- 個別記事 -->
-  <div id="article-page" class="hidden">
-    <div class="article">
-      <h2 id="article-title"></h2>
-      <p id="article-text"></p>
-      <span class="back-btn" onclick="backToList()">⬅ 戻る</span>
-    </div>
+  <!-- 詳細モーダル -->
+  <div id="modal" onclick="closeModal()">
+    <div id="modal-content"></div>
   </div>
 
   <script>
-    const content = document.getElementById("content");
-    const bankContent = document.getElementById("bank-content");
-    const vipContent = document.getElementById("vip-content");
-    const header = document.getElementById("header");
     const body = document.body;
-    const newsList = document.getElementById("news-list");
-    const vipNews = document.getElementById("vip-news");
-    const articlePage = document.getElementById("article-page");
-    const articleTitle = document.getElementById("article-title");
-    const articleText = document.getElementById("article-text");
+    const content = document.getElementById("content");
+    const header = document.getElementById("header");
     const loadingScreen = document.getElementById("loading-screen");
+    const modal = document.getElementById("modal");
+    const modalContent = document.getElementById("modal-content");
 
-    // ニュースデータ
-    let newsData = [
-      {title:"購買に新作パン入荷！", text:"購買で本日から新作パンが販売開始。特に人気なのはチョコクリームパンで、昼休み開始5分で売り切れた模様。"},
-      {title:"来週の体育館使用予定", text:"体育館は来週の昼休みに特定の部活が優先使用予定。特に火曜はバスケ部が全面使用予定なので要注意。"},
-      {title:"テスト範囲のウワサ（未確認）", text:"生徒の間で広まっているテスト範囲の噂。数学は教科書p50〜75、英語はUnit3までとの情報。信憑性は不明。"}
-    ];
-    let vipData = [
-      {title:"裏ルートの入手情報", text:"特定の先輩が持っている非公開の試験対策プリント。"},
-      {title:"VIP限定：次期行事の内部スケジュール", text:"正式発表前の行事予定が一部関係者に共有されている。"}
-    ];
-
-    // SHA-256でハッシュ化（パスワードをソースに直書きしない対策）
-    async function sha256(message) {
-      const msgBuffer = new TextEncoder().encode(message);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // ハッシュ関数（Web Crypto API使用）
+    async function sha256(str) {
+      const buf = new TextEncoder().encode(str);
+      const hash = await crypto.subtle.digest("SHA-256", buf);
+      return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,"0")).join("");
     }
 
-    // 事前にハッシュ化した正しいパスワード
-    const bankHash = "ab2a6b09c87c2b4fdf07426a5e9f8d1e276f3da3dbfdf2d55f4d81c7d07f6c2c"; // "rengouinfo"
-    const vipHash = "e6f6f7b4ed78c14b2c86e3c5b7bdb0f97d861a9f63a8a3e9c9dbf3b9b74b7f5d";  // "vipaccess"
+    // 正しいハッシュ（事前計算しておく）
+    const codes = {
+      "rengouinfo": "情報銀行",
+      "vipaccess": "VIP情報銀行"
+    };
+    let hashedCodes = {};
 
-    function renderNews(listEl, data) {
-      listEl.innerHTML = "";
-      data.forEach((n, i) => {
-        const div = document.createElement("div");
-        div.className = "news-item";
-        div.innerText = n.title;
-        div.onclick = () => openArticle(n);
-        listEl.appendChild(div);
-      });
-    }
+    // 初期化（平文は捨ててハッシュだけ保持）
+    (async ()=>{
+      for (let key in codes) {
+        hashedCodes[await sha256(key)] = codes[key];
+      }
+    })();
 
+    // 検索チェック
     async function checkSearch() {
       const val = document.getElementById("search").value.trim();
-      const hashed = await sha256(val);
-
-      if (hashed === bankHash) {
-        playAuthAnimation(() => activateBankMode());
-      } else if (hashed === vipHash) {
-        playAuthAnimation(() => activateVIPMode());
+      const hash = await sha256(val);
+      if (hashedCodes[hash]) {
+        playAuthAnimation(() => activateMode(hashedCodes[hash]));
+      } else {
+        alert("検索結果なし");
       }
     }
 
-    // 認証アニメーション
+    // 認証演出
     function playAuthAnimation(callback) {
       content.classList.add("hidden");
       header.innerText = "";
-      body.classList.add("bank-mode");
-      loadingScreen.classList.remove("hidden");
+      loadingScreen.style.display = "flex";
 
       const steps = [
         "サーバーの応答まち...",
@@ -234,79 +153,63 @@
         if (i >= steps.length) {
           clearInterval(interval);
           setTimeout(() => {
-            loadingScreen.classList.add("hidden");
+            loadingScreen.style.display = "none";
             callback();
           }, 1000);
         }
       }, 1000);
     }
 
-    function activateBankMode() {
-      bankContent.classList.remove("hidden");
-      vipContent.classList.add("hidden");
-      articlePage.classList.add("hidden");
-      header.innerText = "情報銀行";
-      renderNews(newsList, newsData);
-    }
-
-    function activateVIPMode() {
-      vipContent.classList.remove("hidden");
-      bankContent.classList.add("hidden");
-      articlePage.classList.add("hidden");
-      header.innerText = "VIP情報銀行";
-      renderNews(vipNews, vipData);
-    }
-
-    function activateStudyMode() {
+    // モード切替
+    function activateMode(mode) {
+      body.classList.add("bank-mode");
+      header.innerText = mode;
       content.classList.remove("hidden");
-      bankContent.classList.add("hidden");
-      vipContent.classList.add("hidden");
-      articlePage.classList.add("hidden");
-      body.classList.remove("bank-mode");
-      header.innerText = "中1学習支援サービス";
-    }
 
-    // Zキーで学習モードに戻る
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "z" || e.key === "Z") {
-        activateStudyMode();
+      if (mode === "情報銀行") {
+        renderNews([
+          {title:"購買のジュース売り切れ情報", detail:"レモンティーは毎日昼までに完売している。"},
+          {title:"部活対抗戦の噂", detail:"次回は予想外の部活が出場予定との噂。"}
+        ]);
       }
-    });
-
-    function openArticle(n) {
-      articleTitle.innerText = n.title;
-      articleText.innerText = n.text;
-      bankContent.classList.add("hidden");
-      vipContent.classList.add("hidden");
-      articlePage.classList.remove("hidden");
-    }
-    function backToList() {
-      articlePage.classList.add("hidden");
-      if (header.innerText.includes("VIP")) {
-        vipContent.classList.remove("hidden");
-      } else {
-        bankContent.classList.remove("hidden");
+      if (mode === "VIP情報銀行") {
+        renderNews([
+          {title:"次回テストの範囲リーク", detail:"一部の先生が内部会議で話していた範囲が特定の生徒に伝わっている。"},
+          {title:"先生の異動情報", detail:"来年度に異動予定の先生のリストが極秘で回っている。"}
+        ]);
       }
     }
 
-    // もっと見る
-    let page = 0;
-    let extraNews = [
-      [
-        {title:"購買のジュース売り切れ情報", text:"自販機と購買で売り切れ続出。特にレモンティーは毎日昼までに完売している。"},
-        {title:"次回の部活対抗戦の噂", text:"次回は予想外の部活が出場予定との噂。詳細は部活関係者の間で広まりつつある。"}
-      ]
-    ];
-    function showMore() {
-      if (page < extraNews.length) {
-        newsData = newsData.concat(extraNews[page]);
-        renderNews(newsList, newsData);
-        page++;
-      }
-      if (page >= extraNews.length) {
-        document.querySelector(".btn-more").style.display = "none";
-      }
+    // ニュース表示
+    function renderNews(newsArray) {
+      let html = "<h2>最近の情報</h2>";
+      newsArray.forEach((n, i) => {
+        html += `<div class="news-item" onclick="openModal('${n.title}','${n.detail}')">${n.title}</div>`;
+      });
+      html += `<p><a href="https://docs.google.com/document/d/1CySvUHVIL0Y61mJFlM_2BI6VL9i1Ukx2TJZiCh1R3so/edit?usp=sharing" target="_blank">個別取引はこちら</a></p>`;
+      content.innerHTML = html;
     }
+
+    // 詳細モーダル
+    function openModal(title, detail) {
+      modalContent.innerHTML = `<h3>${title}</h3><p>${detail}</p><button onclick="closeModal()">閉じる</button>`;
+      modal.style.display = "flex";
+    }
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    document.addEventListener("keydown", function(e) {
+  if (e.key === "F12" || 
+      (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || 
+      (e.ctrlKey && e.key === "U")) {
+    e.preventDefault();
+    alert("アクセス拒否：不正操作を検知しました");
+  }
+});
+
+ document.addEventListener("contextmenu", e => e.preventDefault());
+
   </script>
 </body>
 </html>
