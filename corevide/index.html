@@ -1,427 +1,533 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>CoreVIDE</title>
-<style>
-  body {
-    background: linear-gradient(135deg, #203a43 60%, #ff0000 120%);
-    font-family: 'Segoe UI',Roboto,Arial,sans-serif;
-    color: #eee;
-    margin: 0;
-  }
-  header {
-    background: #ff0000;
-    padding: 18px 0;
-    text-align: center;
-    font-size: 2rem;
-    font-weight: bold;
-    letter-spacing: .1em;
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(255,0,0,0.4);
-  }
-  main {
-    max-width: 900px;
-    margin: 30px auto;
-    padding: 0 12px 40px;
-  }
-  .section {
-    margin-bottom: 30px;
-    background: rgba(255,0,0,0.12);
-    border-radius: 16px;
-    box-shadow: 0 2px 12px rgba(255,0,0,0.18);
-    padding: 18px 20px;
-  }
-  .section h2{
-    font-size: 1.22rem;
-    color: #fff3f3;
-    margin-bottom: 8px;
-  }
-  .section input[type="file"]{
-    font-size:1rem;
-    color:#fff;
-    padding:6px 6px 6px 0;
-    background: transparent;
-  }
-  .section input[type="text"]{
-    font-size:1rem;
-    padding:8px;
-    border-radius:6px;
-    border:none;
-    background:rgba(255,255,255,.07);
-    color:#fff;
-    margin-right:12px;
-    outline: none;
-  }
-  .section button {
-    font-size:1rem;
-    background:#ff0000;
-    color:#fff;
-    border-radius:7px;
-    border:none;
-    padding: 8px 20px;
-    font-weight: bold;
-    cursor:pointer;
-    box-shadow:0 4px 8px rgba(255,0,0,0.12);
-    transition:background 0.2s,transform .13s;
-  }
-  .section button:hover {
-    background:#c90000;
-    transform:scale(1.06);
-  }
-  .share-area {
-    margin-bottom:30px;
-    background: rgba(0,0,0,.17);
-    border-radius:13px;
-    box-shadow:0 2px 10px rgba(255,0,0,0.08);
-    padding:16px 18px;
-  }
-  .share-area textarea {
-    width:100%; min-height:80px;
-    font-family:Consolas,monospace;
-    font-size:.95em;
-    border-radius:7px;
-    border:none;
-    padding:8px;
-    margin-bottom:7px;
-    background:#181818;
-    color:#ffaaaa;
-    resize:vertical;
-  }
-  .share-area button {
-    background:#0099ff;
-    color:#fff;
-    padding:6px 11px;
-    border-radius:6px;
-    border:none;
-    font-size:.97rem;
-    font-weight:bold;
-    margin-right:6px;
-    transition:.18s;
-    cursor:pointer;
-  }
-  .share-area button:hover {
-    background:#83d6ff;
-    color:#023;
-  }
-  .videos {
-    display: grid;
-    gap: 32px;
-    grid-template-columns: repeat(auto-fill,minmax(340px,1fr));
-  }
-  .card {
-    background:rgba(30,30,30,0.93);
-    border-radius:14px;
-    overflow:hidden;
-    box-shadow:0 0 20px rgba(255,0,0,.13),0 8px 22px rgba(0,0,0,.67);
-    transition:.3s;
-    position:relative;
-    display:flex;
-    flex-direction:column;
-  }
-  .card:hover {
-    transform:translateY(-6px) scale(1.02);
-    box-shadow:0 0 36px rgba(255,0,0,.23),0 8px 32px rgba(0,0,0,.79);
-  }
-  .card video {
-    width:100%;
-    aspect-ratio:16/9;
-    background:#000;
-    display:block;
-    border-bottom:1px solid #333;
-  }
-  .infoArea {
-    padding:14px 16px 10px;
-    flex-grow:1;
-    display:flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .infoTitle {
-    color:#ffabab;
-    font-weight:700;
-    font-size:1.08rem;
-    word-break:break-all;
-    margin-bottom:7px;
-  }
-  .infoDesc {
-    color:#e0e0e0;
-    font-size:.94rem;
-    margin-bottom:8px;
-  }
-  .infoDate { color: #aaa; font-size: .83rem; }
-  .del-btn {
-    position:absolute;
-    top:14px; right:14px;
-    background:rgba(255,0,0,.90);
-    border:none;
-    color:#fff;
-    border-radius:50%;
-    font-size:1.15rem;
-    width:28px; height:28px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    box-shadow:0 0 7px rgba(255,0,0,0.19);
-    opacity:0;
-    transition:opacity .2s;
-    z-index:2;
-  }
-  .card:hover .del-btn { opacity:1;}
-  /* コメント部分 */
-  .comments {
-    margin:12px 0 5px;
-    background:rgba(255,255,255,.04);
-    border-radius:7px;
-    padding:8px;
-    box-shadow:0 1px 9px rgba(255,0,0,.06);
-    font-size:.96rem;
-  }
-  .comment {
-    margin-bottom:8px;
-    font-size:.97rem;
-    color:#fff;
-    padding:5px 0 5px 0;
-    border-bottom: 1px solid #333;
-  }
-  .comment:last-child { border-bottom:none;}
-  .comment-user {
-    color:#ff7979;
-    font-size:0.89rem;
-    padding-right:6px;
-    font-style:italic;
-  }
-  .comment-date {
-    color:#aaa;
-    font-size:0.81rem;
-    margin-left:7px;
-  }
-  .comment-input-row {
-    margin-top:7px;
-    display:flex;
-    gap:8px;
-    align-items: center;
-  }
-  .comment-input {
-    flex:1;
-    font-size:.97rem;
-    border-radius:6px;
-    border:none;
-    background:rgba(255,255,255,.09);
-    color:#fff;
-    padding:7px 8px;
-    outline:none;
-  }
-  .comment-btn {
-    background:#ff2222;
-    border:none;
-    color:#fff;
-    border-radius:8px;
-    font-size:0.97rem;
-    padding:7px 17px;
-    font-weight:bold;
-    box-shadow:0 3px 7px rgba(255,0,0,.22);
-    cursor:pointer;
-    transition:.15s;
-  }
-  .comment-btn:hover { background:#d70000;}
-  @media (max-width:600px){
-    .videos{ grid-template-columns:1fr;}
-    .card video { height:170px;}
-    .share-area textarea {min-height:60px;}
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>CoreVIDE</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    body {
+      background: #f2f2f2;
+      font-family: "Roboto", "Arial", "Yu Gothic", sans-serif;
+      color: #222;
+      margin: 0;
+      min-height: 100vh;
+    }
+    header {
+      background: #ff0000;
+      padding: 16px 0;
+      text-align: center;
+      color: #fff;
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      box-shadow: 0 2px 10px rgba(255,0,0,0.07);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      user-select:none;
+    }
+    main {
+      max-width: 900px;
+      margin: 30px auto 0 auto;
+      padding: 16px 18px 60px 18px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 22px;
+      align-items:center;
+      background: #fafafa;
+      border-radius: 8px;
+      padding: 13px 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      border: 1.5px solid #ededed;
+    }
+    .input-row input[type="url"] {
+      flex: 1;
+      background: #fff;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+      padding: 11px 10px;
+      transition: border-color .22s;
+    }
+    .input-row input[type="url"]:focus {
+      border-color: #ff0000;
+      outline: none;
+    }
+    .input-row button {
+      background: #ff0000;
+      color: #fff;
+      font-size: 1rem;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 22px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(255,0,0,0.12);
+      cursor:pointer;
+      transition: background .2s,transform .1s;
+    }
+    .input-row button:hover { background: #d90000;}
+    .share-area {
+      margin-bottom:24px;
+      background: #f5f5f8;
+      border-radius:10px;
+      padding:14px 16px;
+      border: 1.5px solid #ededed;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+    .share-area textarea {
+      width:100%; min-height:60px;
+      font-family:Consolas,monospace;
+      font-size:1em;
+      border-radius:6px;
+      border:1px solid #e0e0e0;
+      padding:7px;
+      background: #fff;
+      color: #b71010;
+      resize:vertical;
+      margin-bottom:7px;
+    }
+    .share-area button {
+      background: #467cee;
+      color: #fff;
+      padding:6px 12px;
+      border-radius:5px;
+      border:none;
+      font-size:.98rem;
+      font-weight:700;
+      margin-right:7px;
+      transition:.18s;
+      cursor:pointer;
+      box-shadow: 0 1px 6px rgba(70,124,238,0.09);
+    }
+    .share-area button:hover { background: #245ccb;}
+    .videos {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.10),0 9px 32px rgba(252,0,0,.07);
+      border: 1.5px solid #ededed;
+      display:flex;
+      flex-direction:row;
+      gap:0;
+      padding: 0;
+      position:relative;
+      transition:.18s;
+      min-height:152px;
+    }
+    .card:hover {
+      transform:scale(1.013);
+      box-shadow: 0 3px 18px rgba(255,0,0,0.14),0 14px 46px rgba(70,124,238,.11);
+      border-color:#fa2d2d;
+    }
+    .thumb {
+      min-width: 180px;
+      max-width: 240px;
+      width: 30%;
+      height: 100%;
+      background: #000;
+      background-position: center;
+      background-size: cover;
+      background-repeat: no-repeat;
+      position:relative;
+      display:flex;align-items:center;justify-content:center;
+      cursor:pointer;
+      border-top-left-radius:10px;
+      border-bottom-left-radius:10px;
+    }
+    .thumb::after {
+      content:"▶";
+      font-size:2.7rem;
+      color:rgba(255,0,0,0.88);
+      text-shadow:0 1px 5px rgba(255,0,0,.35),0 0 1px #fff;
+      background:rgba(255,255,255,.11);
+      border-radius:50%;
+      display:inline-block;
+      padding:.1em .25em;
+      pointer-events:none;
+      transition:.18s;
+      user-select:none;
+      margin-left:8px;
+    }
+    .card:hover .thumb::after {
+      filter:brightness(1.4);
+      color: #ff2c2c;
+      background:rgba(255,255,255,.25);
+    }
+    .card .del-btn {
+      position:absolute;
+      top:12px; right:12px;
+      background:#ff2222;
+      border:none;
+      color:#fff;
+      border-radius:50%;
+      font-size:1.14rem;
+      width:28px; height:28px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 0 7px rgba(255,0,0,.10);
+      opacity:0;
+      transition:opacity .2s;
+      z-index:2;
+    }
+    .card:hover .del-btn { opacity:1;}
+    .infoArea {
+      padding:19px 18px 16px 24px;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-start;
+      flex:1;
+    }
+    .infoUrl {
+      font-weight:700;
+      color:#cc2222;
+      word-break:break-all;
+      font-size:1rem;
+      margin-bottom:7px;
+      text-decoration:none;
+    }
+    .infoUrl:hover { text-decoration:underline; color:#ff2222;}
+    .infoDate {
+      color: #aaa;
+      font-size: .80rem;
+    }
+    /* コメントなど */
+    .comments {
+      margin:11px 0 5px;
+      background:#f8f8fc;
+      border-radius:7px;
+      padding:8px;
+      box-shadow:0 1.5px 9px rgba(255,0,0,.08);
+      font-size:.97rem;
+      border:1px solid #ececec;
+      color: #444;
+    }
+    .comment {
+      margin-bottom:6px;
+      font-size:.94rem;
+      color:#333;
+      padding:5px 0 5px 0;
+      border-bottom: 1px solid #e9e9e9;
+    }
+    .comment:last-child { border-bottom:none;}
+    .comment-user {
+      color:#ff7979;
+      font-size:0.87rem;
+      padding-right:6px;
+      font-style:italic;
+    }
+    .comment-date {
+      color:#adadad;
+      font-size:0.80rem;
+      margin-left:8px;
+    }
+    .comment-input-row {
+      margin-top:7px;
+      display:flex;
+      gap:8px;
+      align-items: center;
+    }
+    .comment-input {
+      flex:1;
+      font-size:.97rem;
+      border-radius:4px;
+      border:1px solid #e3e3e3;
+      color:#444;
+      padding:7px 8px;
+      outline:none;
+      background: #fafbfd;
+    }
+    .comment-btn {
+      background:#ff2222;
+      border:none;
+      color:#fff;
+      border-radius:6px;
+      font-size:0.99rem;
+      padding:7px 17px;
+      font-weight:700;
+      box-shadow:0 3px 7px rgba(255,0,0,.11);
+      cursor:pointer;
+      transition:.15s;
+    }
+    .comment-btn:hover { background:#d70000;}
+    /* モーダル */
+    #modal {
+      display:none;
+      position:fixed;
+      z-index:9999;
+      top:0; left:0; width:100vw; height:100vh;
+      background:rgba(0,0,0,.77);
+      backdrop-filter: blur(3px);
+      align-items:center;
+      justify-content:center;
+      padding:25px;
+      overflow:auto;
+      animation: fadeIn .3s ease;
+    }
+    #modal.show { display:flex;}
+    #modal .inner {
+      position:relative;
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 0 38px rgba(255,0,0,0.22),0 0 130px #fff;
+      max-width:900px;width:100%;
+      max-height: 90vh;
+      overflow:hidden;
+      display:flex; flex-direction:column;
+      border:2px solid #467cee;
+    }
+    #modal iframe {
+      width:100%;
+      height:460px;
+      background:#000;
+      border:none;
+      flex-shrink:0;
+    }
+    #modal .close {
+      position:absolute;
+      top:23px;
+      right:17px;
+      background:#ff2222;
+      border:none;
+      color:#fff;
+      font-weight:900;
+      font-size:1.32rem;
+      width:38px;height:38px;
+      border-radius:50%;
+      cursor:pointer;
+      box-shadow:0 0 19px rgba(255,0,0,0.18);
+      user-select:none;
+      transition:.18s;
+    }
+    #modal .close:hover { background:#ff8585;}
+    @media (max-width:600px){
+      .videos{ gap:18px; }
+      .card {
+        flex-direction:column;
+        min-height:10px;
+      }
+      .thumb {
+        min-width:100%; height:170px;
+        border-radius:0;
+      }
+      #modal iframe { height:180px;}
+    }
+    @keyframes fadeIn {from{opacity:0;}to{opacity:1;}}
+  </style>
 </head>
 <body>
 <header>CoreVIDE</header>
 <main>
-  <!-- ファイル動画追加 -->
-  <section class="section">
-    <h2>動画ファイルを追加</h2>
-    <form id="fileForm" onsubmit="event.preventDefault();addFile();">
-      <input id="videoFileInput" type="file" accept="video/mp4,video/webm,video/ogg" />
-      <input id="fileCommentInput" type="text" placeholder="動画のタイトル/説明">
-      <button id="addFileBtn">ファイル追加</button>
-    </form>
-    <p style="font-size:.89rem;color:#faa;margin-top:8px;">※ 4MB以下の動画のみ（localStorage制限）。</p>
-  </section>
-
-  <!-- 共有機能 -->
+  <!-- 外部動画追加 -->
+  <form class="input-row" onsubmit="event.preventDefault();addLink();">
+    <input id="urlInput" type="url" placeholder="動画リンク (YouTube/ニコ動) を入力" autocomplete="off" />
+    <button id="addBtn">追加</button>
+  </form>
+  
+  <!-- JSON共有/インポート/エクスポート機能 -->
   <section class="share-area">
-    <h2 style="font-size:1.1rem;color:#88e;">共有・インポート/エクスポート</h2>
+    <h2 style="font-size:1.07rem;color:#467cee;margin:0 0 5px;">JSON共有・インポート/エクスポート</h2>
     <textarea id="jsonArea" placeholder="ここにJSONをコピー/貼付け"></textarea><br>
     <button onclick="importJson();">インポート</button>
     <button onclick="exportJson();">エクスポート</button>
-    <span id="shareMsg" style="font-size:.95em;color:#8fc;margin-left:10px;"></span>
+    <span id="shareMsg" style="font-size:.98em;color:#468;margin-left:10px;"></span>
   </section>
-
+  
   <section class="videos" id="videoList"></section>
 </main>
+
+<div id="modal"><div class="inner">
+  <button class="close" id="modalClose">&times;</button>
+  <iframe id="modalPlayer" src="" allowfullscreen allow="autoplay"></iframe>
+</div></div>
+
 <script>
-const STORAGE_KEY = "corevide_myvideos";
+const STORAGE_KEY = "corevide_extvideos";
+// データ形式: [{ url: ..., date: "...", comments:[{user,text,date},...] }]
 
-
-function loadVideos(){
+function loadVideos() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   catch { return []; }
 }
-function saveVideos(arr){
+function saveVideos(arr) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
 }
-function fmtDate(date){
+function fmtDate(date) {
   let y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");
   return `${y}-${m}-${d}`;
 }
-function addFile(){
-  const input=document.getElementById("videoFileInput");
-  if (!input.files[0]) return alert("ファイルを選択してください");
-  const file=input.files[0];
-  if(file.size>4*1024*1024) return alert("4MB以下の動画のみ保存できます。");
-  const reader=new FileReader();
-  reader.onloadend=function(e){
-    const data = e.target.result;
-    let arr=loadVideos();
-    arr.unshift({
-      file: { data, name:file.name },
-      title: document.getElementById("fileCommentInput").value,
-      date: fmtDate(new Date()),
-      comments:[]
-    });
-    saveVideos(arr);
-    input.value="";
-    document.getElementById("fileCommentInput").value="";
-    render();
-    showShareMsg('動画を追加しました。');
-  };
-  reader.readAsDataURL(file);
+// サムネ・埋め込み抽出
+function parseVideo(url){
+  let data={type:null,id:null,thumb:null,embedUrl:null};
+  try{
+    const u=new URL(url);
+    const host=u.hostname.toLowerCase();
+    if(/youtu\.be|youtube\.com/.test(host)){
+      let id="";
+      if(host==="youtu.be") id=u.pathname.slice(1);
+      else if(u.searchParams.get("v")) id=u.searchParams.get("v");
+      else {
+        let paths=u.pathname.split("/");
+        id=paths[paths.length-1]||""; if(paths.includes("embed")) id=paths[paths.indexOf("embed")+1]||id;
+        else if(paths.includes("v")) id=paths[paths.indexOf("v")+1]||id;
+      }
+      if(id){ data.type="youtube";data.id=id;
+        data.thumb=`https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+        data.embedUrl=`https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+      }
+    }else if(/nicovideo\.jp/.test(host)||/smilevideo\.jp/.test(host)){
+      const m=u.pathname.match(/\/watch\/(sm\d+)/)||u.pathname.match(/\/(sm\d+)/);
+      if(m&&m[1]){
+        const id=m[1];
+        data.type="niconico"; data.id=id;
+        data.thumb=`https://tn.smilevideo.jp/smile?i=${id.substring(2)}`;
+        data.embedUrl=`https://embed.nicovideo.jp/watch/${id}?autoplay=1`;
+      }
+    }
+  }catch{}
+  return data;
 }
-
+function addLink(){
+  const input=document.getElementById("urlInput");
+  const url=input.value.trim();
+  if(!url) return;
+  try{new URL(url);}catch{alert("URLを入力");return;}
+  let arr=loadVideos();
+  if(arr.some(i=>i.url===url)) { alert("既に登録されています");return; }
+  arr.unshift({ url, date:fmtDate(new Date()), comments:[] });
+  saveVideos(arr);
+  input.value="";
+  render();
+  showShareMsg('動画を追加しました。');
+}
 function addComment(idx){
   const box=document.getElementById("commentInput"+idx);
   const val=box.value.trim();
   if(!val) return;
   let arr=loadVideos();
   arr[idx].comments.push({
-    user:"匿名",
-    text:val,
+    user:"匿名", text:val,
     date: fmtDate(new Date())
   });
   saveVideos(arr);
   box.value="";
   render();
 }
-
+function openModal(embedUrl){
+  document.getElementById("modalPlayer").src=embedUrl;
+  document.getElementById("modal").classList.add("show");
+  document.body.style.overflow="hidden";
+}
+function closeModal(){
+  document.getElementById("modalPlayer").src="";
+  document.getElementById("modal").classList.remove("show");
+  document.body.style.overflow="";
+}
+document.getElementById("modalClose").onclick=closeModal;
+document.getElementById("modal").onclick=function(e){if(e.target===this)closeModal();}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 function createCard(video,idx){
-  const card=document.createElement("article");
-  card.className="card";
-  const vid=document.createElement("video");
-  vid.src=video.file.data;
-  vid.controls=true;
-  vid.preload="metadata";
-  card.appendChild(vid);
+  const info=parseVideo(video.url);
+  const card=document.createElement("div"); card.className="card";
+  // サムネ
+  const thumb=document.createElement("div");
+  thumb.className="thumb";
+  thumb.style.backgroundImage=info.thumb?`url(${info.thumb})`:"";
+  thumb.title="クリックで再生";
+  thumb.onclick=function(){
+    if(info.embedUrl) openModal(info.embedUrl);
+    else alert("埋め込みできません。URLを確認してください");
+  };
+  card.appendChild(thumb);
 
+  // 情報
   const infoArea=document.createElement("div");
   infoArea.className="infoArea";
-  const titleSpan=document.createElement("span");
-  titleSpan.className="infoTitle";
-  titleSpan.textContent=video.title?video.title:"(タイトルなし)";
-  infoArea.appendChild(titleSpan);
-  const fnSpan=document.createElement("div");
-  fnSpan.className="infoDesc";
-  fnSpan.textContent="ファイル名: "+(video.file.name||"no name");
-  infoArea.appendChild(fnSpan);
+  const urlA=document.createElement("a");
+  urlA.className="infoUrl";
+  urlA.href=video.url; urlA.target="_blank"; urlA.textContent=video.url;
+  infoArea.appendChild(urlA);
   const dt=document.createElement("div");
-  dt.className="infoDate";
-  dt.textContent="追加日: "+video.date;
+  dt.className="infoDate"; dt.textContent="追加日: "+video.date;
   infoArea.appendChild(dt);
-  card.appendChild(infoArea);
 
-  const commentsBox=document.createElement("div");
-  commentsBox.className="comments";
+  // コメント表示
+  const commentsBox=document.createElement("div"); commentsBox.className="comments";
   if(video.comments&&video.comments.length>0){
     video.comments.forEach(comment=>{
-      const comDiv=document.createElement("div");
-      comDiv.className="comment";
+      const comDiv=document.createElement("div"); comDiv.className="comment";
       comDiv.innerHTML=`<span class="comment-user">${comment.user}：</span>${comment.text} <span class="comment-date">${comment.date}</span>`;
       commentsBox.appendChild(comDiv);
     });
   }
-  card.appendChild(commentsBox);
+  infoArea.appendChild(commentsBox);
 
-  const inpBox=document.createElement("div");
-  inpBox.className="comment-input-row";
-  const inp=document.createElement("input");
-  inp.className="comment-input";
-  inp.id="commentInput"+idx;
-  inp.placeholder="コメント・批評を書く";
-  const btn=document.createElement("button");
-  btn.className="comment-btn";
-  btn.textContent="送信";
-  btn.onclick=()=>addComment(idx);
+  // コメント入力
+  const inpBox=document.createElement("div"); inpBox.className="comment-input-row";
+  const inp=document.createElement("input"); inp.className="comment-input";
+  inp.id="commentInput"+idx; inp.placeholder="コメント・批評を書く";
+  const btn=document.createElement("button"); btn.className="comment-btn"; btn.textContent="送信";
+  btn.onclick=function(){addComment(idx)};
   inpBox.append(inp,btn);
-  card.appendChild(inpBox);
+  infoArea.appendChild(inpBox);
 
+  card.appendChild(infoArea);
+
+  // 削除ボタン
   const del=document.createElement("button");
-  del.className="del-btn";
-  del.type="button";
-  del.textContent="×";
-  del.title="動画を削除";
-  del.onclick=()=>{
-    if(confirm("削除しますか？")) {
-      let arr=loadVideos();
-      arr.splice(idx,1);
-      saveVideos(arr);
-      render();
-      showShareMsg('動画を削除しました。');
+  del.className="del-btn"; del.type="button"; del.textContent="×"; del.title="動画を削除";
+  del.onclick=function(){
+    if(confirm("削除しますか？")){
+      let arr=loadVideos(); arr.splice(idx,1); saveVideos(arr); render();
+      showShareMsg('削除しました');
     }
   };
   card.appendChild(del);
 
   return card;
 }
-
 function render(){
   const container=document.getElementById("videoList");
   container.innerHTML="";
   const arr=loadVideos();
   if(arr.length==0){
-    const msg=document.createElement("p");
-    msg.textContent="動画ファイルはありません。追加してください。";
-    msg.style.textAlign="center";
-    msg.style.opacity=".7";
-    container.appendChild(msg);
-    return;
+    const msg=document.createElement("p"); msg.style.textAlign="center"; msg.style.opacity=".6";
+    msg.textContent="動画はありません。リンクを追加してください。";
+    container.appendChild(msg); return;
   }
   arr.forEach((video,idx)=>{
     container.appendChild(createCard(video,idx));
   });
 }
-
-// 共有・エクスポート(JSONコピー)機能
+// エクスポート
 function exportJson(){
   const arr=loadVideos();
   const jsonStr=JSON.stringify(arr,null,2);
   document.getElementById('jsonArea').value=jsonStr;
   if(window.navigator.clipboard){
-    window.navigator.clipboard.writeText(jsonStr).then(()=>{
-      showShareMsg("クリップボードにコピーしました！");
-    });
+    window.navigator.clipboard.writeText(jsonStr).then(()=>{showShareMsg("コピーしました！");});
   }else{
     showShareMsg("JSONを表示しました。手動でコピーできます。");
   }
 }
-// インポート(JSON貼付け)機能
+// インポート
 function importJson(){
   let txt=document.getElementById('jsonArea').value.trim();
-  if(!txt) return showShareMsg("JSONテキストを貼付けてください");
+  if(!txt) return showShareMsg("JSONを貼付けてください");
   try{
     let obj=JSON.parse(txt);
     if(!Array.isArray(obj)) throw "形式エラー";
-    saveVideos(obj);
-    render();
-    showShareMsg("インポート完了しました！");
+    saveVideos(obj); render(); showShareMsg("インポート完了！");
   }catch(e){
     showShareMsg("インポート失敗。JSONの形式を確認してください。");
   }
@@ -431,7 +537,7 @@ function showShareMsg(msg){
   el.textContent=msg;
   setTimeout(()=>{el.textContent="";},2500);
 }
-document.getElementById("addFileBtn").onclick=addFile;
+document.getElementById("addBtn").onclick=addLink;
 render();
 </script>
 </body>
