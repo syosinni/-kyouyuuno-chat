@@ -2,12 +2,12 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>世界地図バケツ塗り＋国管理完全版</title>
+<title>世界地図バケツ塗り＋国管理最新版</title>
 <style>
-body { display: flex; flex-direction: column; align-items: center; margin: 20px; font-family: sans-serif; }
-canvas { border:1px solid #000; cursor: crosshair; margin-top:10px; }
+body { display:flex; flex-direction:column; align-items:center; margin:20px; font-family:sans-serif; }
+canvas { border:1px solid #000; cursor:crosshair; margin-top:10px; }
 .controls { margin:10px; }
-#countryList { margin-top:10px; max-height:300px; overflow:auto; border:1px solid #ccc; width: 400px; padding:5px;}
+#countryList { margin-top:10px; max-height:300px; overflow:auto; border:1px solid #ccc; width:450px; padding:5px;}
 .countryItem { display:flex; justify-content:space-between; padding:2px 5px; cursor:pointer; align-items:center; }
 .colorBox { width:20px; height:20px; display:inline-block; margin-right:5px; border:1px solid #000; vertical-align:middle; }
 </style>
@@ -19,6 +19,7 @@ canvas { border:1px solid #000; cursor: crosshair; margin-top:10px; }
   <label>国名: <input type="text" id="countryName" placeholder="国名を入力"></label>
   <label>主義: <input type="text" id="ideology" placeholder="主義を入力"></label>
   <label>代表: <input type="text" id="leader" placeholder="代表を入力"></label>
+  <label>国家人口(100万〜5000万): <input type="number" id="population" min="1000000" max="50000000" value="1000000"></label>
   <button id="zoomIn">拡大</button>
   <button id="zoomOut">縮小</button>
 </div>
@@ -34,38 +35,32 @@ let scale = 1;
 
 let mapImg = new Image();
 mapImg.crossOrigin = "anonymous";
-mapImg.onload = () => {
-    canvas.width = mapImg.width;
-    canvas.height = mapImg.height;
-    drawMap();
-}
+mapImg.onload = () => { canvas.width=mapImg.width; canvas.height=mapImg.height; drawMap(); };
 mapImg.src = svgUrl;
 
-let countryData = []; // 国情報 {name,colorHex,ideology,leader,regions:[{pixels:[]}]}
+let countryData = []; // 国情報 {name,colorHex,ideology,leader,population,regions:[{pixels:[]}]}
 
 // HEX→RGBA
-function hexToRGBA(hex){
-    return {r:parseInt(hex.slice(1,3),16), g:parseInt(hex.slice(3,5),16), b:parseInt(hex.slice(5,7),16), a:255};
-}
+function hexToRGBA(hex){ return {r:parseInt(hex.slice(1,3),16), g:parseInt(hex.slice(3,5),16), b:parseInt(hex.slice(5,7),16), a:255}; }
 
 // Flood Fillで領域ピクセル取得
 function getRegionPixels(x,y){
-    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
-    const data = imgData.data;
-    const width = canvas.width;
-    const stack = [[x,y]];
-    const visited = new Set();
-    const pixels = [];
-    const key = (x,y)=>`${x},${y}`;
+    const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const data=imgData.data;
+    const width=canvas.width;
+    const stack=[[x,y]];
+    const visited=new Set();
+    const pixels=[];
+    const key=(x,y)=>`${x},${y}`;
 
     while(stack.length){
-        const [cx,cy] = stack.pop();
+        const [cx,cy]=stack.pop();
         if(cx<0||cy<0||cx>=width||cy>=canvas.height) continue;
         if(visited.has(key(cx,cy))) continue;
 
         const i=(cx+cy*width)*4;
         const c=[data[i],data[i+1],data[i+2]];
-        if(c[0]===255&&c[1]===255&&c[2]===255){
+        if(c[0]===255 && c[1]===255 && c[2]===255){
             pixels.push({x:cx,y:cy});
             visited.add(key(cx,cy));
             stack.push([cx+1,cy]);
@@ -79,15 +74,12 @@ function getRegionPixels(x,y){
 
 // 領域塗り
 function fillRegion(pixels,colorHex){
-    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
-    const data = imgData.data;
-    const col = hexToRGBA(colorHex);
+    const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const data=imgData.data;
+    const col=hexToRGBA(colorHex);
     pixels.forEach(p=>{
-        const i = (p.x + p.y*canvas.width)*4;
-        data[i]=col.r;
-        data[i+1]=col.g;
-        data[i+2]=col.b;
-        data[i+3]=col.a;
+        const i=(p.x + p.y*canvas.width)*4;
+        data[i]=col.r; data[i+1]=col.g; data[i+2]=col.b; data[i+3]=col.a;
     });
     ctx.putImageData(imgData,0,0);
 }
@@ -96,21 +88,18 @@ function fillRegion(pixels,colorHex){
 function drawMap(){
     ctx.setTransform(scale,0,0,scale,0,0);
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.drawImage(mapImg, 0, 0);
-    countryData.forEach(c=>{
-        c.regions.forEach(r=>fillRegion(r.pixels,c.colorHex));
-    });
+    ctx.drawImage(mapImg,0,0);
+    countryData.forEach(c=>c.regions.forEach(r=>fillRegion(r.pixels,c.colorHex)));
 }
 
 // 国リスト更新
 function updateCountryList(){
-    const listDiv = document.getElementById('countryList');
-    listDiv.innerHTML='';
+    const listDiv=document.getElementById('countryList'); listDiv.innerHTML='';
     countryData.forEach((c,i)=>{
         const div=document.createElement('div');
         div.className='countryItem';
         div.innerHTML=`<span><span class="colorBox" style="background:${c.colorHex}"></span>${c.name}</span>
-        <span>${c.ideology}</span><span>${c.leader}</span>
+        <span>${c.ideology}</span><span>${c.leader}</span><span>${c.population.toLocaleString()}</span>
         <button data-index="${i}">編集</button>`;
         listDiv.appendChild(div);
     });
@@ -122,19 +111,20 @@ document.getElementById('countryList').addEventListener('click',e=>{
         const idx=parseInt(e.target.dataset.index);
         const c=countryData[idx];
         const newName=prompt("国名を変更",c.name);
-        if(newName) c.name=newName;
+        if(newName)c.name=newName;
         const newColor=prompt("色をHEXで変更",c.colorHex);
-        if(newColor) c.colorHex=newColor;
+        if(newColor)c.colorHex=newColor;
         const newIdeology=prompt("主義を変更",c.ideology);
-        if(newIdeology) c.ideology=newIdeology;
+        if(newIdeology)c.ideology=newIdeology;
         const newLeader=prompt("代表を変更",c.leader);
-        if(newLeader) c.leader=newLeader;
-        drawMap();
-        updateCountryList();
+        if(newLeader)c.leader=newLeader;
+        const newPop=parseInt(prompt("国家人口を変更",c.population));
+        if(newPop>=1000000 && newPop<=50000000)c.population=newPop;
+        drawMap(); updateCountryList();
     }
 });
 
-// クリックで塗り
+// 左クリックで塗り
 canvas.addEventListener('click',e=>{
     const rect=canvas.getBoundingClientRect();
     const x=Math.floor((e.clientX-rect.left)/scale);
@@ -144,24 +134,44 @@ canvas.addEventListener('click',e=>{
     const countryName=document.getElementById('countryName').value.trim()||'名前なし';
     const ideology=document.getElementById('ideology').value.trim()||'なし';
     const leader=document.getElementById('leader').value.trim()||'なし';
+    let population=parseInt(document.getElementById('population').value);
+    if(population<1000000) population=1000000;
+    if(population>50000000) population=50000000;
 
-    const pixels=getRegionPixels(x,y);
-    if(pixels.length===0) return;
-
+    const pixels=getRegionPixels(x,y); if(pixels.length===0) return;
     fillRegion(pixels,colorHex);
 
-    // 同じ国名があれば領域追加、なければ新規
-    let country = countryData.find(c=>c.name===countryName);
+    let country=countryData.find(c=>c.name===countryName);
     if(country){
         country.regions.push({pixels:pixels});
         country.colorHex=colorHex;
         country.ideology=ideology;
         country.leader=leader;
+        country.population=population;
     } else {
-        countryData.push({name:countryName,colorHex:colorHex,ideology:ideology,leader:leader,regions:[{pixels:pixels}]});
+        countryData.push({name:countryName,colorHex:colorHex,ideology:ideology,leader:leader,population:population,regions:[{pixels:pixels}]});
     }
-    drawMap();
-    updateCountryList();
+    drawMap(); updateCountryList();
+});
+
+// 右クリックで情報表示
+canvas.addEventListener('contextmenu', e=>{
+    e.preventDefault();
+    const rect=canvas.getBoundingClientRect();
+    const x=Math.floor((e.clientX-rect.left)/scale);
+    const y=Math.floor((e.clientY-rect.top)/scale);
+
+    let found=false;
+    for(const country of countryData){
+        for(const region of country.regions){
+            if(region.pixels.some(p=>p.x===x && p.y===y)){
+                alert(`国名: ${country.name}\n主義: ${country.ideology}\n代表: ${country.leader}\n人口: ${country.population.toLocaleString()}\n色: ${country.colorHex}`);
+                found=true; break;
+            }
+        }
+        if(found) break;
+    }
+    if(!found) alert("ここには国情報はありません");
 });
 
 // ズーム
