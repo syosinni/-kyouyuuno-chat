@@ -2,30 +2,35 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>世界地図シミュレーション完全版</title>
+<title>世界地図シミュレーション 完全版修正版</title>
 <style>
-body { display:flex; flex-direction:column; align-items:center; margin:20px; font-family:sans-serif; }
-canvas { border:1px solid #000; cursor:crosshair; margin-top:10px; }
+body { margin:0; font-family:sans-serif; display:flex; height:100vh; }
+#mapContainer { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:10px; }
+canvas { border:1px solid #000; cursor:crosshair; }
 .controls { margin:10px; }
-#countryList { margin-top:10px; max-height:300px; overflow:auto; border:1px solid #ccc; width:600px; padding:5px;}
-.countryItem { display:flex; justify-content:space-between; padding:2px 5px; cursor:pointer; align-items:center; font-size:14px; }
+#countryList { width:300px; border-left:1px solid #ccc; overflow-y:auto; padding:5px; background:#f9f9f9; }
+.countryItem { border-bottom:1px solid #ccc; padding:5px; font-size:14px; }
+.countryItem button { margin-left:5px; }
 .colorBox { width:20px; height:20px; display:inline-block; margin-right:5px; border:1px solid #000; vertical-align:middle; }
 </style>
 </head>
 <body>
 
-<div class="controls">
-  <label>塗る色: <input type="color" id="colorPicker" value="#ff0000"></label>
-  <label>国名: <input type="text" id="countryName" placeholder="国名"></label>
-  <label>主義: <input type="text" id="ideology" placeholder="主義"></label>
-  <label>代表: <input type="text" id="leader" placeholder="代表"></label>
-  <button id="zoomIn">拡大</button>
-  <button id="zoomOut">縮小</button>
-  <button id="nextMonth">1か月進める</button>
-  <span id="timeDisplay">年:0 月:1</span>
+<div id="mapContainer">
+  <div class="controls">
+    <label>塗る色: <input type="color" id="colorPicker" value="#ff0000"></label>
+    <label>国名: <input type="text" id="countryName" placeholder="国名"></label>
+    <label>主義: <input type="text" id="ideology" placeholder="主義"></label>
+    <label>代表: <input type="text" id="leader" placeholder="代表"></label>
+    <label>税率(0~1): <input type="number" id="taxRate" min="0" max="1" step="0.01" value="0"></label>
+    <button id="zoomIn">拡大</button>
+    <button id="zoomOut">縮小</button>
+    <button id="nextMonth">1か月進める</button>
+    <span id="timeDisplay">年:0 月:1</span>
+  </div>
+  <canvas id="canvas"></canvas>
 </div>
 
-<canvas id="canvas"></canvas>
 <div id="countryList"></div>
 
 <script>
@@ -47,7 +52,7 @@ const resourceList = ["木材","石油","鉄鉱石","金","食料"];
 // HEX→RGBA
 function hexToRGBA(hex){ return {r:parseInt(hex.slice(1,3),16), g:parseInt(hex.slice(3,5),16), b:parseInt(hex.slice(5,7),16), a:255}; }
 
-// Flood Fillで領域ピクセル取得
+// Flood Fill
 function getRegionPixels(x,y){
     const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
     const data=imgData.data;
@@ -67,16 +72,13 @@ function getRegionPixels(x,y){
         if(c[0]===255 && c[1]===255 && c[2]===255){
             pixels.push({x:cx,y:cy});
             visited.add(key(cx,cy));
-            stack.push([cx+1,cy]);
-            stack.push([cx-1,cy]);
-            stack.push([cx,cy+1]);
-            stack.push([cx,cy-1]);
+            stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
         }
     }
     return pixels;
 }
 
-// 領域塗り
+// 塗る
 function fillRegion(pixels,colorHex){
     const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
     const data=imgData.data;
@@ -103,33 +105,44 @@ function updateCountryList(){
         const div=document.createElement('div');
         div.className='countryItem';
         const resStr = Object.entries(c.resources).map(([k,v])=>`${k}:${v}`).join(", ");
-        div.innerHTML=`<span><span class="colorBox" style="background:${c.colorHex}"></span>${c.name}</span>
-        <span>${c.ideology}</span><span>${c.leader}</span>
-        <span>人口:${c.population.toLocaleString()}</span>
-        <span>兵士:${c.soldiers}</span>
-        <span>資源:${resStr}</span>
-        <span>税率:${(c.taxRate*100||0)}%</span>
-        <button data-index="${i}">編集</button>`;
+        div.innerHTML=`
+        <div>
+            <span class="colorBox" style="background:${c.colorHex}"></span>${c.name}<br>
+            主義:${c.ideology} 代表:${c.leader} 人口:${c.population.toLocaleString()} 兵士:${c.soldiers}<br>
+            税率:${(c.taxRate*100).toFixed(1)}% 資源:${resStr}<br>
+            <button data-index="${i}" class="editBtn">編集</button>
+            <button data-index="${i}" class="consBtn">徴兵</button>
+        </div>`;
         listDiv.appendChild(div);
     });
 }
 
 // 編集ボタン
 document.getElementById('countryList').addEventListener('click',e=>{
-    if(e.target.tagName==='BUTTON'){
-        const idx=parseInt(e.target.dataset.index);
+    const idx=parseInt(e.target.dataset.index);
+    if(e.target.classList.contains('editBtn')){
         const c=countryData[idx];
         const newName=prompt("国名を変更",c.name); if(newName)c.name=newName;
         const newColor=prompt("色をHEXで変更",c.colorHex); if(newColor)c.colorHex=newColor;
         const newIdeology=prompt("主義を変更",c.ideology); if(newIdeology)c.ideology=newIdeology;
         const newLeader=prompt("代表を変更",c.leader); if(newLeader)c.leader=newLeader;
         const newPop=parseInt(prompt("人口を変更",c.population)); if(newPop>0)c.population=newPop;
-        const newTax=parseFloat(prompt("税率(0~1)",c.taxRate||0)); if(newTax>=0 && newTax<=1)c.taxRate=newTax;
+        const newTax=parseFloat(prompt("税率(0~1)",c.taxRate||0)); if(!isNaN(newTax)&&newTax>=0 && newTax<=1)c.taxRate=newTax;
         drawMap(); updateCountryList();
+    }
+    if(e.target.classList.contains('consBtn')){
+        const c=countryData[idx];
+        const num=parseInt(prompt("徴兵する人数を入力",Math.floor(c.population*0.1)));
+        if(num>0){
+            const max=Math.floor(c.population*0.1);
+            const actual=Math.min(num,max);
+            c.population-=actual; c.soldiers+=actual;
+            updateCountryList();
+        }
     }
 });
 
-// 左クリックで塗り＋ステート追加＋人口・資源追加
+// 左クリックで塗り＋ステート追加
 canvas.addEventListener('click',e=>{
     const rect=canvas.getBoundingClientRect();
     const x=Math.floor((e.clientX-rect.left)/scale);
@@ -139,24 +152,26 @@ canvas.addEventListener('click',e=>{
     const countryName=document.getElementById('countryName').value.trim()||'名前なし';
     const ideology=document.getElementById('ideology').value.trim()||'なし';
     const leader=document.getElementById('leader').value.trim()||'なし';
+    const taxRate=parseFloat(document.getElementById('taxRate').value)||0;
 
     const pixels=getRegionPixels(x,y); if(pixels.length===0) return;
     fillRegion(pixels,colorHex);
 
     let country=countryData.find(c=>c.name===countryName);
-    const randPop=Math.floor(Math.random()*(50000000-1000000+1))+1000000; // 100万〜5000万
+    const randPop=Math.floor(Math.random()*(50000000-1000000+1))+1000000;
     const newResources = {};
     resourceList.forEach(r=>{ newResources[r]=Math.floor(Math.random()*1000)+100; });
 
     if(country){
         country.regions.push({pixels:pixels});
-        country.population += randPop;
+        country.population+=randPop;
         country.ideology=ideology;
         country.leader=leader;
         country.colorHex=colorHex;
-        country.resources = {...country.resources,...newResources};
+        country.resources={...country.resources,...newResources};
+        country.taxRate=taxRate;
     } else {
-        countryData.push({name:countryName,colorHex:colorHex,ideology:ideology,leader:leader,population:randPop,soldiers:0,regions:[{pixels:pixels}],resources:newResources,taxRate:0});
+        countryData.push({name:countryName,colorHex:colorHex,ideology:ideology,leader:leader,population:randPop,soldiers:0,regions:[{pixels:pixels}],resources:newResources,taxRate:taxRate});
     }
     drawMap(); updateCountryList();
 });
@@ -173,7 +188,7 @@ canvas.addEventListener('contextmenu', e=>{
         for(const region of country.regions){
             if(region.pixels.some(p=>p.x===x && p.y===y)){
                 const resStr = Object.entries(country.resources).map(([k,v])=>`${k}:${v}`).join(", ");
-                alert(`国名: ${country.name}\n主義: ${country.ideology}\n代表: ${country.leader}\n人口: ${country.population.toLocaleString()}\n兵士: ${country.soldiers}\n資源: ${resStr}\n税率: ${(country.taxRate*100||0)}%`);
+                alert(`国名: ${country.name}\n主義: ${country.ideology}\n代表: ${country.leader}\n人口: ${country.population.toLocaleString()}\n兵士: ${country.soldiers}\n税率:${(country.taxRate*100).toFixed(1)}%\n資源:${resStr}`);
                 found=true; break;
             }
         }
@@ -186,34 +201,17 @@ canvas.addEventListener('contextmenu', e=>{
 document.getElementById('zoomIn').addEventListener('click',()=>{scale*=1.2; drawMap();});
 document.getElementById('zoomOut').addEventListener('click',()=>{scale/=1.2; drawMap();});
 
-// 徴兵システム
-function conscript(country, number){
-    const maxConscript=Math.floor(country.population*0.1);
-    const actual=Math.min(number,maxConscript);
-    country.population-=actual;
-    country.soldiers+=actual;
-}
-
-// 1か月進行
-function nextMonth(){
-    month++;
-    if(month>12){ month=1; year++; }
-    countryData.forEach(country=>{
-        // 人口成長: 毎月1%
-        const popGrowth=Math.floor(country.population*0.01);
-        country.population+=popGrowth;
-
-        // 税収計算（税収は資金や通貨として表示していませんがシステムに組込可能）
-        const taxIncome=Math.floor(country.population*1000*country.taxRate);
-        // 資源収入: ランダムで増える
-        resourceList.forEach(r=>{
-            country.resources[r] = (country.resources[r]||0) + Math.floor(Math.random()*100+50);
-        });
+// 時間経過
+document.getElementById('nextMonth').addEventListener('click',()=>{
+    month++; if(month>12){ month=1; year++; }
+    countryData.forEach(c=>{
+        const growth=Math.floor(c.population*0.01); c.population+=growth;
+        // 税収や資源増加（簡易）
+        resourceList.forEach(r=>{ c.resources[r]=(c.resources[r]||0)+Math.floor(Math.random()*100+50); });
     });
     document.getElementById('timeDisplay').textContent=`年:${year} 月:${month}`;
     updateCountryList();
-}
-document.getElementById('nextMonth').addEventListener('click',nextMonth);
+});
 
 </script>
 </body>
