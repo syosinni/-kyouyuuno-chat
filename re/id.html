@@ -2,21 +2,14 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>国家運営シミュレーション 完全版（ドラッグ移動対応）</title>
+<title>国家運営シミュレーション 完全版</title>
 <style>
-body { display:flex; margin:0; font-family:sans-serif; overflow:hidden; }
-#mapArea { 
-    flex:3; border:1px solid #333; position:relative; 
-    overflow:hidden; background:#eee; 
-    touch-action: none; /* タッチドラッグ対応 */
-}
-#map { 
-    position:absolute; width:2000px; height:1000px; 
-    transform-origin: 0 0; cursor:grab; 
-}
-#countryList { flex:1; border-left:2px solid #666; padding:10px; overflow-y:auto; min-width:300px; }
-.country-item { border:1px solid #ccc; margin:5px; padding:5px; border-radius:8px; background:#f9f9f9; }
-.troop { position:absolute; border:2px solid #000; cursor:pointer; }
+html,body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font-family:sans-serif; }
+#mapArea { position:relative; width:100%; height:100%; background:#eee; touch-action:none; }
+#map { position:absolute; width:3000px; height:1500px; transform-origin:0 0; cursor:grab; }
+#countryList { position:absolute; right:0; top:0; width:300px; height:100%; overflow-y:auto; background:#f4f4f4; border-left:2px solid #666; padding:10px; box-sizing:border-box; }
+.country-item { border:1px solid #ccc; margin:5px; padding:5px; border-radius:8px; background:#fff; }
+.troop { position:absolute; border:2px solid #000; cursor:pointer; background:blue; border-radius:2px; }
 #controls { position:absolute; top:10px; left:10px; background:#fff; padding:5px; border-radius:8px; z-index:10; }
 button { margin:2px; padding:6px 12px; font-size:14px; }
 </style>
@@ -34,13 +27,12 @@ button { margin:2px; padding:6px 12px; font-size:14px; }
     <button onclick="requestNewCountry()">＋国申請</button>
   </div>
   <svg id="map" xmlns="http://www.w3.org/2000/svg">
-    <image href="https://kyouyuuno-to.f5.si/img/0001.svg" width="2000" height="1000"/>
+    <image href="https://kyouyuuno-to.f5.si/img/0001.svg" width="3000" height="1500"/>
   </svg>
 </div>
 <div id="countryList"><h3>国家リスト</h3></div>
 
 <script>
-// --- 初期データ ---
 let countryData=[], scale=1, year=2000, month=1;
 let selectedCountry=null, movingTroop=null;
 let troopElements=[];
@@ -53,7 +45,7 @@ function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 function requestNewCountry(){
   const name=prompt("国名を入力してください:"); if(!name) return;
   const ideology=prompt("主義を入力してください:"); 
-  const population=rand(10000,500000); 
+  const population=rand(1000,50000); 
   const currency=name.slice(0,3).toUpperCase()+"$";
   const country={ name, ideology, population, soldiers:0, budget:1000, taxRate:10,
     diplomacy:{}, resources:{}, currency, rate:rand(50,150)/100,
@@ -88,7 +80,7 @@ function updateCountryList(){
 // --- 徴兵 ---
 function recruit(name){
   const c=countryData.find(x=>x.name===name);
-  const num=rand(50,500);
+  const num=rand(10,200);
   if(c.budget>=num*10){ c.budget-=num*10; c.soldiers+=num; alert(`${name} は${num}人徴兵しました`);}
   else alert("予算不足");
   updateCountryList();
@@ -106,9 +98,7 @@ function setTax(name){
 function addTroop(name){ selectedCountry=name; alert("兵士を配置する場所をクリック"); }
 
 // --- 領土申請 ---
-function claimTerritory(name){ 
-  selectedCountry=name; alert("領土を申請する場所をクリック"); 
-}
+function claimTerritory(name){ selectedCountry=name; alert("領土を申請する場所をクリック"); }
 
 // --- マップクリック処理 ---
 const mapArea=document.getElementById('mapArea');
@@ -166,10 +156,9 @@ function drawTroops(){
     c.troops.forEach((t,i)=>{
       const el=document.createElement('div');
       el.className="troop"; 
-      const size=20+Math.sqrt(c.soldiers)/2;
+      const size=20+Math.sqrt(c.soldiers)/5;
       el.style.left=(t.x*scale)+"px"; el.style.top=(t.y*scale)+"px"; 
       el.style.width=size+"px"; el.style.height=size+"px";
-      el.style.background="blue"; el.title=c.name+"軍";
       el.addEventListener('mousedown',()=>{ movingTroop={country:c.name,troopIndex:i}; });
       mapArea.appendChild(el); troopElements.push(el);
     });
