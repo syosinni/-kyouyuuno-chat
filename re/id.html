@@ -181,6 +181,49 @@ document.getElementById('loadFile').addEventListener('change',e=>{
   reader.onload=()=>{ countryData=JSON.parse(reader.result); updateCountryList(); drawTroops(); };
   reader.readAsText(file);
 });
+  function claimTerritory(name){
+  selectedCountry=name;
+  alert("領土を申請する場所をクリック");
+}
+
+// クリック処理内に追加
+mapArea.addEventListener('click', e=>{
+  const rect=mapArea.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/scale;
+  const y=(e.clientY-rect.top)/scale;
+
+  if(selectedCountry){
+    const c=countryData.find(x=>x.name===selectedCountry);
+    const color=prompt("領土の色を入力（例:#ff0000）","#" + Math.floor(Math.random()*16777215).toString(16));
+    const size=50; // 50px四方の領土
+    c.territories.push({x:x-size/2,y:y-size/2,width:size,height:size,color});
+    drawTerritories();
+    selectedCountry=null;
+  }
+});
+
+// 領土描画
+function drawTerritories(){
+  // 既存の領土div削除
+  document.querySelectorAll(".territory").forEach(el=>el.remove());
+  countryData.forEach(c=>{
+    c.territories.forEach(t=>{
+      const el=document.createElement("div");
+      el.className="territory";
+      el.style.position="absolute";
+      el.style.left=(t.x*scale+mapOffsetX)+"px";
+      el.style.top=(t.y*scale+mapOffsetY)+"px";
+      el.style.width=(t.width*scale)+"px";
+      el.style.height=(t.height*scale)+"px";
+      el.style.backgroundColor=t.color;
+      el.style.opacity=0.5;
+      el.style.border="1px solid #000";
+      el.title=c.name;
+      mapArea.appendChild(el);
+    });
+  });
+}
+
 </script>
 </body>
 </html>
