@@ -1,166 +1,76 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>アイビスペイント風ステートバケツ塗り</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      background: #f7f7f7;
-    }
-    #controls {
-      margin: 10px;
-    }
-    #wrapper {
-      position: relative;
-      display: inline-block;
-      overflow: hidden;
-    }
-    img {
-      display: block;
-      user-select: none;
-    }
-    canvas {
-      position: absolute;
-      top: 0;
-      left: 0;
-      cursor: crosshair;
-      z-index: 1;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>SVGバケツ塗り</title>
+<style>
+  canvas { border: 1px solid #000; cursor: crosshair; display: block; margin: 20px auto; }
+</style>
 </head>
 <body>
-  <h1>SVGマップバケツ塗りツール 🪣</h1>
-  <div id="controls">
-    <input type="color" id="colorPicker" value="#42a5f5">
-    <button id="detectColorBtn">クリック色を取得</button>
-    <span id="detectedColor">取得色: #------</span>
-    <br>
-    <button id="zoomInBtn">＋ 拡大</button>
-    <button id="zoomOutBtn">－ 縮小</button>
-  </div>
 
-  <div id="wrapper">
-    <img id="bgImg" src="https://kyouyuuno-to.f5.si/img/0001.svg" alt="Map">
-    <canvas id="paintCanvas"></canvas>
-  </div>
+<canvas id="canvas"></canvas>
 
-  <script>
-    const img = document.getElementById('bgImg');
-    const canvas = document.getElementById('paintCanvas');
-    const ctx = canvas.getContext('2d');
-    const wrapper = document.getElementById('wrapper');
+<script>
+const svgUrl = "https://kyouyuuno-to.f5.si/img/0001.svg";
+const fillColor = {r:255, g:0, b:0, a:255}; // 塗りたい色 RGBA
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-    const colorPicker = document.getElementById('colorPicker');
-    const detectBtn = document.getElementById('detectColorBtn');
-    const detectedColorLabel = document.getElementById('detectedColor');
-    const zoomInBtn = document.getElementById('zoomInBtn');
-    const zoomOutBtn = document.getElementById('zoomOutBtn');
+// SVGを画像に変換して描画
+const img = new Image();
+img.crossOrigin = "anonymous";
+img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+}
+img.src = svgUrl;
 
-    let scale = 1;
-    let detectMode = false;
-    const THRESHOLD = 30;
+// バケツ塗り関数（4方向で広がるFlood Fill）
+function floodFill(x, y) {
+    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const data = imgData.data;
 
-    img.onload = () => {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      wrapper.style.width = img.naturalWidth + 'px';
-      wrapper.style.height = img.naturalHeight + 'px';
-    };
+    const width = canvas.width;
+    const height = canvas.height;
 
-    // ズームボタン
-    zoomInBtn.onclick = () => applyZoom(1.2);
-    zoomOutBtn.onclick = () => applyZoom(0.8);
+    const idx = (x + y*width)*4;
+    const targetColor = [data[idx], data[idx+1], data[idx+2], data[idx+3]];
 
-    function applyZoom(factor) {
-      scale *= factor;
-      wrapper.style.transform = `scale(${scale})`;
+    // すでに塗る色なら終了
+    if(targetColor[0]===fillColor.r && targetColor[1]===fillColor.g && targetColor[2]===fillColor.b) return;
+
+    const stack = [[x,y]];
+    while(stack.length){
+        const [cx,cy] = stack.pop();
+        const i = (cx + cy*width)*4;
+        const c = [data[i], data[i+1], data[i+2], data[i+3]];
+
+        // 白(#ffffff)のみ塗る
+        if(c[0]===255 && c[1]===255 && c[2]===255){
+            data[i] = fillColor.r;
+            data[i+1] = fillColor.g;
+            data[i+2] = fillColor.b;
+            data[i+3] = fillColor.a;
+
+            if(cx>0) stack.push([cx-1,cy]);
+            if(cx<width-1) stack.push([cx+1,cy]);
+            if(cy>0) stack.push([cx,cy-1]);
+            if(cy<height-1) stack.push([cx,cy+1]);
+        }
     }
+    ctx.putImageData(imgData,0,0);
+}
 
-    // カラー吸い取りモード
-    detectBtn.onclick = () => {
-      detectMode = true;
-      canvas.style.cursor = 'pointer';
-    };
+// クリックでバケツ塗り
+canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left)*(canvas.width/rect.width));
+    const y = Math.floor((e.clientY - rect.top)*(canvas.height/rect.height));
+    floodFill(x,y);
+});
+</script>
 
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / scale);
-      const y = Math.floor((e.clientY - rect.top) / scale);
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      if (detectMode) {
-        const pix = ctx.getImageData(x, y, 1, 1).data;
-        const hex = rgbToHex(pix[0], pix[1], pix[2]);
-        detectedColorLabel.textContent = '取得色: ' + hex;
-        detectMode = false;
-        canvas.style.cursor = 'crosshair';
-      } else {
-        const fillColor = hexToRgba(colorPicker.value);
-        floodFill(imgData, x, y, fillColor, THRESHOLD);
-        ctx.putImageData(imgData, 0, 0);
-      }
-    });
-
-    function hexToRgba(hex) {
-      const v = hex.replace('#','');
-      const bi = parseInt(v,16);
-      return [(bi >> 16)&255, (bi >>8)&255, bi&255, 255];
-    }
-
-    function rgbToHex(r,g,b) {
-      return '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
-    }
-
-    function isWhite([r, g, b, a]) {
-      return r > 240 && g > 240 && b > 240;
-    }
-
-    function isBoundary([r, g, b, a]) {
-      // 黒または灰色の境界判定
-      const isBlack = r < 50 && g < 50 && b < 50;
-      const isGray = Math.abs(r - g) < 15 && Math.abs(g - b) < 15 && r > 120 && r < 200;
-      return isBlack || isGray;
-    }
-
-    function colorMatch(a, b, t) {
-      return Math.abs(a[0]-b[0]) <= t &&
-             Math.abs(a[1]-b[1]) <= t &&
-             Math.abs(a[2]-b[2]) <= t;
-    }
-
-    function floodFill(imageData, sx, sy, fillColor, threshold) {
-      const { data, width, height } = imageData;
-      const startIdx = (sy * width + sx) * 4;
-      const baseColor = data.slice(startIdx, startIdx + 4);
-
-      if (!isWhite(baseColor)) return;
-
-      const visited = new Uint8Array(width * height);
-      const stack = [[sx, sy]];
-
-      while (stack.length) {
-        const [x, y] = stack.pop();
-        if (x < 0 || y < 0 || x >= width || y >= height) continue;
-        const idx = y * width + x;
-        if (visited[idx]) continue;
-
-        const pos = idx * 4;
-        const pix = data.slice(pos, pos + 4);
-
-        if (isBoundary(pix)) continue;
-        if (!isWhite(pix)) continue;
-
-        data[pos] = fillColor[0];
-        data[pos + 1] = fillColor[1];
-        data[pos + 2] = fillColor[2];
-        data[pos + 3] = 255;
-        visited[idx] = 1;
-
-        stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
-      }
-    }
-  </script>
 </body>
 </html>
