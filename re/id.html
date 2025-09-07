@@ -2,67 +2,45 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>国家運営マップ</title>
+  <title>SVGクリック判定テスト</title>
   <style>
-    body {
-      background: #222;
-      color: white;
-      font-family: sans-serif;
-      text-align: center;
+    svg {
+      width: 800px;
+      height: auto;
+      border: 1px solid #333;
     }
-    #map-container {
-      width: 95%;
-      margin: auto;
-      border: 2px solid #555;
+    path {
+      cursor: pointer;
+      transition: fill 0.3s;
     }
-    #info {
-      margin-top: 10px;
-      padding: 10px;
-      background: #333;
-      white-space: pre-line;
+    path:hover {
+      opacity: 0.7;
     }
   </style>
 </head>
 <body>
-  <h1>国家運営ゲーム マップ</h1>
-  <div id="map-container">
-    <!-- SVGを読み込み -->
-    <object id="worldmap" type="image/svg+xml" data="https://kyouyuuno-to.f5.si/img/0001.svg"></object>
-  </div>
+  <h1>州クリックテスト</h1>
 
-  <div id="info">領土をクリックしてください。</div>
+  <svg id="map" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+    <!-- 州A -->
+    <path id="state-a" d="M 100 100 L 300 100 L 300 300 L 100 300 Z"
+          fill="#cccccc" stroke="#000000" stroke-width="2"/>
+    <!-- 州B -->
+    <path id="state-b" d="M 310 100 L 500 100 L 500 300 L 310 300 Z"
+          fill="#cccccc" stroke="#000000" stroke-width="2"/>
+  </svg>
 
   <script>
-    document.getElementById("worldmap").addEventListener("load", function() {
-      const svgDoc = this.contentDocument;
-      const paths = svgDoc.querySelectorAll("path");
-
-      // 全てのpathに連番IDを付与（既にidがある場合は上書きしない）
-      paths.forEach((path, index) => {
-        if (!path.id) {
-          path.id = "state" + (index + 1);
+    document.querySelectorAll("path").forEach(el => {
+      el.addEventListener("click", () => {
+        // 今の色を確認してトグル
+        if (el.getAttribute("fill") === "#cccccc") {
+          el.setAttribute("fill", "#ff9999"); // 選択色
+        } else {
+          el.setAttribute("fill", "#cccccc"); // デフォルト色
         }
 
-        // 初期色を設定
-        path.setAttribute("fill", "#ffffff");
-        path.setAttribute("stroke", "#000000");
-        path.setAttribute("stroke-width", "0.5");
-
-        // クリックで領土申請（塗りつぶし＆情報表示）
-        path.addEventListener("click", () => {
-          const id = path.id;
-
-          // 領土を赤色に変更
-          path.setAttribute("fill", "#ff4444");
-
-          // 仮の人口・資源データ（例）
-          const population = Math.floor(Math.random() * 1000000);
-          const resources = ["石油", "鉄", "小麦", "金", "木材"];
-          const resource = resources[Math.floor(Math.random() * resources.length)];
-
-          document.getElementById("info").innerText =
-            `領土ID: ${id}\n人口: ${population}\n資源: ${resource}`;
-        });
+        alert("クリックされた州: " + el.id);
       });
     });
   </script>
