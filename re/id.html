@@ -2,31 +2,23 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>国家運営シミュレーション 完全版（拡張マップ）</title>
+<title>国家運営シミュレーション 完全版（ドラッグ移動対応）</title>
 <style>
 body { display:flex; margin:0; font-family:sans-serif; overflow:hidden; }
 #mapArea { 
-    flex:3; 
-    border:1px solid #333; 
-    position:relative; 
-    overflow:scroll; /* スクロール可能に */
-    min-width:800px; 
-    min-height:600px; 
-    background:#eee;
+    flex:3; border:1px solid #333; position:relative; 
+    overflow:hidden; background:#eee; 
+    touch-action: none; /* タッチドラッグ対応 */
 }
-#map {
-    width:2000px;  /* 大きいSVGサイズ */
-    height:1000px;
-    transform-origin: 0 0; /* 左上基準で拡大縮小 */
+#map { 
+    position:absolute; width:2000px; height:1000px; 
+    transform-origin: 0 0; cursor:grab; 
 }
 #countryList { flex:1; border-left:2px solid #666; padding:10px; overflow-y:auto; min-width:300px; }
 .country-item { border:1px solid #ccc; margin:5px; padding:5px; border-radius:8px; background:#f9f9f9; }
 .troop { position:absolute; border:2px solid #000; cursor:pointer; }
 #controls { position:absolute; top:10px; left:10px; background:#fff; padding:5px; border-radius:8px; z-index:10; }
 button { margin:2px; padding:6px 12px; font-size:14px; }
-.diplomacyLine { position:absolute; height:3px; z-index:0; pointer-events:none; background:green; }
-.tab { margin-top:10px; border-top:1px solid #aaa; padding-top:5px; }
-.tab h4 { margin:2px 0; }
 </style>
 </head>
 <body>
@@ -48,10 +40,10 @@ button { margin:2px; padding:6px 12px; font-size:14px; }
 <div id="countryList"><h3>国家リスト</h3></div>
 
 <script>
-// --- データ初期化 ---
+// --- 初期データ ---
 let countryData=[], scale=1, year=2000, month=1;
 let selectedCountry=null, movingTroop=null;
-let troopElements=[], diplomacyLines=[];
+let troopElements=[];
 const resourceList=["鉄","石油","小麦","木材","金","銀","銅","希少金属","石炭","水"];
 const ministryTemplates=["国防省","経済省","外交省","農業省","科学省","内務省","外務省","財務省","教育省","医療省",
 "防災省","工業省","運輸省","エネルギー省","労働省","情報省","治安省","観光省","環境省","技術省"];
@@ -59,23 +51,20 @@ function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 
 // --- 国家申請 ---
 function requestNewCountry(){
-  const name=prompt("国名を入力してください:");
-  if(!name) return;
-  const ideology=prompt("主義を入力してください:");
-  const population=rand(10000,500000);
+  const name=prompt("国名を入力してください:"); if(!name) return;
+  const ideology=prompt("主義を入力してください:"); 
+  const population=rand(10000,500000); 
   const currency=name.slice(0,3).toUpperCase()+"$";
-  const rate=parseFloat((Math.random()*5).toFixed(2)); 
   const country={ name, ideology, population, soldiers:0, budget:1000, taxRate:10,
-    diplomacy:{}, resources:{}, currency, rate,
-    troops:[], ministries:[], laws:[], parliament:[] };
+    diplomacy:{}, resources:{}, currency, rate:rand(50,150)/100,
+    troops:[], ministries:[], laws:[], parliament:[], territories:[] };
   resourceList.forEach(r=>{ country.resources[r]=rand(50,200); });
   ministryTemplates.forEach(m=>{ country.ministries.push({name:m,effect:1.0,minister:"未任命"}); });
   countryData.push(country);
   updateCountryList();
-  drawDiplomacy();
 }
 
-// --- 国リスト更新 ---
+// --- 国家リスト更新 ---
 function updateCountryList(){
   const div=document.getElementById('countryList');
   div.innerHTML="<h3>国家リスト</h3>";
@@ -91,10 +80,7 @@ function updateCountryList(){
     <button onclick="recruit('${c.name}')">徴兵</button>
     <button onclick="setTax('${c.name}')">税率変更</button>
     <button onclick="addTroop('${c.name}')">兵配置</button>
-    <button onclick="trade('${c.name}')">貿易</button>
-    <button onclick="diplomacy('${c.name}')">外交</button>
-    <button onclick="viewMinistries('${c.name}')">省庁</button>
-    <button onclick="parliament('${c.name}')">議会</button>`;
+    <button onclick="claimTerritory('${c.name}')">領土申請</button>`;
     div.appendChild(d);
   });
 }
@@ -119,16 +105,28 @@ function setTax(name){
 // --- 兵士配置 ---
 function addTroop(name){ selectedCountry=name; alert("兵士を配置する場所をクリック"); }
 
-document.getElementById('map').addEventListener('click',e=>{
-  if(!selectedCountry && !movingTroop) return;
-  const rect=document.getElementById('mapArea').getBoundingClientRect();
-  const x=(e.clientX-rect.left)/scale, y=(e.clientY-rect.top)/scale;
+// --- 領土申請 ---
+function claimTerritory(name){ 
+  selectedCountry=name; alert("領土を申請する場所をクリック"); 
+}
+
+// --- マップクリック処理 ---
+const mapArea=document.getElementById('mapArea');
+mapArea.addEventListener('click', e=>{
+  const rect=mapArea.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/scale;
+  const y=(e.clientY-rect.top)/scale;
 
   if(selectedCountry){
     const c=countryData.find(x=>x.name===selectedCountry);
-    if(c.soldiers<=0){alert("兵士がいません"); return;}
-    const t={x,y,size:20}; c.troops.push(t);
-    drawTroops(); selectedCountry=null; updateCountryList();
+    if(confirm("兵士を配置しますか？")){
+      if(c.soldiers<=0){alert("兵士がいません"); selectedCountry=null; return;}
+      const t={x,y,size:20}; c.troops.push(t); drawTroops(); updateCountryList();
+    } else { 
+      c.territories.push({x,y}); 
+      alert("領土を申請しました"); 
+    }
+    selectedCountry=null;
   } else if(movingTroop){
     const {country,troopIndex}=movingTroop;
     const c=countryData.find(x=>x.name===country);
@@ -137,12 +135,29 @@ document.getElementById('map').addEventListener('click',e=>{
   }
 });
 
-// --- 長押し(タブレット申請) ---
-let touchTimer;
-document.getElementById('map').addEventListener('touchstart',e=>{
-  touchTimer=setTimeout(()=>{ requestNewCountry(); },600);
+// --- ドラッグ移動 ---
+let isDragging=false, dragStartX=0, dragStartY=0, mapOffsetX=0, mapOffsetY=0;
+mapArea.addEventListener('mousedown', e=>{ isDragging=true; dragStartX=e.clientX-mapOffsetX; dragStartY=e.clientY-mapOffsetY; });
+mapArea.addEventListener('mousemove', e=>{ 
+  if(!isDragging) return;
+  mapOffsetX=e.clientX-dragStartX; mapOffsetY=e.clientY-dragStartY;
+  document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`;
+  drawTroops();
 });
-document.getElementById('map').addEventListener('touchend',()=>{ clearTimeout(touchTimer); });
+mapArea.addEventListener('mouseup', ()=>{ isDragging=false; });
+mapArea.addEventListener('mouseleave', ()=>{ isDragging=false; });
+
+// タッチ対応
+mapArea.addEventListener('touchstart', e=>{ 
+  if(e.touches.length===1){ isDragging=true; dragStartX=e.touches[0].clientX-mapOffsetX; dragStartY=e.touches[0].clientY-mapOffsetY; }
+});
+mapArea.addEventListener('touchmove', e=>{ 
+  if(!isDragging || e.touches.length!==1) return;
+  mapOffsetX=e.touches[0].clientX-dragStartX; mapOffsetY=e.touches[0].clientY-dragStartY;
+  document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`;
+  drawTroops();
+});
+mapArea.addEventListener('touchend', ()=>{ isDragging=false; });
 
 // --- 兵士描画 ---
 function drawTroops(){
@@ -150,59 +165,33 @@ function drawTroops(){
   countryData.forEach(c=>{
     c.troops.forEach((t,i)=>{
       const el=document.createElement('div');
-      el.className="troop";
+      el.className="troop"; 
       const size=20+Math.sqrt(c.soldiers)/2;
-      el.style.left=(t.x*scale)+"px"; el.style.top=(t.y*scale)+"px";
+      el.style.left=(t.x*scale)+"px"; el.style.top=(t.y*scale)+"px"; 
       el.style.width=size+"px"; el.style.height=size+"px";
-      el.style.background=c.ideology.includes("戦")?"red":"blue";
-      el.title=c.name+"軍";
+      el.style.background="blue"; el.title=c.name+"軍";
       el.addEventListener('mousedown',()=>{ movingTroop={country:c.name,troopIndex:i}; });
-      document.getElementById('mapArea').appendChild(el);
-      troopElements.push(el);
+      mapArea.appendChild(el); troopElements.push(el);
     });
   });
 }
-    let isDragging=false, dragStartX=0, dragStartY=0, mapOffsetX=0, mapOffsetY=0;
 
-const map=document.getElementById('mapArea');
+// --- ズーム ---
+document.getElementById('zoomIn').addEventListener('click',()=>{ scale*=1.2; document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`; drawTroops(); });
+document.getElementById('zoomOut').addEventListener('click',()=>{ scale/=1.2; document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`; drawTroops(); });
 
-map.addEventListener('mousedown', e=>{
-  isDragging=true;
-  dragStartX=e.clientX - mapOffsetX;
-  dragStartY=e.clientY - mapOffsetY;
+// --- 保存/読み込み ---
+document.getElementById('saveBtn').addEventListener('click',()=>{
+  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(countryData)],{type:'application/json'}));
+  a.download="countries.json"; a.click();
 });
-
-map.addEventListener('mousemove', e=>{
-  if(!isDragging) return;
-  mapOffsetX=e.clientX - dragStartX;
-  mapOffsetY=e.clientY - dragStartY;
-  document.getElementById('map').style.transform=`translate(${mapOffsetX}px, ${mapOffsetY}px) scale(${scale})`;
-  drawTroops(); drawDiplomacy();
+document.getElementById('loadBtn').addEventListener('click',()=>{document.getElementById('loadFile').click();});
+document.getElementById('loadFile').addEventListener('change',e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=()=>{ countryData=JSON.parse(reader.result); updateCountryList(); drawTroops(); };
+  reader.readAsText(file);
 });
-
-map.addEventListener('mouseup', ()=>{ isDragging=false; });
-map.addEventListener('mouseleave', ()=>{ isDragging=false; });
-
-// タッチ対応
-map.addEventListener('touchstart', e=>{
-  if(e.touches.length===1){
-    isDragging=true;
-    dragStartX=e.touches[0].clientX - mapOffsetX;
-    dragStartY=e.touches[0].clientY - mapOffsetY;
-  }
-});
-map.addEventListener('touchmove', e=>{
-  if(!isDragging || e.touches.length!==1) return;
-  mapOffsetX=e.touches[0].clientX - dragStartX;
-  mapOffsetY=e.touches[0].clientY - dragStartY;
-  document.getElementById('map').style.transform=`translate(${mapOffsetX}px, ${mapOffsetY}px) scale(${scale})`;
-  drawTroops(); drawDiplomacy();
-});
-map.addEventListener('touchend', ()=>{ isDragging=false; });
-
-
-// --- 以下、貿易・外交・省庁・議会・時間経過・保存/読み込み・ズームは前回コードと同じ ---
-// ... 省略（前回コードの trade(), diplomacy(), parliament(), save/load, zoom 等をそのまま統合）
 </script>
 </body>
 </html>
