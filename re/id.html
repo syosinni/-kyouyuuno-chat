@@ -162,6 +162,44 @@ function drawTroops(){
     });
   });
 }
+    let isDragging=false, dragStartX=0, dragStartY=0, mapOffsetX=0, mapOffsetY=0;
+
+const map=document.getElementById('mapArea');
+
+map.addEventListener('mousedown', e=>{
+  isDragging=true;
+  dragStartX=e.clientX - mapOffsetX;
+  dragStartY=e.clientY - mapOffsetY;
+});
+
+map.addEventListener('mousemove', e=>{
+  if(!isDragging) return;
+  mapOffsetX=e.clientX - dragStartX;
+  mapOffsetY=e.clientY - dragStartY;
+  document.getElementById('map').style.transform=`translate(${mapOffsetX}px, ${mapOffsetY}px) scale(${scale})`;
+  drawTroops(); drawDiplomacy();
+});
+
+map.addEventListener('mouseup', ()=>{ isDragging=false; });
+map.addEventListener('mouseleave', ()=>{ isDragging=false; });
+
+// タッチ対応
+map.addEventListener('touchstart', e=>{
+  if(e.touches.length===1){
+    isDragging=true;
+    dragStartX=e.touches[0].clientX - mapOffsetX;
+    dragStartY=e.touches[0].clientY - mapOffsetY;
+  }
+});
+map.addEventListener('touchmove', e=>{
+  if(!isDragging || e.touches.length!==1) return;
+  mapOffsetX=e.touches[0].clientX - dragStartX;
+  mapOffsetY=e.touches[0].clientY - dragStartY;
+  document.getElementById('map').style.transform=`translate(${mapOffsetX}px, ${mapOffsetY}px) scale(${scale})`;
+  drawTroops(); drawDiplomacy();
+});
+map.addEventListener('touchend', ()=>{ isDragging=false; });
+
 
 // --- 以下、貿易・外交・省庁・議会・時間経過・保存/読み込み・ズームは前回コードと同じ ---
 // ... 省略（前回コードの trade(), diplomacy(), parliament(), save/load, zoom 等をそのまま統合）
