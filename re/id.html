@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <title>国家運営シミュレーション 完全版</title>
 <style>
-body { display:flex; margin:0; font-family:sans-serif; }
-#mapArea { flex:3; border:1px solid #333; position:relative; overflow:hidden; }
-#countryList { flex:1; border-left:2px solid #666; padding:10px; overflow-y:auto; min-width:280px; }
-.country-item { border:1px solid #ccc; margin:5px; padding:5px; border-radius:8px; }
-.troop { position:absolute; width:20px; height:20px; background:red; border:2px solid #000; }
-#controls { position:absolute; top:10px; left:10px; background:#fff; padding:5px; border-radius:8px; }
+body { display:flex; margin:0; font-family:sans-serif; overflow:hidden; }
+#mapArea { flex:3; border:1px solid #333; position:relative; overflow:hidden; min-width:600px; }
+#countryList { flex:1; border-left:2px solid #666; padding:10px; overflow-y:auto; min-width:300px; }
+.country-item { border:1px solid #ccc; margin:5px; padding:5px; border-radius:8px; background:#f9f9f9; }
+.troop { position:absolute; border:2px solid #000; cursor:pointer; }
+#controls { position:absolute; top:10px; left:10px; background:#fff; padding:5px; border-radius:8px; z-index:10; }
 button { margin:2px; padding:6px 12px; font-size:14px; }
-.diplomacyLine { position:absolute; height:3px; background:rgba(0,0,0,0.5); z-index:0; }
+.diplomacyLine { position:absolute; height:3px; z-index:0; pointer-events:none; }
+.tab { margin-top:10px; border-top:1px solid #aaa; padding-top:5px; }
+.tab h4 { margin:2px 0; }
 </style>
 </head>
 <body>
@@ -24,6 +26,7 @@ button { margin:2px; padding:6px 12px; font-size:14px; }
     <input type="file" id="loadFile" style="display:none"/>
     <button id="loadBtn">📂読み込み</button>
     <div id="timeDisplay">年:2000 月:1</div>
+    <button onclick="requestNewCountry()">＋国申請</button>
   </div>
   <svg id="map" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
     <image href="https://kyouyuuno-to.f5.si/img/0001.svg" width="100%" height="100%"/>
@@ -42,16 +45,16 @@ const ministryTemplates=["国防省","経済省","外交省","農業省","科学
 function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
 
 // --- 国家申請 ---
-function requestNewCountry(target){
+function requestNewCountry(){
   const name=prompt("国名を入力してください:");
   if(!name) return;
   const ideology=prompt("主義を入力してください:");
-  const population=rand(10000,5000000);
+  const population=rand(10000,1000000);
   const currency=name.slice(0,3).toUpperCase()+"$";
   const rate=parseFloat((Math.random()*5).toFixed(2)); 
   const country={ name, ideology, population, soldiers:0, budget:1000, taxRate:10,
     diplomacy:{}, resources:{}, currency, rate,
-    troops:[], ministries:[] };
+    troops:[], ministries:[], laws:[], parliament:[] };
   resourceList.forEach(r=>{ country.resources[r]=rand(50,200); });
   ministryTemplates.forEach(m=>{ country.ministries.push({name:m,effect:1.0,minister:"未任命"}); });
   countryData.push(country);
@@ -77,7 +80,8 @@ function updateCountryList(){
     <button onclick="addTroop('${c.name}')">兵配置</button>
     <button onclick="trade('${c.name}')">貿易</button>
     <button onclick="diplomacy('${c.name}')">外交</button>
-    <button onclick="viewMinistries('${c.name}')">省庁</button>`;
+    <button onclick="viewMinistries('${c.name}')">省庁</button>
+    <button onclick="parliament('${c.name}')">議会</button>`;
     div.appendChild(d);
   });
 }
@@ -85,7 +89,7 @@ function updateCountryList(){
 // --- 徴兵 ---
 function recruit(name){
   const c=countryData.find(x=>x.name===name);
-  const num=rand(100,1000);
+  const num=rand(50,500);
   if(c.budget>=num*10){ c.budget-=num*10; c.soldiers+=num; alert(`${name} は${num}人徴兵しました`);}
   else alert("予算不足");
   updateCountryList();
@@ -115,7 +119,6 @@ document.getElementById('map').addEventListener('click',e=>{
   } else if(movingTroop){
     const {country,troopIndex}=movingTroop;
     const c=countryData.find(x=>x.name===country);
-    // 移動制限: 自国＋同盟＋敵国以外不可
     if(c){ c.troops[troopIndex].x=x; c.troops[troopIndex].y=y; }
     drawTroops(); movingTroop=null;
   }
@@ -124,7 +127,7 @@ document.getElementById('map').addEventListener('click',e=>{
 // --- 長押し(タブレット申請) ---
 let touchTimer;
 document.getElementById('map').addEventListener('touchstart',e=>{
-  touchTimer=setTimeout(()=>{ requestNewCountry(e.target); },600);
+  touchTimer=setTimeout(()=>{ requestNewCountry(); },600);
 });
 document.getElementById('map').addEventListener('touchend',()=>{ clearTimeout(touchTimer); });
 
@@ -135,8 +138,9 @@ function drawTroops(){
     c.troops.forEach((t,i)=>{
       const el=document.createElement('div');
       el.className="troop";
+      const size=20+Math.sqrt(c.soldiers)/2;
       el.style.left=(t.x*scale)+"px"; el.style.top=(t.y*scale)+"px";
-      el.style.width=(20+Math.sqrt(c.soldiers))+"px"; el.style.height=(20+Math.sqrt(c.soldiers))+"px";
+      el.style.width=size+"px"; el.style.height=size+"px";
       el.style.background=c.ideology.includes("戦")?"red":"blue";
       el.title=c.name+"軍";
       el.addEventListener('mousedown',()=>{ movingTroop={country:c.name,troopIndex:i}; });
@@ -167,7 +171,7 @@ function diplomacy(name){
   const c=countryData.find(x=>x.name===name);
   const other=prompt("外交相手国名を入力");
   if(!other||!countryData.find(x=>x.name===other)) return;
-  const rel=prompt("関係を入力: 中立/友好/同盟/敵対/経済同盟/従属");
+  const rel=prompt("関係を入力: 中立/友好/同盟/軍事同盟/経済同盟/従属国/宣戦布告/貿易協定");
   c.diplomacy[other]=rel;
   drawDiplomacy(); updateCountryList();
 }
@@ -199,6 +203,17 @@ function viewMinistries(name){
   alert(txt);
 }
 
+// --- 議会 ---
+function parliament(name){
+  const c=countryData.find(x=>x.name===name);
+  let txt="議会:\n1. 法律制定\n2. 税率変更\n3. 徴兵法\n4. 条約承認\n番号入力で選択";
+  const choice=prompt(txt);
+  if(choice=="1"){ const law=prompt("法律名"); c.laws.push(law); alert("法律制定:"+law);}
+  else if(choice=="2"){ setTax(name);}
+  else if(choice=="3"){ recruit(name);}
+  else if(choice=="4"){ diplomacy(name);}
+}
+
 // --- 時間経過 ---
 document.getElementById('nextMonth').addEventListener('click',()=>{
   month++; if(month>12){month=1;year++;}
@@ -216,9 +231,9 @@ document.getElementById('nextMonth').addEventListener('click',()=>{
 document.getElementById('saveBtn').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify(countryData)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="save.json"; a.click();
+  a.download="countries.json"; a.click();
 });
-document.getElementById('loadBtn').addEventListener('click',()=>{ document.getElementById('loadFile').click(); });
+document.getElementById('loadBtn').addEventListener('click',()=>{document.getElementById('loadFile').click();});
 document.getElementById('loadFile').addEventListener('change',e=>{
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
@@ -227,8 +242,9 @@ document.getElementById('loadFile').addEventListener('change',e=>{
 });
 
 // --- ズーム ---
-document.getElementById('zoomIn').addEventListener('click',()=>{scale*=1.2; drawTroops(); drawDiplomacy();});
-document.getElementById('zoomOut').addEventListener('click',()=>{scale/=1.2; drawTroops(); drawDiplomacy();});
+document.getElementById('zoomIn').addEventListener('click',()=>{ scale*=1.2; document.getElementById('map').style.transform=`scale(${scale})`; drawTroops(); drawDiplomacy(); });
+document.getElementById('zoomOut').addEventListener('click',()=>{ scale/=1.2; document.getElementById('map').style.transform=`scale(${scale})`; drawTroops(); drawDiplomacy(); });
+
 </script>
 </body>
 </html>
