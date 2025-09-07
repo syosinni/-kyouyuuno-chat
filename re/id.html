@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>世界地図シミュレーション 完全版修正版</title>
+<title>世界地図シミュレーション 完全版</title>
 <style>
 body { margin:0; font-family:sans-serif; display:flex; height:100vh; }
-#mapContainer { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding:10px; }
+#mapContainer { flex:1; display:flex; flex-direction:column; align-items:center; padding:10px; }
 canvas { border:1px solid #000; cursor:crosshair; }
-.controls { margin:10px; }
-#countryList { width:300px; border-left:1px solid #ccc; overflow-y:auto; padding:5px; background:#f9f9f9; }
+.controls { margin:10px; display:flex; flex-wrap:wrap; gap:10px; }
+#countryList { width:350px; border-left:1px solid #ccc; overflow-y:auto; padding:5px; background:#f9f9f9; }
 .countryItem { border-bottom:1px solid #ccc; padding:5px; font-size:14px; }
 .countryItem button { margin-left:5px; }
 .colorBox { width:20px; height:20px; display:inline-block; margin-right:5px; border:1px solid #000; vertical-align:middle; }
@@ -22,7 +22,7 @@ canvas { border:1px solid #000; cursor:crosshair; }
     <label>国名: <input type="text" id="countryName" placeholder="国名"></label>
     <label>主義: <input type="text" id="ideology" placeholder="主義"></label>
     <label>代表: <input type="text" id="leader" placeholder="代表"></label>
-    <label>税率(0~1): <input type="number" id="taxRate" min="0" max="1" step="0.01" value="0"></label>
+    <label>税率(0~100%): <input type="number" id="taxRate" min="0" max="100" step="1" value="0"></label>
     <button id="zoomIn">拡大</button>
     <button id="zoomOut">縮小</button>
     <button id="nextMonth">1か月進める</button>
@@ -46,7 +46,6 @@ mapImg.src = svgUrl;
 
 let countryData = [];
 let month=1, year=0;
-
 const resourceList = ["木材","石油","鉄鉱石","金","食料"];
 
 // HEX→RGBA
@@ -61,12 +60,10 @@ function getRegionPixels(x,y){
     const visited=new Set();
     const pixels=[];
     const key=(x,y)=>`${x},${y}`;
-
     while(stack.length){
         const [cx,cy]=stack.pop();
         if(cx<0||cy<0||cx>=width||cy>=canvas.height) continue;
         if(visited.has(key(cx,cy))) continue;
-
         const i=(cx+cy*width)*4;
         const c=[data[i],data[i+1],data[i+2]];
         if(c[0]===255 && c[1]===255 && c[2]===255){
@@ -96,6 +93,15 @@ function drawMap(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(mapImg,0,0);
     countryData.forEach(c=>c.regions.forEach(r=>fillRegion(r.pixels,c.colorHex)));
+    // 兵士表示
+    countryData.forEach(c=>{
+        if(c.troops){
+            c.troops.forEach(t=>{
+                ctx.fillStyle='black';
+                ctx.fillRect(t.x-2,t.y-2,4,4);
+            });
+        }
+    });
 }
 
 // 国リスト更新
@@ -108,30 +114,33 @@ function updateCountryList(){
         div.innerHTML=`
         <div>
             <span class="colorBox" style="background:${c.colorHex}"></span>${c.name}<br>
-            主義:${c.ideology} 代表:${c.leader} 人口:${c.population.toLocaleString()} 兵士:${c.soldiers}<br>
-            税率:${(c.taxRate*100).toFixed(1)}% 資源:${resStr}<br>
+            主義:${c.ideology} 代表:${c.leader}<br>
+            人口:${c.population.toLocaleString()} 兵士:${c.soldiers} 予算:${(c.budget||0).toLocaleString()}<br>
+            税率:${c.taxRate}% 資源:${resStr}<br>
             <button data-index="${i}" class="editBtn">編集</button>
             <button data-index="${i}" class="consBtn">徴兵</button>
+            <button data-index="${i}" class="placeTroopBtn">兵配置</button>
+            <button data-index="${i}" class="tradeBtn">貿易</button>
+            <button data-index="${i}" class="diplomacyBtn">外交</button>
         </div>`;
         listDiv.appendChild(div);
     });
 }
 
-// 編集ボタン
+// 編集、徴兵、兵配置、貿易、外交
 document.getElementById('countryList').addEventListener('click',e=>{
     const idx=parseInt(e.target.dataset.index);
+    const c=countryData[idx];
     if(e.target.classList.contains('editBtn')){
-        const c=countryData[idx];
         const newName=prompt("国名を変更",c.name); if(newName)c.name=newName;
         const newColor=prompt("色をHEXで変更",c.colorHex); if(newColor)c.colorHex=newColor;
         const newIdeology=prompt("主義を変更",c.ideology); if(newIdeology)c.ideology=newIdeology;
         const newLeader=prompt("代表を変更",c.leader); if(newLeader)c.leader=newLeader;
         const newPop=parseInt(prompt("人口を変更",c.population)); if(newPop>0)c.population=newPop;
-        const newTax=parseFloat(prompt("税率(0~1)",c.taxRate||0)); if(!isNaN(newTax)&&newTax>=0 && newTax<=1)c.taxRate=newTax;
+        const newTax=parseInt(prompt("税率(0~100%)",c.taxRate||0)); if(!isNaN(newTax)&&newTax>=0 && newTax<=100)c.taxRate=newTax;
         drawMap(); updateCountryList();
     }
     if(e.target.classList.contains('consBtn')){
-        const c=countryData[idx];
         const num=parseInt(prompt("徴兵する人数を入力",Math.floor(c.population*0.1)));
         if(num>0){
             const max=Math.floor(c.population*0.1);
@@ -139,6 +148,36 @@ document.getElementById('countryList').addEventListener('click',e=>{
             c.population-=actual; c.soldiers+=actual;
             updateCountryList();
         }
+    }
+    if(e.target.classList.contains('placeTroopBtn')){
+        const num=parseInt(prompt("配置する兵士数を入力",Math.min(c.soldiers,1)));
+        if(!c.troops)c.troops=[];
+        for(let i=0;i<num;i++){
+            const x=parseInt(prompt("配置X座標",canvas.width/2));
+            const y=parseInt(prompt("配置Y座標",canvas.height/2));
+            c.troops.push({x:x,y:y});
+        }
+        drawMap(); updateCountryList();
+    }
+    if(e.target.classList.contains('tradeBtn')){
+        const targetName=prompt("貿易相手国名を入力"); 
+        const target=countryData.find(t=>t.name===targetName);
+        if(!target){ alert("存在しません"); return;}
+        const resName=prompt("資源名を入力");
+        if(!c.resources[resName]||c.resources[resName]<=0){alert("資源不足"); return;}
+        const amount=parseInt(prompt("数量を入力",1));
+        const price=amount*10;
+        if(c.resources[resName]<amount){ alert("資源不足"); return;}
+        c.resources[resName]-=amount; c.budget=(c.budget||0)+price;
+        target.resources[resName]=(target.resources[resName]||0)+amount;
+        target.budget=(target.budget||0)-price;
+        updateCountryList();
+        alert(`取引成功: ${amount} ${resName} を ${target.name}に販売`);
+    }
+    if(e.target.classList.contains('diplomacyBtn')){
+        const status=prompt("外交関係を設定（友好/敵対）","友好");
+        c.diplomacy=status;
+        updateCountryList();
     }
 });
 
@@ -152,7 +191,7 @@ canvas.addEventListener('click',e=>{
     const countryName=document.getElementById('countryName').value.trim()||'名前なし';
     const ideology=document.getElementById('ideology').value.trim()||'なし';
     const leader=document.getElementById('leader').value.trim()||'なし';
-    const taxRate=parseFloat(document.getElementById('taxRate').value)||0;
+    const taxRate=parseInt(document.getElementById('taxRate').value)||0;
 
     const pixels=getRegionPixels(x,y); if(pixels.length===0) return;
     fillRegion(pixels,colorHex);
@@ -171,7 +210,11 @@ canvas.addEventListener('click',e=>{
         country.resources={...country.resources,...newResources};
         country.taxRate=taxRate;
     } else {
-        countryData.push({name:countryName,colorHex:colorHex,ideology:ideology,leader:leader,population:randPop,soldiers:0,regions:[{pixels:pixels}],resources:newResources,taxRate:taxRate});
+        countryData.push({
+            name:countryName,colorHex:colorHex,ideology:ideology,leader:leader,
+            population:randPop,soldiers:0,regions:[{pixels:pixels}],
+            resources:newResources,taxRate:taxRate,budget:0,troops:[]
+        });
     }
     drawMap(); updateCountryList();
 });
@@ -182,13 +225,13 @@ canvas.addEventListener('contextmenu', e=>{
     const rect=canvas.getBoundingClientRect();
     const x=Math.floor((e.clientX-rect.left)/scale);
     const y=Math.floor((e.clientY-rect.top)/scale);
-
     let found=false;
     for(const country of countryData){
         for(const region of country.regions){
             if(region.pixels.some(p=>p.x===x && p.y===y)){
                 const resStr = Object.entries(country.resources).map(([k,v])=>`${k}:${v}`).join(", ");
-                alert(`国名: ${country.name}\n主義: ${country.ideology}\n代表: ${country.leader}\n人口: ${country.population.toLocaleString()}\n兵士: ${country.soldiers}\n税率:${(country.taxRate*100).toFixed(1)}%\n資源:${resStr}`);
+                const troopCount=country.troops?country.troops.length:0;
+                alert(`国名: ${country.name}\n主義: ${country.ideology}\n代表: ${country.leader}\n人口: ${country.population.toLocaleString()}\n兵士:${country.soldiers} 配置済み:${troopCount}\n予算:${(country.budget||0).toLocaleString()}\n税率:${country.taxRate}%\n外交:${country.diplomacy||'なし'}\n資源:${resStr}`);
                 found=true; break;
             }
         }
@@ -206,13 +249,13 @@ document.getElementById('nextMonth').addEventListener('click',()=>{
     month++; if(month>12){ month=1; year++; }
     countryData.forEach(c=>{
         const growth=Math.floor(c.population*0.01); c.population+=growth;
-        // 税収や資源増加（簡易）
+        const taxIncome=Math.floor(c.population*c.taxRate/100);
+        c.budget=(c.budget||0)+taxIncome;
         resourceList.forEach(r=>{ c.resources[r]=(c.resources[r]||0)+Math.floor(Math.random()*100+50); });
     });
     document.getElementById('timeDisplay').textContent=`年:${year} 月:${month}`;
     updateCountryList();
 });
-
 </script>
 </body>
 </html>
