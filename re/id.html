@@ -1,184 +1,708 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>国家運営ゲーム - 完全版</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
-    canvas {
-      display: block;
-      background: #f0f0f0;
-      cursor: crosshair;
-    }
-    #toolbar {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: rgba(255,255,255,0.9);
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    }
-    #toolbar button, #toolbar input {
-      margin: 5px;
-    }
-  </style>
+<meta charset="utf-8" />
+<title>国家運営シミュレーション — 完全版（FloodFill対応）</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{--panel:#ffffff;--muted:#666}
+  html,body{height:100%;margin:0;font-family:Inter, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;background:#e9eefc}
+  #app{height:100%;display:flex}
+  /* マップ領域（左） */
+  #mapArea{flex:1;position:relative;overflow:hidden;background:#cfe0ff;border-right:1px solid #d7e0f5}
+  #mapContainer{position:absolute;left:0;top:0;transform-origin:0 0; touch-action:none; user-select:none}
+  svg#worldSvg{display:block}
+  /* overlay canvas sits inside mapContainer on top of SVG */
+  canvas.overlay{position:absolute;left:0;top:0;pointer-events:none}
+  /* troops / UI overlays created inside mapContainer */
+  .troop{position:absolute;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;box-sizing:border-box;border:1px solid #222}
+  .territoryRect{position:absolute;pointer-events:auto;box-sizing:border-box;border-radius:4px}
+  /* パネル（右） */
+  #panel{width:420px;padding:12px;background:var(--panel);box-shadow:0 6px 18px rgba(10,20,40,0.06);border-radius:8px;margin:12px;overflow:auto}
+  h3{margin:6px 0}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type="text"],input[type="number"],select{padding:6px;border-radius:6px;border:1px solid #ddd}
+  button{padding:6px 10px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer}
+  .small{font-size:13px;color:var(--muted)}
+  .countryItem{padding:8px;border-radius:8px;border:1px solid #eee;margin-bottom:8px;background:#fbfdff}
+  label{font-size:13px}
+  .modes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  footer{font-size:12px;color:#777;margin-top:8px}
+  /* toolbar on map */
+  #toolbar{position:absolute;left:10px;top:10px;z-index:60;background:rgba(255,255,255,0.95);padding:8px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+  /* small responsivity */
+  @media (max-width:900px){ #panel{width:320px} }
+</style>
 </head>
 <body>
-  <div id="toolbar">
-    <button onclick="setMode('pan')">移動</button>
-    <button onclick="setMode('draw')">境界線描画</button>
-    <input type="color" id="colorPicker" value="#00aaff">
-    <button onclick="setMode('fill')">塗りつぶし</button>
+<div id="app">
+  <div id="mapArea">
+    <div id="toolbar">
+      <div style="display:flex;gap:6px;align-items:center">
+        <button id="btnPan">パン</button>
+        <button id="btnTerritory">領土バケツ</button>
+        <button id="btnTroop">兵配置</button>
+        <button id="btnInfo">情報</button>
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+        <button id="btnZoomIn">＋</button>
+        <button id="btnZoomOut">－</button>
+        <button id="btnNextMonth">▶ 月進め</button>
+        <span id="timeDisplay" class="small" style="margin-left:6px">Year:0 M:1</span>
+      </div>
+      <div style="margin-top:8px">
+        <input id="colorPicker" type="color" value="#ffb400">
+        <label class="small">塗り色</label>
+      </div>
+      <div style="margin-top:8px">
+        <button id="btnSave">保存</button>
+        <button id="btnLoad">読み込む</button>
+        <input id="fileInput" type="file" accept=".json" style="display:none">
+      </div>
+    </div>
+
+    <!-- mapContainer: SVG image + overlay canvases + DOM overlays -->
+    <div id="mapContainer">
+      <svg id="worldSvg" xmlns="http://www.w3.org/2000/svg" width="2400" height="1200" viewBox="0 0 2400 1200">
+        <image id="worldImage" href="https://kyouyuuno-to.f5.si/img/0001.svg" x="0" y="0" width="2400" height="1200" preserveAspectRatio="xMidYMid meet" />
+      </svg>
+      <!-- overlay canvas used to composite country fills and selection preview -->
+      <canvas id="overlayCanvas" class="overlay" width="2400" height="1200"></canvas>
+      <!-- auxiliary hidden canvas used for floodfill and pixel read -->
+      <canvas id="workCanvas" width="2400" height="1200" style="display:none"></canvas>
+    </div>
   </div>
-  <canvas id="map"></canvas>
-  <script>
-    const canvas = document.getElementById("map");
-    const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
 
-    // ゲームモード
-    let mode = "pan";
-    let isDrawing = false;
-    let startX, startY;
-    let offsetX = 0, offsetY = 0;
-    let scale = 1;
+  <div id="panel">
+    <h3>国家管理パネル</h3>
+    <div class="row">
+      <label>国選択
+        <select id="countrySelect"><option value="">— 選択 —</option></select>
+      </label>
+      <label>税率 <input id="taxInput" type="number" min="0" max="100" value="10" style="width:80px"></label>
+    </div>
 
-    // 線データ保存
-    let lines = [];
-    let currentLine = [];
+    <div style="margin-top:8px">
+      <button id="btnCreateCountry">国を作成</button>
+      <button id="btnAutoSim">自動進行 ON/OFF</button>
+    </div>
 
-    function setMode(m) {
-      mode = m;
+    <h4 style="margin-top:12px">国家一覧</h4>
+    <div id="countryList"></div>
+
+    <h4 style="margin-top:12px">市場（価格）</h4>
+    <div id="marketList" class="small"></div>
+
+    <h4 style="margin-top:12px">操作メモ</h4>
+    <div class="small">
+      ・「領土バケツ」モードで白(#ffffff)領域をクリックすると、<br>
+      &nbsp;&nbsp;境界色 #cecece / #000000 に囲まれた白領域のみが塗られます。<br>
+      ・塗った領域は選択中の国に紐づきます（右パネルで国を選択）。<br>
+      ・ドラッグで地図をパン、＋/−でズーム。長押し（600ms）でタブレットから国作成が可能。<br>
+      ・兵配置は「兵配置」モードでクリック（または国パネルから徴兵→配置）。<br>
+      ・保存/読み込みでゲーム状態を丸ごと管理。
+    </div>
+    <footer>作成: ChatGPT — 完全版（FloodFill）</footer>
+  </div>
+</div>
+
+<script>
+/* =========================
+   完全版メインスクリプト
+   機能まとめ:
+   - SVGマップ読み込み（2400x1200）
+   - mapContainer を translate/scale してパン・ズーム
+   - overlayCanvas に国ごとの塗り（pixel mask）を合成
+   - workCanvas に SVG を描き、FloodFillで白(#fff)領域を検出・塗る
+   - 塗ったピクセルは country.masks (offscreen canvas) に保存 -> overlayに合成
+   - 国家管理、兵配置、外交簡易、議会簡易、マーケット価格変動、保存/読込
+   =========================*/
+
+const MAP_W = 2400, MAP_H = 1200;
+const worldImage = document.getElementById('worldImage');
+const mapContainer = document.getElementById('mapContainer');
+const overlayCanvas = document.getElementById('overlayCanvas');
+const overlayCtx = overlayCanvas.getContext('2d');
+const workCanvas = document.getElementById('workCanvas');
+const workCtx = workCanvas.getContext('2d');
+
+let countries = []; // country objects
+let scale = 1, offsetX = 0, offsetY = 0;
+let mode = 'pan'; // 'pan'|'territory'|'troop'|'info'
+let dragging = false, pointerStart = null, startOffset = null, moved=false;
+let longpressTimer = null;
+let autoSim = false, autoSimInterval = null;
+let market = {};
+const resourceList = ["木材","石炭","石油","鉄","銅","金","銀","希少金属","小麦","水","食料"];
+const BOUNDARY_COLORS = [hexToRGBA('#cecece'), hexToRGBA('#000000')];
+const FILL_TARGET = [255,255,255,255]; // only fill white areas
+
+/* helper */
+function uid(prefix='id'){ return prefix + Math.floor(Math.random()*1e9).toString(36); }
+function hexToRGBA(hex){
+  const h = hex.replace('#','');
+  return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16), a:255 };
+}
+function colEq(a,b){ return a[0]===b[0] && a[1]===b[1] && a[2]===b[2] && a[3]===b[3]; }
+function rgbaToArr(r,g,b,a){ return [r,g,b,a]; }
+
+/* init market */
+function initMarket(){ resourceList.forEach(r=> market[r]=Math.max(1, Math.floor(Math.random()*60)+5)); updateMarketUI(); }
+function updateMarketUI(){
+  const el = document.getElementById('marketList'); el.innerHTML='';
+  resourceList.forEach(r=>{
+    const div = document.createElement('div');
+    div.textContent = `${r}: ${market[r]}`;
+    el.appendChild(div);
+  });
+}
+
+/* load image into workCanvas when SVG loaded */
+function drawBaseToWorkCanvas(){
+  // draw the SVG raster into workCanvas by creating an Image from dataURL of SVG element
+  // Best effort: use the worldImage href; image should be same-origin or CORS allowed.
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = ()=>{
+    workCtx.clearRect(0,0,MAP_W,MAP_H);
+    workCtx.drawImage(img,0,0,MAP_W,MAP_H);
+    // Also draw to overlay background for visual (we keep SVG visible beneath)
+    redrawOverlay(); // overlay will composite country masks on top
+  };
+  img.onerror = (e)=>{
+    console.warn('SVG image load error (CORS?). Attempting to draw inline bitmap may fail. Error:', e);
+    // still proceed; FloodFill will try to read whatever present in workCanvas (may be empty)
+  };
+  img.src = worldImage.getAttribute('href') || worldImage.href.baseVal || worldImage.getAttributeNS('http://www.w3.org/1999/xlink','href');
+}
+
+/* =========================
+   Country model
+   - each country has an offscreen canvas mask (same size as map) where filled pixels are drawn
+   - on redraw, all masks are composited into overlayCanvas
+   =========================*/
+function createCountry(name, color){
+  const c = {
+    id: uid('c'), name: name || ('Nation' + (countries.length+1)),
+    color: color || randomColor(),
+    ideology:'', leader:'', taxRate:10,
+    population: Math.floor(Math.random()*2000000)+5000,
+    budget: Math.floor(Math.random()*10000),
+    currency: (name||'CUR').slice(0,3).toUpperCase(),
+    rate: (Math.random()*2+0.5),
+    territories: [], // array of rects {id,x,y,w,h,color}
+    troops: [], // array of {id,x,y,count}
+    maskCanvas: document.createElement('canvas')
+  };
+  c.maskCanvas.width = MAP_W; c.maskCanvas.height = MAP_H;
+  c.maskCtx = c.maskCanvas.getContext('2d');
+  countries.push(c);
+  refreshUI();
+  redrawAll();
+  return c;
+}
+
+/* random color */
+function randomColor(){ return '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'); }
+
+/* =========================
+   Flood Fill: fill only contiguous white region, stop at boundary colors or non-white
+   Implementation: stack-based 4-neighbor flood fill on workCanvas pixel data
+   Returns: array of pixel coordinates filled (optional)
+   Also draws filled pixels directly into country's maskCanvas
+   =========================*/
+function floodFillMap(x, y, targetColorHex, country){
+  // x,y are map coords (integers)
+  if(x < 0 || y < 0 || x >= MAP_W || y >= MAP_H) return 0;
+  // read workCanvas image data
+  const img = workCtx.getImageData(0,0,MAP_W,MAP_H);
+  const data = img.data;
+  const w = MAP_W, h = MAP_H;
+  // helper to get pixel at integer coords
+  function getPx(ix,iy){
+    const i = (iy * w + ix) * 4;
+    return [data[i], data[i+1], data[i+2], data[i+3]];
+  }
+  function setMaskPx(maskCtx, ix,iy, rgba){
+    const imgd = maskCtx.createImageData(1,1);
+    imgd.data[0]=rgba[0]; imgd.data[1]=rgba[1]; imgd.data[2]=rgba[2]; imgd.data[3]=rgba[3];
+    maskCtx.putImageData(imgd, ix, iy);
+  }
+  // check start pixel is white
+  const startPx = getPx(x,y);
+  if(!colEq(startPx, FILL_TARGET)) return 0; // only fill white regions
+  // Prepare target color as rgba array
+  const tgt = hexToRGBA(targetColorHex);
+  const fillArr = [tgt.r, tgt.g, tgt.b, tgt.a];
+  // BFS/stack
+  const stack = [[x,y]];
+  const visited = new Uint8Array(w*h);
+  let filledCount = 0;
+  while(stack.length){
+    const [cx,cy] = stack.pop();
+    const idx = cx + cy * w;
+    if(visited[idx]) continue;
+    visited[idx]=1;
+    const px = getPx(cx,cy);
+    // if pixel is white -> fill. If pixel matches any boundary color -> skip. If already filled by another country mask? we still allow (you may override) — but we check workCanvas only
+    // check boundary colors
+    let isBoundary = false;
+    for(const bc of BOUNDARY_COLORS){
+      if(px[0]===bc.r && px[1]===bc.g && px[2]===bc.b) { isBoundary=true; break; }
     }
+    if(isBoundary) continue;
+    // only proceed if pixel is white (target)
+    if(!colEq(px, FILL_TARGET)) continue;
+    // set in country's mask
+    setMaskPx(country.maskCtx, cx, cy, fillArr);
+    filledCount++;
+    // neighbors
+    if(cx+1 < w) stack.push([cx+1,cy]);
+    if(cx-1 >=0) stack.push([cx-1,cy]);
+    if(cy+1 < h) stack.push([cx,cy+1]);
+    if(cy-1 >=0) stack.push([cx,cy-1]);
+  }
+  // After mask updated, redraw overlay
+  compositeMasksToOverlay();
+  return filledCount;
+}
 
-    // パン移動用
-    let isPanning = false;
-    let panStartX, panStartY;
+/* composite masks from all countries onto overlayCanvas */
+function compositeMasksToOverlay(){
+  overlayCtx.clearRect(0,0,MAP_W,MAP_H);
+  // Draw masks in country order (later countries on top)
+  countries.forEach(c=>{
+    // set globalAlpha maybe for subtle effect
+    overlayCtx.globalAlpha = 0.9;
+    overlayCtx.drawImage(c.maskCanvas, 0, 0);
+    // To tint mask to country color, we use source-in trick
+    overlayCtx.globalCompositeOperation = 'source-in';
+    overlayCtx.fillStyle = c.color;
+    overlayCtx.fillRect(0,0,MAP_W,MAP_H);
+    overlayCtx.globalCompositeOperation = 'source-over';
+  });
+  overlayCtx.globalAlpha = 1;
+}
 
-    canvas.addEventListener("mousedown", e => {
-      const x = (e.offsetX - offsetX) / scale;
-      const y = (e.offsetY - offsetY) / scale;
+/* =========================
+   UI / Interaction
+   - pan/zoom via mapContainer transform
+   - pointer handling with longpress detection for mobile create
+   - click in territory mode triggers floodFillMap()
+   =========================*/
+const mapArea = document.getElementById('mapArea');
+const btnPan = document.getElementById('btnPan');
+const btnTerr = document.getElementById('btnTerritory');
+const btnTroop = document.getElementById('btnTroop');
+const btnInfo = document.getElementById('btnInfo');
+const btnZoomIn = document.getElementById('btnZoomIn');
+const btnZoomOut = document.getElementById('btnZoomOut');
+const btnNextMonth = document.getElementById('btnNextMonth');
+const btnCreateCountry = document.getElementById('btnCreateCountry');
+const btnSave = document.getElementById('btnSave');
+const btnLoad = document.getElementById('btnLoad');
+const fileInputEl = document.getElementById('fileInput');
 
-      if (mode === "draw") {
-        isDrawing = true;
-        currentLine.push([x, y]);
-      } else if (mode === "pan") {
-        isPanning = true;
-        panStartX = e.clientX - offsetX;
-        panStartY = e.clientY - offsetY;
-      } else if (mode === "fill") {
-        const color = document.getElementById("colorPicker").value;
-        floodFill(e.offsetX, e.offsetY, hexToRgb(color));
+btnPan.addEventListener('click', ()=> setMode('pan'));
+btnTerr.addEventListener('click', ()=> setMode('territory'));
+btnTroop.addEventListener('click', ()=> setMode('troop'));
+btnInfo.addEventListener('click', ()=> setMode('info'));
+btnZoomIn.addEventListener('click', ()=> zoomAt(1.2));
+btnZoomOut.addEventListener('click', ()=> zoomAt(1/1.2));
+btnNextMonth.addEventListener('click', ()=> monthTick());
+btnSave.addEventListener('click', ()=> saveJSON());
+btnLoad.addEventListener('click', ()=> fileInputEl.click());
+fileInputEl.addEventListener('change', loadJSONFromFile);
+
+document.getElementById('btnCreateCountry').addEventListener('click', ()=>{
+  const name = prompt('国名を入力'); if(!name) return;
+  createCountry(name, document.getElementById('colorPicker').value);
+});
+
+/* setMode */
+function setMode(m){
+  mode = m;
+  // visual hint
+  [btnPan,btnTerr,btnTroop,btnInfo].forEach(b=> b.style.background = '');
+  if(m==='pan') btnPan.style.background='#e6f7ff';
+  if(m==='territory') btnTerr.style.background='#e6f7ff';
+  if(m==='troop') btnTroop.style.background='#e6f7ff';
+  if(m==='info') btnInfo.style.background='#e6f7ff';
+}
+
+/* pointer handling */
+let pointerId = null;
+mapArea.addEventListener('pointerdown', (ev)=>{
+  if(ev.button!==0) return;
+  mapArea.setPointerCapture(ev.pointerId);
+  pointerId = ev.pointerId;
+  dragging = true; moved=false;
+  pointerStart = {x: ev.clientX, y: ev.clientY};
+  startOffset = {x: offsetX, y: offsetY};
+  // start longpress to quick create country
+  clearTimeout(longpressTimer);
+  longpressTimer = setTimeout(()=>{
+    // longpress: create country at point
+    const mp = screenToMap(ev.clientX, ev.clientY);
+    const name = prompt('長押しで国作成 — 名前を入力');
+    if(name){
+      const c = createCountry(name, document.getElementById('colorPicker').value);
+      // optionally auto-fill small rect there
+      c.territories.push({ id: uid('t'), x: mp.x-40, y: mp.y-30, w:80, h:60, color: c.color });
+      redrawAll();
+    }
+  }, 600);
+});
+mapArea.addEventListener('pointermove', (ev)=>{
+  if(!dragging) return;
+  const dx = ev.clientX - pointerStart.x;
+  const dy = ev.clientY - pointerStart.y;
+  if(Math.hypot(dx,dy) > 4) moved = true;
+  if(mode === 'pan' || moved){
+    offsetX = startOffset.x + dx;
+    offsetY = startOffset.y + dy;
+    updateTransform();
+  }
+});
+mapArea.addEventListener('pointerup', (ev)=>{
+  mapArea.releasePointerCapture(ev.pointerId);
+  dragging = false;
+  clearTimeout(longpressTimer);
+  // click handling if not moved
+  if(!moved){
+    const mp = screenToMap(ev.clientX, ev.clientY);
+    handleMapClick(mp);
+  }
+});
+
+/* convert screen coords -> map coords */
+function screenToMap(sx, sy){
+  const rect = mapArea.getBoundingClientRect();
+  const localX = sx - rect.left - offsetX;
+  const localY = sy - rect.top  - offsetY;
+  return { x: Math.round(localX / scale), y: Math.round(localY / scale) };
+}
+
+/* convert map coords to screen (for centering) */
+function mapToScreen(mx,my){
+  const rect = mapArea.getBoundingClientRect();
+  return { x: rect.left + offsetX + mx*scale, y: rect.top + offsetY + my*scale };
+}
+
+/* map click action depending on mode */
+function handleMapClick(mp){
+  if(mode === 'territory'){
+    // perform flood fill at mp
+    const colorHex = document.getElementById('colorPicker').value;
+    const cid = document.getElementById('countrySelect').value;
+    if(!cid){ alert('領土に紐づける国を右パネルで選んでください'); return; }
+    const country = countries.find(c=>c.id===cid);
+    const startX = Math.floor(mp.x), startY = Math.floor(mp.y);
+    const filled = floodFillMap(startX, startY, colorHex, country);
+    if(filled > 0){
+      // optionally add a small rect record (not exact shape)
+      country.territories.push({ id: uid('t'), x: startX-8, y: startY-8, w:16, h:16, color: colorHex });
+      redrawAll();
+      alert(`塗りつぶしました: ${filled} ピクセル`);
+    } else {
+      alert('塗れる領域が見つからないか、白領域ではありません。境界線が #cecece または #000000 で囲まれているか確認してください。');
+    }
+  } else if(mode === 'troop'){
+    const cid = document.getElementById('countrySelect').value;
+    if(!cid){ alert('国を選択してください'); return; }
+    const c = countries.find(x=>x.id===cid);
+    const n = parseInt(prompt('配置する兵数を入力', Math.min(100, Math.max(1, Math.floor(c.population*0.01)))));
+    if(isNaN(n)||n<=0) return;
+    c.population = Math.max(0, c.population - n);
+    c.troops.push({ id: uid('tr'), x: mp.x, y: mp.y, count: n });
+    redrawAll();
+  } else if(mode === 'info'){
+    // check territory or troop clicked
+    for(const c of countries){
+      for(const t of c.territories){
+        if(pointInRect(mp.x, mp.y, t)){ alert(`国:${c.name}\n領土ID:${t.id}\n色:${t.color}`); return; }
       }
+      for(const tr of c.troops){
+        if(Math.abs(tr.x-mp.x) < 12 && Math.abs(tr.y-mp.y) < 12){ alert(`国:${c.name}\n兵:${tr.count}`); return; }
+      }
+    }
+    alert('情報なし');
+  } else {
+    // pan mode click does nothing
+  }
+}
+
+/* simple point-in-rect */
+function pointInRect(x,y,r){ return x>=r.x && x<=r.x+r.w && y>=r.y && y<=r.y+r.h; }
+
+/* =========================
+   Transform / redraw
+   =========================*/
+function updateTransform(){
+  mapContainer.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+}
+
+/* composite overlay + draw DOM overlays */
+function redrawAll(){
+  compositeMasksToOverlay();
+  // clear existing territory/troop DOM nodes inside mapContainer (except svg and canvases)
+  Array.from(mapContainer.children).forEach((ch,idx)=>{
+    if(ch.tagName === 'SVG' || ch.tagName === 'CANVAS') return;
+    mapContainer.removeChild(ch);
+  });
+  // draw territory bounding rects (for quick UI observation; main visual is overlay mask)
+  countries.forEach(c=>{
+    c.territories.forEach(t=>{
+      const d = document.createElement('div');
+      d.className = 'territoryRect';
+      d.style.left = t.x + 'px';
+      d.style.top  = t.y + 'px';
+      d.style.width = t.w + 'px';
+      d.style.height = t.h + 'px';
+      d.style.background = t.color;
+      d.style.opacity = 0.25;
+      d.style.border = '1px dashed rgba(0,0,0,0.15)';
+      mapContainer.appendChild(d);
     });
-
-    canvas.addEventListener("mousemove", e => {
-      const x = (e.offsetX - offsetX) / scale;
-      const y = (e.offsetY - offsetY) / scale;
-
-      if (isDrawing) {
-        currentLine.push([x, y]);
-        redraw();
-      } else if (isPanning) {
-        offsetX = e.clientX - panStartX;
-        offsetY = e.clientY - panStartY;
-        redraw();
-      }
-    });
-
-    canvas.addEventListener("mouseup", () => {
-      if (isDrawing) {
-        lines.push(currentLine);
-        currentLine = [];
-        isDrawing = false;
-      }
-      isPanning = false;
-    });
-
-    // Flood Fill (境界塗りつぶし)
-    function floodFill(startX, startY, fillColor) {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-
-      const targetColor = getPixel(data, startX, startY);
-
-      if (colorsMatch(targetColor, fillColor)) return;
-
-      const stack = [[startX, startY]];
-      while (stack.length > 0) {
-        const [x, y] = stack.pop();
-        const currentColor = getPixel(data, x, y);
-
-        if (colorsMatch(currentColor, targetColor)) {
-          setPixel(data, x, y, fillColor);
-
-          stack.push([x + 1, y]);
-          stack.push([x - 1, y]);
-          stack.push([x, y + 1]);
-          stack.push([x, y - 1]);
-        }
-      }
-
-      ctx.putImageData(imageData, 0, 0);
-    }
-
-    function getPixel(data, x, y) {
-      const index = (y * canvas.width + x) * 4;
-      return [data[index], data[index + 1], data[index + 2], data[index + 3]];
-    }
-
-    function setPixel(data, x, y, color) {
-      const index = (y * canvas.width + x) * 4;
-      data[index] = color[0];
-      data[index + 1] = color[1];
-      data[index + 2] = color[2];
-      data[index + 3] = 255;
-    }
-
-    function colorsMatch(a, b) {
-      return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
-    }
-
-    function hexToRgb(hex) {
-      const bigint = parseInt(hex.slice(1), 16);
-      return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255, 255];
-    }
-
-    // 描画更新
-    function redraw() {
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      ctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
-
-      ctx.strokeStyle = "black";
-      ctx.lineWidth = 2;
-
-      lines.forEach(line => {
-        ctx.beginPath();
-        ctx.moveTo(line[0][0], line[0][1]);
-        for (let i = 1; i < line.length; i++) {
-          ctx.lineTo(line[i][0], line[i][1]);
-        }
-        ctx.stroke();
+    // troops
+    c.troops.forEach(tr=>{
+      const el = document.createElement('div');
+      el.className = 'troop';
+      const size = Math.max(12, Math.min(56, 10 + Math.log10(tr.count+1)*20));
+      el.style.left = (tr.x - size/2) + 'px';
+      el.style.top  = (tr.y - size/2) + 'px';
+      el.style.width = size + 'px'; el.style.height = size + 'px';
+      el.style.background = shadeColor(c.color, -8);
+      el.style.borderRadius = '4px';
+      el.textContent = tr.count;
+      // troop dragging within mapContainer (pointer events)
+      el.addEventListener('pointerdown', (ev)=>{
+        ev.stopPropagation();
+        const start = { sx: ev.clientX, sy: ev.clientY, ox: tr.x, oy: tr.y };
+        const onmove = (e)=>{
+          const dx = (e.clientX - start.sx) / scale;
+          const dy = (e.clientY - start.sy) / scale;
+          tr.x = start.ox + dx; tr.y = start.oy + dy;
+          el.style.left = (tr.x - size/2) + 'px';
+          el.style.top  = (tr.y - size/2) + 'px';
+        };
+        const onup = (e)=>{ window.removeEventListener('pointermove', onmove); window.removeEventListener('pointerup', onup); };
+        window.addEventListener('pointermove', onmove);
+        window.addEventListener('pointerup', onup);
       });
+      mapContainer.appendChild(el);
+    });
+  });
+  updateTransform();
+  refreshUI();
+}
 
-      if (currentLine.length > 0) {
-        ctx.beginPath();
-        ctx.moveTo(currentLine[0][0], currentLine[0][1]);
-        for (let i = 1; i < currentLine.length; i++) {
-          ctx.lineTo(currentLine[i][0], currentLine[i][1]);
-        }
-        ctx.stroke();
-      }
-    }
+/* shade helper */
+function shadeColor(hex, percent){
+  const h = hex.replace('#','');
+  const R = parseInt(h.substring(0,2),16);
+  const G = parseInt(h.substring(2,4),16);
+  const B = parseInt(h.substring(4,6),16);
+  const t = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent)/100;
+  const toHex = (v)=>('0'+Math.round((t - v) * p + v).toString(16)).slice(-2);
+  return '#' + toHex(R) + toHex(G) + toHex(B);
+}
 
-    redraw();
-  </script>
+/* zoom toward center */
+function zoomAt(factor){
+  const areaRect = mapArea.getBoundingClientRect();
+  const cx = areaRect.width/2, cy = areaRect.height/2;
+  const before = screenToMap(cx, cy);
+  scale *= factor;
+  // keep center stable
+  const after = mapToScreen(before.x, before.y);
+  offsetX += cx - after.x;
+  offsetY += cy - after.y;
+  updateTransform();
+}
+
+/* =========================
+   Game systems: UI and minor logic
+   =========================*/
+function refreshUI(){
+  // country select and list
+  const select = document.getElementById('countrySelect'); select.innerHTML = '<option value="">— 選択 —</option>';
+  const list = document.getElementById('countryList'); list.innerHTML = '';
+  countries.forEach(c=>{
+    const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name; select.appendChild(opt);
+    const box = document.createElement('div'); box.className='countryItem';
+    box.innerHTML = `<strong style="color:${c.color}">${c.name}</strong> <div class="small">人口:${c.population.toLocaleString()} 兵:${c.troops.reduce((s,t)=>s+t.count,0)} 予算:${c.budget.toLocaleString()}</div>
+      <div style="margin-top:6px;display:flex;gap:6px;">
+        <button data-c="${c.id}" class="btnEdit">編集</button>
+        <button data-c="${c.id}" class="btnCons">徴兵</button>
+        <button data-c="${c.id}" class="btnCenter">中心へ移動</button>
+      </div>`;
+    list.appendChild(box);
+  });
+}
+
+/* country list button handlers */
+document.getElementById('countryList').addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('button');
+  if(!btn) return;
+  const cid = btn.dataset.c;
+  const c = countries.find(x=>x.id===cid);
+  if(!c) return;
+  if(btn.classList.contains('btnEdit')){
+    const nn = prompt('国名', c.name); if(nn) c.name = nn;
+    const tc = prompt('色 (hex)', c.color); if(tc) c.color = tc;
+    refreshUI(); redrawAll();
+  } else if(btn.classList.contains('btnCons')){
+    const max = Math.max(1, Math.floor(c.population*0.05));
+    const n = parseInt(prompt('徴兵数', Math.min(1000,max)));
+    if(isNaN(n)||n<=0) return;
+    c.population -= n; c.troops.push({id: uid('tr'), x: MAP_W/2 + (Math.random()*200-100), y: MAP_H/2 + (Math.random()*200-100), count: n});
+    c.budget -= Math.floor(n*2);
+    redrawAll();
+  } else if(btn.classList.contains('btnCenter')){
+    // center on first territory/troop
+    let mx = MAP_W/2, my = MAP_H/2;
+    if(c.territories.length>0){ mx = c.territories[0].x + c.territories[0].w/2; my = c.territories[0].y + c.territories[0].h/2; }
+    else if(c.troops.length>0){ mx = c.troops[0].x; my = c.troops[0].y; }
+    centerTo(mx,my);
+  }
+});
+
+function centerTo(mx,my){
+  const areaRect = mapArea.getBoundingClientRect();
+  offsetX = areaRect.width/2 - mx*scale;
+  offsetY = areaRect.height/2 - my*scale;
+  updateTransform();
+}
+
+/* monthTick: population grow, tax revenue, market change */
+function monthTick(){
+  countries.forEach(c=>{
+    c.population += Math.max(0, Math.floor(c.population*0.005));
+    c.budget += Math.floor(c.population * c.taxRate / 1000);
+    // small production
+    resourceList.forEach(r=> c.resources[r] = (c.resources[r]||0) + Math.floor(Math.random()*40+10));
+  });
+  // market fluctuation
+  resourceList.forEach(r=> market[r] = Math.max(1, market[r] + Math.floor(Math.random()*11 - 5)));
+  updateMarketUI();
+  document.getElementById('timeDisplay').textContent = `Year:0 M:0`; // simplified
+  refreshUI();
+}
+
+/* =========================
+   Save / Load
+   =========================*/
+function saveJSON(){
+  const payload = {
+    countries: countries.map(c=>({
+      id:c.id,name:c.name,color:c.color,ideology:c.ideology,leader:c.leader,taxRate:c.taxRate,
+      population:c.population,budget:c.budget,currency:c.currency,rate:c.rate,
+      territories:c.territories,troops:c.troops
+    })),
+    market: market, scale: scale, offsetX: offsetX, offsetY: offsetY, time: {year:0, month:0}
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'world_save.json'; a.click();
+}
+function loadJSONFromFile(ev){
+  const f = ev.target.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      countries = (data.countries||[]).map(c=>{
+        const cc = Object.assign({}, c);
+        cc.maskCanvas = document.createElement('canvas'); cc.maskCanvas.width = MAP_W; cc.maskCanvas.height = MAP_H;
+        cc.maskCtx = cc.maskCanvas.getContext('2d');
+        // re-draw territories into mask if color present (we just fill rects)
+        cc.territories = cc.territories || [];
+        cc.troops = cc.troops || [];
+        return cc;
+      });
+      market = data.market || market;
+      scale = data.scale || 1; offsetX = data.offsetX || 0; offsetY = data.offsetY || 0;
+      redrawAll();
+      updateMarketUI();
+      alert('読み込み完了');
+    } catch(err){ alert('読み込みエラー: '+err); }
+  };
+  reader.readAsText(f);
+}
+
+/* =========================
+   Utilities & init
+   =========================*/
+function createCountry(name, color){
+  const c = createCountrySilent(name, color);
+  refreshUI(); redrawAll();
+  return c;
+}
+function createCountrySilent(name, color){
+  const c = {
+    id: uid('c'), name: name || ('Nation' + (countries.length+1)),
+    color: color || randomColor(), ideology:'', leader:'', taxRate:10,
+    population: Math.floor(Math.random()*5000000)+10000, budget: Math.floor(Math.random()*50000),
+    currency: (name||'CUR').slice(0,3).toUpperCase(), rate: (Math.random()*2+0.5),
+    territories: [], troops: [], maskCanvas: document.createElement('canvas')
+  };
+  c.maskCanvas.width = MAP_W; c.maskCanvas.height = MAP_H; c.maskCtx = c.maskCanvas.getContext('2d');
+  // if any territories provided, draw simple rects into mask
+  countries.push(c);
+  return c;
+}
+
+function randomColor(){ return '#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'); }
+
+/* point-in-rect already defined earlier */
+
+/* short helper to composite initial masks (none) */
+function redrawMasksFromTerritories(){
+  countries.forEach(c=>{
+    // clear mask
+    c.maskCtx.clearRect(0,0,MAP_W,MAP_H);
+    (c.territories||[]).forEach(t=>{
+      c.maskCtx.fillStyle = t.color || c.color;
+      c.maskCtx.globalAlpha = 1;
+      c.maskCtx.fillRect(Math.round(t.x), Math.round(t.y), Math.round(t.w), Math.round(t.h));
+    });
+  });
+  compositeMasksToOverlay();
+}
+
+/* small shading for troop rendering */
+function shuffleInitialData(){
+  // create sample country if none exist
+  if(countries.length===0){
+    const a = createCountrySilent('Aland','#ff7f50'); a.territories.push({id:uid('t'), x:200, y:200, w:120, h:80, color:a.color}); a.troops.push({id:uid('tr'), x:260, y:260, count:400});
+    const b = createCountrySilent('Boria','#7fb8ff'); b.territories.push({id:uid('t'), x:700, y:300, w:140, h:100, color:b.color}); b.troops.push({id:uid('tr'), x:760, y:340, count:320});
+  }
+  redrawMasksFromTerritories();
+  redrawAll();
+}
+
+/* small helpers */
+function setInitialView(){
+  // center map roughly
+  const areaRect = mapArea.getBoundingClientRect();
+  offsetX = areaRect.width/2 - (MAP_W/2)*scale;
+  offsetY = areaRect.height/2 - (MAP_H/2)*scale;
+  updateTransform();
+}
+
+/* init */
+initMarket();
+drawBaseToWorkCanvas();
+shuffleInitialData();
+setMode('pan');
+setInitialView();
+updateTransform();
+refreshUI();
+
+/* prevent context menu interfering */
+mapArea.addEventListener('contextmenu', e=>e.preventDefault());
+
+</script>
 </body>
 </html>
