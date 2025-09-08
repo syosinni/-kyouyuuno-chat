@@ -7,8 +7,9 @@
   body { font-family: sans-serif; display: flex; }
   #mapContainer { position: relative; }
   canvas { border: 1px solid #000; }
-  #controls { margin-left: 20px; }
-  input, button { margin: 5px 0; display: block; }
+  #controls { margin-left: 20px; width: 300px; }
+  input, button, select { margin: 5px 0; display: block; width: 100%; }
+  h3 { margin: 10px 0 5px; }
 </style>
 </head>
 <body>
@@ -20,31 +21,44 @@
   <label>国名: <input id="countryName" type="text" value="日本"></label>
   <label>代表: <input id="leaderName" type="text" value="山田太郎"></label>
   <label>主義: <input id="ideology" type="text" value="民主主義"></label>
+  <label>国家方針: 
+    <select id="policy">
+      <option value="平和">平和</option>
+      <option value="軍事拡張">軍事拡張</option>
+      <option value="経済重視">経済重視</option>
+    </select>
+  </label>
+  <label>税率(%): <input id="taxRate" type="number" value="10" min="0" max="100"></label>
+  <label>徴兵可能数: <input id="conscription" type="number" value="1000" min="0"></label>
+  <h3>軍事</h3>
+  <label>陸軍: <input id="army" type="number" value="500" min="0"></label>
+  <label>海軍: <input id="navy" type="number" value="100" min="0"></label>
+  <label>空軍: <input id="airforce" type="number" value="50" min="0"></label>
+  <h3>開発</h3>
+  <label>研究開発進行(%): <input id="research" type="number" value="0" min="0" max="100"></label>
   <button id="saveBtn">セーブ</button>
   <button id="loadBtn">ロード</button>
   <pre id="jsonOutput"></pre>
 </div>
 
 <script>
-// --- 1. 地図表示とクリックで塗る ---
+// --- 地図表示とクリックで塗る ---
 const canvas = document.getElementById('mapCanvas');
 const ctx = canvas.getContext('2d');
 
-// ここにポリゴンで囲まれた領土座標例 (本来はSVGデータから変換)
 const territories = [
-  {id: 'A', points: [{x:100,y:100},{x:200,y:100},{x:200,y:200},{x:100,y:200}], owner:null},
-  {id: 'B', points: [{x:250,y:100},{x:350,y:100},{x:350,y:200},{x:250,y:200}], owner:null},
+  // ここではサンプルとして簡易ポリゴンを指定
+  {id:'A', points:[{x:100,y:100},{x:200,y:100},{x:200,y:200},{x:100,y:200}], owner:null},
+  {id:'B', points:[{x:250,y:100},{x:350,y:100},{x:350,y:200},{x:250,y:200}], owner:null}
 ];
 
-// 画像読み込み (PNG/SVG対応)
 const mapImage = new Image();
-mapImage.src = 'https://kyouyuuno-to.f5.si/img/0001.svg'; // GitHub上のSVGやPNGのURLに置き換え
+mapImage.src = 'https://kyouyuuno-to.f5.si/img/0001.svg';
 mapImage.onload = () => { ctx.drawImage(mapImage,0,0,canvas.width,canvas.height); drawTerritories(); }
 
-// ポリゴン描画
 function drawTerritories() {
   territories.forEach(t => {
-    if(t.owner) {
+    if(t.owner){
       ctx.fillStyle = t.owner.color;
       ctx.beginPath();
       t.points.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
@@ -59,59 +73,80 @@ function drawTerritories() {
   });
 }
 
-// ポリゴン内判定
-function isInside(polygon, x, y) {
+function isInside(polygon, x, y){
   let inside = false;
-  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-    const xi = polygon[i].x, yi = polygon[i].y;
-    const xj = polygon[j].x, yj = polygon[j].y;
-    const intersect = ((yi > y) != (yj > y)) && (x < (xj - xi)*(y - yi)/(yj - yi)+xi);
-    if(intersect) inside = !inside;
+  for(let i=0,j=polygon.length-1;i<polygon.length;j=i++){
+    const xi=polygon[i].x, yi=polygon[i].y;
+    const xj=polygon[j].x, yj=polygon[j].y;
+    const intersect=((yi>y)!=(yj>y)) && (x<(xj-xi)*(y-yi)/(yj-yi)+xi);
+    if(intersect) inside=!inside;
   }
   return inside;
 }
 
-// クリック処理
 canvas.addEventListener('click', e=>{
   const rect = canvas.getBoundingClientRect();
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
+
   const country = {
     name: document.getElementById('countryName').value,
     leader: document.getElementById('leaderName').value,
     ideology: document.getElementById('ideology').value,
-    color: '#ff0000'
+    color: '#'+Math.floor(Math.random()*16777215).toString(16)
   };
+
   territories.forEach(t=>{
     if(isInside(t.points,x,y)) t.owner = country;
   });
+
   ctx.drawImage(mapImage,0,0,canvas.width,canvas.height);
   drawTerritories();
 });
 
-// --- 2. JSONセーブ/ロード ---
-document.getElementById('saveBtn').addEventListener('click', ()=>{
-  const saveData = {
+// --- JSONセーブ/ロード ---
+function getGameData(){
+  return {
     countryInfo: {
       name: document.getElementById('countryName').value,
       leader: document.getElementById('leaderName').value,
       ideology: document.getElementById('ideology').value,
+      policy: document.getElementById('policy').value,
+      taxRate: parseInt(document.getElementById('taxRate').value),
+      conscription: parseInt(document.getElementById('conscription').value),
+      army: parseInt(document.getElementById('army').value),
+      navy: parseInt(document.getElementById('navy').value),
+      airforce: parseInt(document.getElementById('airforce').value),
+      research: parseInt(document.getElementById('research').value)
     },
     territories: territories.map(t=>({id:t.id, owner:t.owner?t.owner.name:null}))
   };
-  document.getElementById('jsonOutput').textContent = JSON.stringify(saveData, null, 2);
-  localStorage.setItem('gameSave', JSON.stringify(saveData));
+}
+
+document.getElementById('saveBtn').addEventListener('click', ()=>{
+  const saveData = getGameData();
+  document.getElementById('jsonOutput').textContent = JSON.stringify(saveData,null,2);
+  localStorage.setItem('gameSave',JSON.stringify(saveData));
 });
 
 document.getElementById('loadBtn').addEventListener('click', ()=>{
   const loadData = JSON.parse(localStorage.getItem('gameSave'));
   if(!loadData) return;
-  document.getElementById('countryName').value = loadData.countryInfo.name;
-  document.getElementById('leaderName').value = loadData.countryInfo.leader;
-  document.getElementById('ideology').value = loadData.countryInfo.ideology;
+  const c = loadData.countryInfo;
+  document.getElementById('countryName').value = c.name;
+  document.getElementById('leaderName').value = c.leader;
+  document.getElementById('ideology').value = c.ideology;
+  document.getElementById('policy').value = c.policy;
+  document.getElementById('taxRate').value = c.taxRate;
+  document.getElementById('conscription').value = c.conscription;
+  document.getElementById('army').value = c.army;
+  document.getElementById('navy').value = c.navy;
+  document.getElementById('airforce').value = c.airforce;
+  document.getElementById('research').value = c.research;
+
   territories.forEach(t=>{
     const ownerName = loadData.territories.find(l=>l.id===t.id)?.owner;
-    t.owner = ownerName ? {name: ownerName, color:'#ff0000'} : null;
+    t.owner = ownerName ? {name:ownerName,color:'#ff0000'} : null;
   });
   ctx.drawImage(mapImage,0,0,canvas.width,canvas.height);
   drawTerritories();
