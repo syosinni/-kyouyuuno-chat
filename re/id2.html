@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ToyLAND 国家システム プロトタイプ</title>
+<style>
+  body { font-family: sans-serif; display: flex; margin: 0; }
+  #map-container { position: relative; flex: 2; }
+  svg { width: 100%; height: 90vh; border:1px solid #000; }
+  #panel { flex: 1; padding: 10px; background: #f0f0f0; overflow-y: auto; }
+  .territory { cursor: pointer; }
+  #popup { position: absolute; background: #fff; border: 1px solid #000; padding: 5px; display:none; }
+  button { margin: 2px; }
+</style>
+</head>
+<body>
+<div id="map-container">
+  <svg id="map" xmlns="http://www.w3.org/2000/svg">
+    <image href="https://kyouyuuno-to.f5.si/img/0001.svg" width="100%" height="100%" />
+    <!-- ここに領土パスを追加 -->
+  </svg>
+  <div id="popup"></div>
+</div>
+
+<div id="panel">
+  <h2>国家情報</h2>
+  <label>国名: <input type="text" id="nationName" value="プレイヤー国家"></label><br>
+  <label>主義: <input type="text" id="ideology" value="民主主義"></label><br>
+  <label>通貨: <input type="text" id="currency" value="ToyCoin"></label><br>
+  <label>税率 (%): <input type="number" id="taxRate" value="10"></label><br>
+  <label>徴兵率 (%): <input type="number" id="conscriptionRate" value="10"></label><br>
+  <button onclick="saveData()">セーブ</button>
+  <button onclick="loadData()">ロード</button>
+
+  <h2>軍事</h2>
+  <button onclick="deployArmy()">軍隊配置</button>
+  <button onclick="moveArmy()">軍隊移動</button>
+
+  <h2>資源・市場</h2>
+  <button onclick="tradeResources()">貿易</button>
+  <button onclick="develop()">開発</button>
+
+  <h2>外交・議会</h2>
+  <button onclick="makeLaw()">法案作成</button>
+  <button onclick="negotiate()">外交交渉</button>
+</div>
+
+<script>
+const map = document.getElementById('map');
+const popup = document.getElementById('popup');
+let territories = []; // 領土パス
+let nationData = {
+  name: 'プレイヤー国家',
+  ideology: '民主主義',
+  currency: 'ToyCoin',
+  taxRate: 10,
+  conscriptionRate: 10,
+  territories: [],
+  armies: [],
+  resources: { food:100, minerals:100, energy:100 },
+  laws: [],
+  diplomacy: []
+};
+
+// 領土クリックで塗る
+function addTerritory(x, y, color='blue'){
+  let newPath = document.createElementNS("http://www.w3.org/2000/svg","path");
+  newPath.setAttribute('d', `M${x},${y} l20,0 l0,20 l-20,0 Z`);
+  newPath.setAttribute('fill', color);
+  newPath.classList.add('territory');
+  map.appendChild(newPath);
+  territories.push(newPath);
+  newPath.addEventListener('click', e=>{
+    e.stopPropagation();
+    paintTerritory(newPath);
+  });
+}
+
+function paintTerritory(path){
+  let color = prompt('塗る色を入力（英語名や#HEX）','blue');
+  if(color) path.setAttribute('fill', color);
+  // 領土に追加
+  if(!nationData.territories.includes(path)) nationData.territories.push(path);
+}
+
+// マップクリックでポップアップ
+map.addEventListener('click', e=>{
+  popup.style.display='none';
+});
+
+// データセーブ・ロード
+function saveData(){
+  localStorage.setItem('nationData', JSON.stringify(nationData));
+  alert('セーブ完了');
+}
+function loadData(){
+  let data = JSON.parse(localStorage.getItem('nationData'));
+  if(data) {
+    nationData = data;
+    document.getElementById('nationName').value = nationData.name;
+    document.getElementById('ideology').value = nationData.ideology;
+    document.getElementById('currency').value = nationData.currency;
+    document.getElementById('taxRate').value = nationData.taxRate;
+    document.getElementById('conscriptionRate').value = nationData.conscriptionRate;
+    alert('ロード完了');
+  }
+}
+
+// 軍事システム（簡易アニメ）
+function deployArmy(){ alert('軍隊を配置しました'); }
+function moveArmy(){ alert('軍隊を移動しました'); }
+
+// 経済・資源
+function tradeResources(){ alert('貿易を行いました'); }
+function develop(){ alert('開発を行いました'); }
+
+// 議会・外交
+function makeLaw(){ alert('法案を作成しました'); }
+function negotiate(){ alert('外交交渉しました'); }
+
+// デモ用に領土追加
+addTerritory(50,50);
+addTerritory(100,50);
+addTerritory(50,100);
+
+</script>
+</body>
+</html>
