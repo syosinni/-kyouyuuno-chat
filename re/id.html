@@ -38,7 +38,7 @@ const territories = [
 
 // 画像読み込み (PNG/SVG対応)
 const mapImage = new Image();
-mapImage.src = 'map.png'; // GitHub上のSVGやPNGのURLに置き換え
+mapImage.src = 'https://kyouyuuno-to.f5.si/img/0001.svg'; // GitHub上のSVGやPNGのURLに置き換え
 mapImage.onload = () => { ctx.drawImage(mapImage,0,0,canvas.width,canvas.height); drawTerritories(); }
 
 // ポリゴン描画
