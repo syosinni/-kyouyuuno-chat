@@ -2,121 +2,139 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>国家運営シミュレーション</title>
+<title>地図塗りつぶしシミュレーション</title>
 <style>
-  body { display:flex; font-family: sans-serif; margin:0; height:100vh; }
-  #map-container { flex:3; border:1px solid #333; }
+  body { display:flex; margin:0; font-family:sans-serif; height:100vh; }
+  #canvas-container { flex:3; display:flex; justify-content:center; align-items:center; background:#eef; }
   #panel { flex:1; padding:10px; background:#f0f0f0; overflow:auto; }
-  .territory { cursor:pointer; stroke:#000; fill:#ccc; }
+  canvas { border:1px solid #333; background:#fff; }
   button { margin:5px 0; padding:5px 10px; }
 </style>
 </head>
 <body>
-  <div id="map-container">
-    <svg id="svg-map" viewBox="0 0 500 500" width="100%" height="100%">
-      <rect id="territory1" class="territory" x="10" y="10" width="200" height="200"/>
-      <rect id="territory2" class="territory" x="220" y="10" width="200" height="200"/>
-      <rect id="territory3" class="territory" x="10" y="220" width="200" height="200"/>
-      <rect id="territory4" class="territory" x="220" y="220" width="200" height="200"/>
-    </svg>
-  </div>
-  <div id="panel">
-    <h2>国家情報</h2>
-    <div id="country-info">
-      <p>国名: <span id="country-name">帝国</span></p>
-      <p>代表: <span id="country-leader">未設定</span></p>
-      <p>主義: <span id="country-ideology">君主制</span></p>
-      <p>人口: <span id="country-population">1000000</span></p>
-      <p>予算: <span id="country-budget">500000</span></p>
-      <p>通貨: <span id="country-currency">10000</span></p>
-    </div>
-    <h3>操作</h3>
-    <button onclick="saveGame()">セーブ</button>
-    <button onclick="loadGame()">ロード</button>
-    <hr>
-    <h3>選択中領土</h3>
-    <p id="selected-territory">なし</p>
-  </div>
+<div id="canvas-container">
+  <canvas id="mapCanvas" width="600" height="600"></canvas>
+</div>
+
+<div id="panel">
+<h2>国家情報</h2>
+<div id="country-info">
+<p>国名: <span id="country-name">帝国</span></p>
+<p>代表: <span id="country-leader">未設定</span></p>
+<p>主義: <span id="country-ideology">君主制</span></p>
+</div>
+
+<h3>操作</h3>
+<button onclick="saveGame()">セーブ</button>
+<button onclick="loadGame()">ロード</button>
+<hr>
+<h3>選択中領土</h3>
+<p id="selected-territory">なし</p>
+</div>
 
 <script>
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+
 let country = {
-  name: "帝国",
-  leader: "未設定",
-  ideology: "君主制",
-  population: 1000000,
-  budget: 500000,
-  currency: 10000,
-  territories: {}
+  name:"帝国",
+  leader:"未設定",
+  ideology:"君主制",
+  territories:{} // {territoryId: {pixels:[{x,y}]}}
 };
 
-let selectedTerritory = null;
+let territoryIdCounter = 0;
 
-// SVG領土クリック設定
-document.querySelectorAll('.territory').forEach(t => {
-  t.addEventListener('click', () => selectTerritory(t));
+// 地図画像を読み込む
+const img = new Image();
+img.src = 'https://kyouyuuno-to.f5.si/img/0001.svg'; // GitHub上のURLに差し替え
+img.onload = () => {
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+}
+
+// バケツ塗り関数（境界線が灰色 #808080 や黒 #000000 である場合）
+function floodFill(x, y, fillColor) {
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = imgData.data;
+
+  function getColor(ix, iy) {
+    const index = (iy * canvas.width + ix) * 4;
+    return {r:data[index], g:data[index+1], b:data[index+2], a:data[index+3]};
+  }
+  function setColor(ix, iy, color) {
+    const index = (iy * canvas.width + ix) * 4;
+    data[index]=color.r; data[index+1]=color.g; data[index+2]=color.b; data[index+3]=255;
+  }
+  function colorsMatch(c1,c2){ return c1.r===c2.r && c1.g===c2.g && c1.b===c2.b; }
+
+  const targetColor = getColor(x,y);
+  // 境界線を超えないように
+  if (colorsMatch(targetColor,{r:128,g:128,b:128}) || colorsMatch(targetColor,{r:0,g:0,b:0})) return;
+
+  const stack = [{x,y}];
+  const territoryPixels = [];
+
+  while(stack.length>0){
+    const {x:cx,y:cy}=stack.pop();
+    if(cx<0 || cy<0 || cx>=canvas.width || cy>=canvas.height) continue;
+    const color=getColor(cx,cy);
+    if(!colorsMatch(color,targetColor)) continue;
+
+    setColor(cx,cy,fillColor);
+    territoryPixels.push({x:cx,y:cy});
+
+    stack.push({x:cx+1,y:cy});
+    stack.push({x:cx-1,y:cy});
+    stack.push({x:cx,y:cy+1});
+    stack.push({x:cx,y:cy-1});
+  }
+
+  ctx.putImageData(imgData,0,0);
+  return territoryPixels;
+}
+
+// クリックイベント
+canvas.addEventListener('click', e=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(e.clientX - rect.left);
+  const y = Math.floor(e.clientY - rect.top);
+  const fillColor = {r:136,g:136,b:255}; // 自国色
+  const pixels = floodFill(x,y,fillColor);
+  if(pixels.length>0){
+    const tid = 'territory'+(territoryIdCounter++);
+    country.territories[tid]={pixels};
+    document.getElementById('selected-territory').innerText = tid;
+  }
 });
 
-function selectTerritory(territory) {
-  selectedTerritory = territory.id;
-  document.getElementById('selected-territory').innerText = selectedTerritory;
-  // 自国色に変更
-  territory.style.fill = '#8888ff';
-  // 国家データに追加
-  country.territories[selectedTerritory] = { resources: 100, units: [] };
-  updatePanel();
-}
-
-function updatePanel() {
-  document.getElementById('country-name').innerText = country.name;
-  document.getElementById('country-leader').innerText = country.leader;
-  document.getElementById('country-ideology').innerText = country.ideology;
-  document.getElementById('country-population').innerText = country.population;
-  document.getElementById('country-budget').innerText = country.budget;
-  document.getElementById('country-currency').innerText = country.currency;
-}
-
 // セーブ
-function saveGame() {
-  const dataStr = JSON.stringify(country, null, 2);
-  const blob = new Blob([dataStr], {type: "application/json"});
+function saveGame(){
+  const dataStr = JSON.stringify(country,null,2);
+  const blob = new Blob([dataStr],{type:"application/json"});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = "data.json";
-  a.click();
+  const a=document.createElement('a');
+  a.href=url; a.download="data.json"; a.click();
   URL.revokeObjectURL(url);
 }
 
 // ロード
-function loadGame() {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-  input.onchange = e => {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = event => {
-      country = JSON.parse(event.target.result);
+function loadGame(){
+  const input=document.createElement('input');
+  input.type='file'; input.accept='.json';
+  input.onchange=e=>{
+    const file=e.target.files[0];
+    const reader=new FileReader();
+    reader.onload=event=>{
+      country=JSON.parse(event.target.result);
       restoreTerritories();
-      updatePanel();
     };
     reader.readAsText(file);
   };
   input.click();
 }
 
-// 領土復元
-function restoreTerritories() {
-  document.querySelectorAll('.territory').forEach(t => {
-    if(country.territories[t.id]) {
-      t.style.fill = '#8888ff';
-    } else {
-      t.style.fill = '#ccc';
-    }
-  });
-}
-
-updatePanel();
-</script>
-</body>
-</html>
+function restoreTerritories(){
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  for(const tid in country.territories){
+    const fillColor={r:136,g:136,b:255};
+    country.territories[tid].pixels
