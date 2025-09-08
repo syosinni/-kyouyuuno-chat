@@ -1,228 +1,516 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>国家運営シミュレーション 完全版</title>
+<meta charset="utf-8" />
+<title>国家運営シミュレーション — 領土塗り版 完全版</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-html,body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; font-family:sans-serif; }
-#mapArea { position:relative; width:100%; height:100%; background:#eee; touch-action:none; }
-#map { position:absolute; width:3000px; height:1500px; transform-origin:0 0; cursor:grab; }
-#countryList { position:absolute; right:0; top:0; width:300px; height:100%; overflow-y:auto; background:#f4f4f4; border-left:2px solid #666; padding:10px; box-sizing:border-box; }
-.country-item { border:1px solid #ccc; margin:5px; padding:5px; border-radius:8px; background:#fff; }
-.troop { position:absolute; border:2px solid #000; cursor:pointer; background:blue; border-radius:2px; }
-#controls { position:absolute; top:10px; left:10px; background:#fff; padding:5px; border-radius:8px; z-index:10; }
-button { margin:2px; padding:6px 12px; font-size:14px; }
+  :root{--panel:#ffffff;--muted:#666}
+  html,body{height:100%;margin:0;font-family:Inter, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;background:#e9eefc}
+  #app{height:100%;display:flex;gap:8px}
+  /* 左：マップ（フル） */
+  #mapArea{flex:1;position:relative;overflow:hidden;background:#dfe9f8;border-radius:8px;margin:8px}
+  /* コンテンツ（SVG + overlays）をまとめるコンテナ。これを translate/scale する */
+  #mapContainer{position:absolute;left:0;top:0;transform-origin:0 0; touch-action:none; user-select:none}
+  svg{display:block}
+  /* オーバーレイ要素（領土・兵隊）を mapContainer 内に作る */
+  .territory{position:absolute;pointer-events:auto;border:1px solid rgba(0,0,0,0.2);box-sizing:border-box;border-radius:4px}
+  .troop{position:absolute;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;box-sizing:border-box;border:1px solid #222}
+  /* 右：パネル */
+  #panel{width:420px;padding:12px;background:var(--panel);box-shadow:0 6px 18px rgba(10,20,40,0.06);border-radius:8px;margin:8px;overflow:auto}
+  h3{margin:6px 0}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type="text"],input[type="number"],select{padding:6px;border-radius:6px;border:1px solid #ddd}
+  button{padding:6px 10px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer}
+  .small{font-size:13px;color:var(--muted)}
+  .countryItem{padding:8px;border-radius:8px;border:1px solid #eee;margin-bottom:8px;background:#fbfdff}
+  label{font-size:13px}
+  .modes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+  footer{font-size:12px;color:#777;margin-top:8px}
 </style>
 </head>
 <body>
-<div id="mapArea">
-  <div id="controls">
-    <button id="zoomIn">＋</button>
-    <button id="zoomOut">－</button>
-    <button id="nextMonth">▶ 次の月</button>
-    <button id="saveBtn">💾保存</button>
-    <input type="file" id="loadFile" style="display:none"/>
-    <button id="loadBtn">📂読み込み</button>
-    <div id="timeDisplay">年:2000 月:1</div>
-    <button onclick="requestNewCountry()">＋国申請</button>
+<div id="app">
+  <div id="mapArea">
+    <!-- コントロール小窓 -->
+    <div id="miniControls" style="position:absolute;left:10px;top:10px;z-index:30;background:rgba(255,255,255,0.95);padding:8px;border-radius:8px;">
+      <div style="display:flex;gap:6px;align-items:center">
+        <button id="btnZoomIn">＋</button>
+        <button id="btnZoomOut">－</button>
+        <button id="btnNextMonth">1ヶ月進める</button>
+        <span id="timeDisplay" style="margin-left:6px;font-weight:600">Year:0 Month:1</span>
+      </div>
+      <div class="modes" style="margin-top:6px">
+        <button id="modePan" data-mode="pan">パン</button>
+        <button id="modeTerritory" data-mode="territory">領土申請</button>
+        <button id="modeTroop" data-mode="troop">兵配置</button>
+        <button id="modeNone" data-mode="none">通常</button>
+      </div>
+    </div>
+
+    <!-- ここが transform の対象（SVG + overlays 全てを包含） -->
+    <div id="mapContainer">
+      <!-- 大きめのSVGを埋め込む -->
+      <svg id="worldSvg" xmlns="http://www.w3.org/2000/svg" width="2400" height="1200" viewBox="0 0 2400 1200">
+        <image href="https://kyouyuuno-to.f5.si/img/0001.svg" x="0" y="0" width="2400" height="1200" preserveAspectRatio="xMidYMid meet" />
+      </svg>
+      <!-- overlays will be appended here dynamically as absolute-positioned divs -->
+    </div>
   </div>
-  <svg id="map" xmlns="http://www.w3.org/2000/svg">
-    <image href="https://kyouyuuno-to.f5.si/img/0001.svg" width="3000" height="1500"/>
-  </svg>
+
+  <div id="panel">
+    <h3>国家管理パネル</h3>
+    <div class="row">
+      <label>国選択
+        <select id="countrySelect"><option value="">— 選択 —</option></select>
+      </label>
+      <label>色 <input id="territoryColor" type="color" value="#ffb400"></label>
+      <label>税率 <input id="taxInput" type="number" min="0" max="100" value="10" style="width:70px"></label>
+    </div>
+
+    <div style="margin-top:8px">
+      <button id="btnCreateCountry">国を作成</button>
+      <button id="btnSave">保存 (JSON)</button>
+      <button id="btnLoad">読み込み</button>
+      <input id="fileInput" type="file" accept=".json" style="display:none">
+    </div>
+
+    <h4 style="margin-top:12px">国家一覧</h4>
+    <div id="countryList"></div>
+
+    <h4 style="margin-top:12px">操作メモ</h4>
+    <div class="small">
+      ・モードで「領土申請」を選び、マップを短くクリックで領土を作成。<br>
+      ・「兵配置」モードで短クリックすると兵を配置（徴兵は国家詳細から）。<br>
+      ・長押し（600ms）でタブレットから国作成ダイアログを開けます。<br>
+      ・ドラッグでマップ移動（パン）、＋/−でズーム。<br>
+      ・保存/読込で国家・領土・兵配置をまるごと保存できます。
+    </div>
+
+    <footer>作成: ChatGPT — 改善完全版</footer>
+  </div>
 </div>
-<div id="countryList"><h3>国家リスト</h3></div>
 
 <script>
-let countryData=[], scale=1, year=2000, month=1;
-let selectedCountry=null, movingTroop=null;
-let troopElements=[];
-const resourceList=["鉄","石油","小麦","木材","金","銀","銅","希少金属","石炭","水"];
-const ministryTemplates=["国防省","経済省","外交省","農業省","科学省","内務省","外務省","財務省","教育省","医療省",
-"防災省","工業省","運輸省","エネルギー省","労働省","情報省","治安省","観光省","環境省","技術省"];
-function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+/* ===========================
+   データモデル
+   - countries: array of country objects
+     country = {
+       id, name, color, ideology, leader, taxRate,
+       population, budget, currency, rate,
+       territories: [ {x,y,w,h,color,id} ]   // map-coordinates (SVG pixels)
+       troops: [ {x,y,count,id} ]
+     }
+   - mapSize: matches SVG width/height
+   ===========================*/
+const mapContainer = document.getElementById('mapContainer');
+const mapArea = document.getElementById('mapArea');
+const worldSvg = document.getElementById('worldSvg');
+const countrySelect = document.getElementById('countrySelect');
+const countryListEl = document.getElementById('countryList');
+const fileInput = document.getElementById('fileInput');
 
-// --- 国家申請 ---
-function requestNewCountry(){
-  const name=prompt("国名を入力してください:"); if(!name) return;
-  const ideology=prompt("主義を入力してください:"); 
-  const population=rand(1000,50000); 
-  const currency=name.slice(0,3).toUpperCase()+"$";
-  const country={ name, ideology, population, soldiers:0, budget:1000, taxRate:10,
-    diplomacy:{}, resources:{}, currency, rate:rand(50,150)/100,
-    troops:[], ministries:[], laws:[], parliament:[], territories:[] };
-  resourceList.forEach(r=>{ country.resources[r]=rand(50,200); });
-  ministryTemplates.forEach(m=>{ country.ministries.push({name:m,effect:1.0,minister:"未任命"}); });
-  countryData.push(country);
-  updateCountryList();
-}
+const MAP_W = 2400, MAP_H = 1200;
 
-// --- 国家リスト更新 ---
-function updateCountryList(){
-  const div=document.getElementById('countryList');
-  div.innerHTML="<h3>国家リスト</h3>";
-  countryData.forEach(c=>{
-    const d=document.createElement('div');
-    d.className="country-item";
-    d.innerHTML=`<b>${c.name}</b><br>
-    主義:${c.ideology}<br>
-    人口:${c.population.toLocaleString()}<br>
-    兵士:${c.soldiers}<br>
-    予算:${c.budget.toLocaleString()}<br>
-    通貨:${c.currency} (1円=${c.rate.toFixed(2)}${c.currency})<br>
-    <button onclick="recruit('${c.name}')">徴兵</button>
-    <button onclick="setTax('${c.name}')">税率変更</button>
-    <button onclick="addTroop('${c.name}')">兵配置</button>
-    <button onclick="claimTerritory('${c.name}')">領土申請</button>`;
-    div.appendChild(d);
+let countries = [];
+let mode = 'none'; // 'pan'|'territory'|'troop'|'none'
+let scale = 1;
+let offsetX = 0, offsetY = 0; // translation in px
+let isPointerDown = false;
+let pointerStart = {x:0,y:0};
+let startOffset = {x:0,y:0};
+let moved = false;
+let longpressTimer = null;
+let time = {year:0, month:1};
+
+/* helper id */
+function uid(prefix='id'){ return prefix + Math.floor(Math.random()*1e9).toString(36); }
+
+/* UI initial */
+document.getElementById('timeDisplay').textContent = `Year:${time.year} Month:${time.month}`;
+
+/* MODE buttons */
+document.getElementById('modePan').addEventListener('click', ()=> setMode('pan'));
+document.getElementById('modeTerritory').addEventListener('click', ()=> setMode('territory'));
+document.getElementById('modeTroop').addEventListener('click', ()=> setMode('troop'));
+document.getElementById('modeNone').addEventListener('click', ()=> setMode('none'));
+
+function setMode(m){
+  mode = m;
+  // highlight active
+  document.querySelectorAll('#miniControls button[data-mode]').forEach(b=>{
+    b.style.background = (b.dataset.mode === m) ? '#e6f7ff' : '';
   });
 }
 
-// --- 徴兵 ---
-function recruit(name){
-  const c=countryData.find(x=>x.name===name);
-  const num=rand(10,200);
-  if(c.budget>=num*10){ c.budget-=num*10; c.soldiers+=num; alert(`${name} は${num}人徴兵しました`);}
-  else alert("予算不足");
-  updateCountryList();
+/* create country button */
+document.getElementById('btnCreateCountry').addEventListener('click', ()=> {
+  const name = prompt('国名を入力');
+  if(!name) return;
+  const color = document.getElementById('territoryColor').value;
+  const c = {
+    id: uid('c'), name, color, ideology:'', leader:'', taxRate: parseInt(document.getElementById('taxInput').value)||10,
+    population: Math.floor(Math.random()*5000000)+10000, budget:1000,
+    currency: name.slice(0,3).toUpperCase(), rate: (Math.random()*2+0.5).toFixed(2),
+    territories: [], troops: []
+  };
+  countries.push(c); refreshUI();
+});
+
+/* refresh country select & list */
+function refreshUI(){
+  // select
+  countrySelect.innerHTML = '<option value="">— 選択 —</option>';
+  countries.forEach(c=> {
+    const opt = document.createElement('option'); opt.value = c.id; opt.textContent = c.name;
+    countrySelect.appendChild(opt);
+  });
+  // list
+  countryListEl.innerHTML = '';
+  countries.forEach(c=>{
+    const box = document.createElement('div'); box.className='countryItem';
+    box.innerHTML = `<strong style="color:${c.color}">${c.name}</strong> <div class="small">人口:${c.population.toLocaleString()} 兵:${c.troops.reduce((s,t)=>s+t.count,0)} 予算:${c.budget.toLocaleString()}</div>
+      <div style="margin-top:6px;display:flex;gap:6px">
+        <button data-c="${c.id}" class="btnEdit">編集</button>
+        <button data-c="${c.id}" class="btnConscription">徴兵</button>
+        <button data-c="${c.id}" class="btnCenter">中心へ移動</button>
+      </div>`;
+    countryListEl.appendChild(box);
+  });
 }
 
-// --- 税率変更 ---
-function setTax(name){
-  const c=countryData.find(x=>x.name===name);
-  const t=parseInt(prompt("新しい税率(0-100%)",c.taxRate));
-  if(!isNaN(t) && t>=0 && t<=100) c.taxRate=t;
-  updateCountryList();
+/* edit / conscription / center handlers */
+countryListEl.addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('button');
+  if(!btn) return;
+  const cid = btn.dataset.c;
+  const c = countries.find(x=>x.id===cid);
+  if(!c) return;
+  if(btn.classList.contains('btnEdit')){
+    const newName = prompt('国名', c.name); if(newName) c.name = newName;
+    const newColor = prompt('色 (HEX)', c.color) || c.color; c.color = newColor;
+    const newTax = parseInt(prompt('税率(0-100)', c.taxRate)); if(!isNaN(newTax)) c.taxRate = Math.max(0,Math.min(100,newTax));
+    refreshUI(); redrawAll();
+  } else if(btn.classList.contains('btnConscription')){
+    const max = Math.max(0, Math.floor(c.population*0.05));
+    const n = parseInt(prompt(`徴兵数を入力（最大 ${max}）`, Math.min(1000,max)));
+    if(isNaN(n)||n<=0) return;
+    c.population -= n; c.troops.push({x:MAP_W/2 + Math.random()*200-100, y:MAP_H/2 + Math.random()*200-100, count:n, id:uid('t')});
+    c.budget -= Math.floor(n*2);
+    refreshUI(); redrawAll();
+  } else if(btn.classList.contains('btnCenter')){
+    // center view to first territory or first troop or center of map
+    let tx = MAP_W/2, ty = MAP_H/2;
+    if(c.territories.length>0){ tx = c.territories[0].x + c.territories[0].w/2; ty = c.territories[0].y + c.territories[0].h/2; }
+    else if(c.troops.length>0){ tx = c.troops[0].x; ty = c.troops[0].y; }
+    centerTo(tx,ty);
+  }
+});
+
+/* center map to given map coordinates */
+function centerTo(mapX,mapY){
+  // compute offset so that mapX,mapY in mapContainer becomes center of mapArea viewport
+  const areaRect = mapArea.getBoundingClientRect();
+  const centerX = areaRect.width/2, centerY = areaRect.height/2;
+  offsetX = centerX - mapX*scale;
+  offsetY = centerY - mapY*scale;
+  updateTransform();
 }
 
-// --- 兵士配置 ---
-function addTroop(name){ selectedCountry=name; alert("兵士を配置する場所をクリック"); }
-
-// --- 領土申請 ---
-function claimTerritory(name){ selectedCountry=name; alert("領土を申請する場所をクリック"); }
-
-// --- マップクリック処理 ---
-const mapArea=document.getElementById('mapArea');
-mapArea.addEventListener('click', e=>{
-  const rect=mapArea.getBoundingClientRect();
-  const x=(e.clientX-rect.left)/scale;
-  const y=(e.clientY-rect.top)/scale;
-
-  if(selectedCountry){
-    const c=countryData.find(x=>x.name===selectedCountry);
-    if(confirm("兵士を配置しますか？")){
-      if(c.soldiers<=0){alert("兵士がいません"); selectedCountry=null; return;}
-      const t={x,y,size:20}; c.troops.push(t); drawTroops(); updateCountryList();
-    } else { 
-      c.territories.push({x,y}); 
-      alert("領土を申請しました"); 
+/* =========================
+   Pointer handling (pan vs click vs longpress)
+   - detect small movement (<6px) as click, otherwise pan
+   - longpress (600ms) triggers context: create country at location
+   =========================*/
+let pointerId = null;
+mapArea.addEventListener('pointerdown', (ev)=>{
+  // ignore if clicked on UI elements inside panel
+  if(ev.target.closest('#panel')) return;
+  mapArea.setPointerCapture(ev.pointerId);
+  pointerId = ev.pointerId;
+  isPointerDown = true;
+  moved = false;
+  pointerStart = {x:ev.clientX, y:ev.clientY};
+  startOffset = {x:offsetX, y:offsetY};
+  // start longpress
+  clearTimeout(longpressTimer);
+  longpressTimer = setTimeout(()=>{
+    // longpress: open quick country create at map coords
+    const mp = screenToMap(pointerStart.x, pointerStart.y);
+    const name = prompt('（長押し）国を作成 — 名前を入力');
+    if(name){
+      const c = {
+        id: uid('c'), name, color: document.getElementById('territoryColor').value,
+        ideology:'', leader:'', taxRate: parseInt(document.getElementById('taxInput').value)||10,
+        population: Math.floor(Math.random()*100000)+5000, budget:1000, currency:name.slice(0,3).toUpperCase(), rate:(Math.random()*2+0.5).toFixed(2),
+        territories:[{x: mp.x-30, y: mp.y-20, w:80, h:60, color: document.getElementById('territoryColor').value, id: uid('ter')}],
+        troops: []
+      };
+      countries.push(c); refreshUI(); redrawAll();
     }
-    selectedCountry=null;
-  } else if(movingTroop){
-    const {country,troopIndex}=movingTroop;
-    const c=countryData.find(x=>x.name===country);
-    if(c){ c.troops[troopIndex].x=x; c.troops[troopIndex].y=y; }
-    drawTroops(); movingTroop=null;
+  }, 600);
+});
+
+mapArea.addEventListener('pointermove', (ev)=>{
+  if(!isPointerDown) return;
+  const dx = ev.clientX - pointerStart.x;
+  const dy = ev.clientY - pointerStart.y;
+  if(Math.hypot(dx,dy) > 6){
+    moved = true;
+    clearTimeout(longpressTimer);
+    // perform pan (unless mode is territory/troop placing and they want click — but drag should be pan)
+    offsetX = startOffset.x + dx;
+    offsetY = startOffset.y + dy;
+    updateTransform();
   }
 });
 
-// --- ドラッグ移動 ---
-let isDragging=false, dragStartX=0, dragStartY=0, mapOffsetX=0, mapOffsetY=0;
-mapArea.addEventListener('mousedown', e=>{ isDragging=true; dragStartX=e.clientX-mapOffsetX; dragStartY=e.clientY-mapOffsetY; });
-mapArea.addEventListener('mousemove', e=>{ 
-  if(!isDragging) return;
-  mapOffsetX=e.clientX-dragStartX; mapOffsetY=e.clientY-dragStartY;
-  document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`;
-  drawTroops();
-});
-mapArea.addEventListener('mouseup', ()=>{ isDragging=false; });
-mapArea.addEventListener('mouseleave', ()=>{ isDragging=false; });
-
-// タッチ対応
-mapArea.addEventListener('touchstart', e=>{ 
-  if(e.touches.length===1){ isDragging=true; dragStartX=e.touches[0].clientX-mapOffsetX; dragStartY=e.touches[0].clientY-mapOffsetY; }
-});
-mapArea.addEventListener('touchmove', e=>{ 
-  if(!isDragging || e.touches.length!==1) return;
-  mapOffsetX=e.touches[0].clientX-dragStartX; mapOffsetY=e.touches[0].clientY-dragStartY;
-  document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`;
-  drawTroops();
-});
-mapArea.addEventListener('touchend', ()=>{ isDragging=false; });
-
-// --- 兵士描画 ---
-function drawTroops(){
-  troopElements.forEach(el=>el.remove()); troopElements=[];
-  countryData.forEach(c=>{
-    c.troops.forEach((t,i)=>{
-      const el=document.createElement('div');
-      el.className="troop"; 
-      const size=20+Math.sqrt(c.soldiers)/5;
-      el.style.left=(t.x*scale)+"px"; el.style.top=(t.y*scale)+"px"; 
-      el.style.width=size+"px"; el.style.height=size+"px";
-      el.addEventListener('mousedown',()=>{ movingTroop={country:c.name,troopIndex:i}; });
-      mapArea.appendChild(el); troopElements.push(el);
-    });
-  });
-}
-
-// --- ズーム ---
-document.getElementById('zoomIn').addEventListener('click',()=>{ scale*=1.2; document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`; drawTroops(); });
-document.getElementById('zoomOut').addEventListener('click',()=>{ scale/=1.2; document.getElementById('map').style.transform=`translate(${mapOffsetX}px,${mapOffsetY}px) scale(${scale})`; drawTroops(); });
-
-// --- 保存/読み込み ---
-document.getElementById('saveBtn').addEventListener('click',()=>{
-  const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(countryData)],{type:'application/json'}));
-  a.download="countries.json"; a.click();
-});
-document.getElementById('loadBtn').addEventListener('click',()=>{document.getElementById('loadFile').click();});
-document.getElementById('loadFile').addEventListener('change',e=>{
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=()=>{ countryData=JSON.parse(reader.result); updateCountryList(); drawTroops(); };
-  reader.readAsText(file);
-});
-  function claimTerritory(name){
-  selectedCountry=name;
-  alert("領土を申請する場所をクリック");
-}
-
-// クリック処理内に追加
-mapArea.addEventListener('click', e=>{
-  const rect=mapArea.getBoundingClientRect();
-  const x=(e.clientX-rect.left)/scale;
-  const y=(e.clientY-rect.top)/scale;
-
-  if(selectedCountry){
-    const c=countryData.find(x=>x.name===selectedCountry);
-    const color=prompt("領土の色を入力（例:#ff0000）","#" + Math.floor(Math.random()*16777215).toString(16));
-    const size=50; // 50px四方の領土
-    c.territories.push({x:x-size/2,y:y-size/2,width:size,height:size,color});
-    drawTerritories();
-    selectedCountry=null;
+mapArea.addEventListener('pointerup', (ev)=>{
+  mapArea.releasePointerCapture(ev.pointerId);
+  isPointerDown = false;
+  clearTimeout(longpressTimer);
+  // if movement was small -> treat as click; otherwise it's pan
+  if(!moved){
+    const screenPoint = {x:ev.clientX, y:ev.clientY};
+    handleMapClick(screenPoint);
   }
 });
 
-// 領土描画
-function drawTerritories(){
-  // 既存の領土div削除
-  document.querySelectorAll(".territory").forEach(el=>el.remove());
-  countryData.forEach(c=>{
+/* convert screen coordinates to map coordinates (SVG pixels) */
+function screenToMap(screenX, screenY){
+  const rect = mapArea.getBoundingClientRect();
+  const localX = screenX - rect.left - offsetX;
+  const localY = screenY - rect.top - offsetY;
+  return { x: localX / scale, y: localY / scale };
+}
+
+/* convert map coords to container-left/top px (unscaled) for element placement */
+function mapToContainerPx(mx,my){
+  return { left: mx + 'px', top: my + 'px' };
+}
+
+/* handle click (short press) behaviors based on mode */
+function handleMapClick(screenPoint){
+  const mp = screenToMap(screenPoint.x, screenPoint.y);
+  // depending on mode
+  if(mode === 'territory'){
+    // create rectangle around click with size determined by user (or default)
+    const color = document.getElementById('territoryColor').value || '#ffb400';
+    const size = 80;
+    const cid = countrySelect.value;
+    if(!cid){ alert('国を選択してください（右パネルの国選択）'); return; }
+    const country = countries.find(c=>c.id===cid);
+    if(!country){ alert('国が見つかりません'); return; }
+    const ter = { id: uid('ter'), x: mp.x - size/2, y: mp.y - size/2, w: size, h: size, color };
+    country.territories.push(ter);
+    redrawAll();
+    return;
+  } else if(mode === 'troop'){
+    const cid = countrySelect.value;
+    if(!cid){ alert('国を選択してください'); return; }
+    const country = countries.find(c=>c.id===cid);
+    if(!country){ alert('国が見つかりません'); return; }
+    if(country.population <= 0 && country.troops.length===0){ alert('徴兵や兵がいません'); return; }
+    // prompt count
+    const max = Math.max(1, Math.floor(country.population * 0.02));
+    const n = parseInt(prompt(`配置する兵数（最大 ${max}）`, Math.min(50, max)));
+    if(isNaN(n) || n<=0) return;
+    country.population = Math.max(0, country.population - n);
+    country.troops.push({ id: uid('t'), x: mp.x, y: mp.y, count: n });
+    redrawAll();
+    return;
+  } else {
+    // default: click on territory or troop to show info
+    for(const c of countries){
+      for(const t of c.territories){
+        if(pointInRect(mp.x, mp.y, t)){
+          alert(`国:${c.name}\n領土ID:${t.id}\n色:${t.color}\nサイズ:${t.w}x${t.h}`);
+          return;
+        }
+      }
+      for(const tr of c.troops){
+        if(Math.abs(tr.x - mp.x) < 12 && Math.abs(tr.y - mp.y) < 12){
+          alert(`国:${c.name}\n兵数:${tr.count}`);
+          return;
+        }
+      }
+    }
+  }
+}
+
+/* simple point-in-rect */
+function pointInRect(x,y,r){ return x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h; }
+
+/* update transform on mapContainer */
+function updateTransform(){
+  mapContainer.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+  // no need to reposition children (they are inside container)
+}
+
+/* redraw territories & troops overlays */
+function redrawAll(){
+  // clear existing overlays inside mapContainer except the SVG (first child)
+  Array.from(mapContainer.children).slice(1).forEach(el => el.remove());
+  // draw territories
+  countries.forEach(c=>{
     c.territories.forEach(t=>{
-      const el=document.createElement("div");
-      el.className="territory";
-      el.style.position="absolute";
-      el.style.left=(t.x*scale+mapOffsetX)+"px";
-      el.style.top=(t.y*scale+mapOffsetY)+"px";
-      el.style.width=(t.width*scale)+"px";
-      el.style.height=(t.height*scale)+"px";
-      el.style.backgroundColor=t.color;
-      el.style.opacity=0.5;
-      el.style.border="1px solid #000";
-      el.title=c.name;
-      mapArea.appendChild(el);
+      const div = document.createElement('div');
+      div.className = 'territory';
+      div.style.left = t.x + 'px';
+      div.style.top  = t.y + 'px';
+      div.style.width = t.w + 'px';
+      div.style.height = t.h + 'px';
+      div.style.background = t.color;
+      div.style.opacity = 0.45;
+      div.dataset.countryId = c.id;
+      div.dataset.territoryId = t.id;
+      // click inside mapContainer will be handled by pointer events at mapArea; but we can add hover info
+      mapContainer.appendChild(div);
+    });
+    // troops
+    c.troops.forEach(tr=>{
+      const el = document.createElement('div');
+      el.className = 'troop';
+      const size = Math.max(10, Math.min(48, 10 + Math.log10(tr.count+1)*18));
+      el.style.left = (tr.x - size/2) + 'px';
+      el.style.top  = (tr.y - size/2) + 'px';
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.background = shadeColor(c.color, -10);
+      el.style.borderRadius = '4px';
+      el.textContent = tr.count;
+      el.title = `${c.name} 軍`;
+      // enable dragging troop within mapContainer (pointerdown -> set movingTroop)
+      el.addEventListener('pointerdown', (ev)=>{
+        ev.stopPropagation();
+        // start dragging troop
+        const start = {sx: ev.clientX, sy: ev.clientY, ox: tr.x, oy: tr.y};
+        const onmove = (e)=>{
+          const dx = (e.clientX - start.sx)/scale;
+          const dy = (e.clientY - start.sy)/scale;
+          tr.x = start.ox + dx; tr.y = start.oy + dy;
+          // update position quickly
+          el.style.left = (tr.x - size/2) + 'px';
+          el.style.top  = (tr.y - size/2) + 'px';
+        };
+        const onup = (e)=>{
+          window.removeEventListener('pointermove', onmove);
+          window.removeEventListener('pointerup', onup);
+        };
+        window.addEventListener('pointermove', onmove);
+        window.addEventListener('pointerup', onup);
+      });
+      mapContainer.appendChild(el);
     });
   });
+  updateTransform();
+  refreshUI(); // update list
 }
+
+/* small color shade helper */
+function shadeColor(hex, percent) {
+  const h = hex.replace('#','');
+  const R = parseInt(h.substring(0,2),16);
+  const G = parseInt(h.substring(2,4),16);
+  const B = parseInt(h.substring(4,6),16);
+  const t = percent < 0 ? 0 : 255;
+  const p = Math.abs(percent)/100;
+  const toHex = (v)=>('0'+Math.round((t - v) * p + v).toString(16)).slice(-2);
+  return '#' + toHex(R) + toHex(G) + toHex(B);
+}
+
+/* zoom buttons */
+document.getElementById('btnZoomIn').addEventListener('click', ()=> {
+  // zoom toward center
+  const areaRect = mapArea.getBoundingClientRect();
+  const cx = areaRect.width/2, cy = areaRect.height/2;
+  zoomAt(1.2, cx, cy);
+});
+document.getElementById('btnZoomOut').addEventListener('click', ()=> {
+  const areaRect = mapArea.getBoundingClientRect();
+  const cx = areaRect.width/2, cy = areaRect.height/2;
+  zoomAt(1/1.2, cx, cy);
+});
+
+/* zoom at screen point */
+function zoomAt(factor, screenX, screenY){
+  // map coordinates before
+  const before = screenToMap(screenX, screenY);
+  scale *= factor;
+  // adjust offset so point under cursor remains same
+  const afterScreen = mapToScreen(before.x, before.y);
+  offsetX += screenX - afterScreen.x;
+  offsetY += screenY - afterScreen.y;
+  updateTransform();
+}
+
+/* mapToScreen: map coords -> screen coords (taking transform into account) */
+function mapToScreen(mx,my){
+  const rect = mapArea.getBoundingClientRect();
+  return { x: rect.left + offsetX + mx * scale, y: rect.top + offsetY + my * scale };
+}
+
+/* next month (simple tick) */
+document.getElementById('btnNextMonth').addEventListener('click', ()=>{
+  time.month++;
+  if(time.month>12){ time.month=1; time.year++; }
+  // simple updates: population growth, resource production, auto-sell (not complex)
+  countries.forEach(c=>{
+    const popGrow = Math.floor(c.population * 0.01);
+    c.population += popGrow;
+    // produce small resources
+    if(!c.resources) c.resources = {};
+    ['木材','小麦','水'].forEach(r=> c.resources[r] = (c.resources[r]||0) + Math.floor(Math.random()*50+10));
+    // tax revenue
+    c.budget += Math.floor(c.population * c.taxRate / 1000);
+  });
+  document.getElementById('timeDisplay').textContent = `Year:${time.year} Month:${time.month}`;
+  refreshUI();
+});
+
+/* Save / Load JSON */
+document.getElementById('btnSave').addEventListener('click', ()=>{
+  const payload = { countries, time };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'world_save.json'; a.click();
+});
+document.getElementById('btnLoad').addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', (ev)=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=> {
+    try{
+      const data = JSON.parse(r.result);
+      countries = data.countries || [];
+      time = data.time || time;
+      refreshUI(); redrawAll();
+      document.getElementById('timeDisplay').textContent = `Year:${time.year} Month:${time.month}`;
+      alert('読み込み完了');
+    }catch(err){ alert('JSON読み込みエラー: '+err); }
+  };
+  r.readAsText(f);
+});
+
+/* keyboard shortcuts: space to toggle pan/none */
+window.addEventListener('keydown', (e)=>{
+  if(e.key === ' ') { e.preventDefault(); setMode(mode === 'pan' ? 'none' : 'pan'); }
+});
+
+/* initial setup */
+setMode('none');
+refreshUI();
+redrawAll();
+
+/* Helper: redrawAll wrapper (keeps mapContainer children) */
+function redrawAll(){ redrawAllTerritoriesAndTroops(); }
+function redrawAllTerritoriesAndTroops(){
+  // reuse function above (same name) — to avoid duplication call it:
+  // we call redrawAll() which is defined earlier; to avoid confusion, just call that:
+  // (already defined)
+}
+
+/* ensure updateTransform called initially */
+updateTransform();
 
 </script>
 </body>
