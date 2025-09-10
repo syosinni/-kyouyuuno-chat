@@ -1,190 +1,112 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<title>ToyLAND 国家シミュレーター</title>
-<style>
-body { font-family: sans-serif; display: flex; }
-#map-container { position: relative; width: 800px; height: 600px; border: 1px solid #000; }
-#side-panel { margin-left: 10px; width: 300px; overflow-y: auto; height:600px;}
-.popup { position: absolute; background: #fff; border: 1px solid #000; padding: 5px; display:none; }
-.army { position:absolute; width:10px; height:10px; border-radius:50%; background:red; }
-.ai-army { background:blue; }
-</style>
+  <meta charset="UTF-8">
+  <title>ToyLAND</title>
+  <style>
+    body { display:flex; }
+    #mapCanvas { border:1px solid black; cursor:crosshair; }
+    #panel { margin-left:20px; }
+  </style>
 </head>
 <body>
+  <canvas id="mapCanvas" width="800" height="600"></canvas>
 
-<div id="map-container">
-<img id="map" src="https://kyouyuuno-to.f5.si/img/0001.svg" width="800" height="600">
-<canvas id="overlay" width="800" height="600" style="position:absolute; top:0; left:0;"></canvas>
-<div id="popup" class="popup"></div>
-</div>
+  <div id="panel">
+    <h2>国家情報</h2>
+    <label>国名: <input id="nationName" value="プレイヤー国家"></label><br>
+    <label>主義: 
+      <select id="ideology">
+        <option>民主主義</option>
+        <option>共産主義</option>
+        <option>独裁</option>
+      </select>
+    </label><br>
+    <label>通貨: <input id="currency" value="ToyCoin"></label><br>
+    <label>色: <input type="color" id="colorPicker" value="#ff0000"></label><br>
+    <button onclick="saveGame()">セーブ</button>
+    <button onclick="loadGame()">ロード</button>
+  </div>
 
-<div id="side-panel">
-<h2>国家情報</h2>
-<label>国名: <input id="nation-name" value="プレイヤー国家"></label><br>
-<label>主義: <input id="nation-ideology" value="民主主義"></label><br>
-<label>通貨: <input id="nation-currency" value="ToyCoin"></label><br>
-<label>通貨価値: <span id="currency-value">1.0</span></label><br>
-<label>国家予算: <span id="budget">10000</span></label><br>
-<label>徴兵率: <input type="range" id="conscription-rate" min="0" max="100" value="10"> <span id="conscription-value">10%</span></label><br>
-<label>税率: <input type="range" id="tax-rate" min="0" max="100" value="10"> <span id="tax-value">10%</span></label><br>
-<button id="add-army">軍隊配置</button>
-<h3>軍隊</h3>
-<ul id="army-list"></ul>
-<h3>資源</h3>
-<ul id="resource-list"></ul>
-<h3>研究/開発</h3>
-<ul id="research-list"></ul>
-<h3>AI国家</h3>
-<ul id="ai-list"></ul>
-</div>
+  <script>
+    const canvas = document.getElementById("mapCanvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.src = "https://kyouyuuno-to.f5.si/img/0001.png"; // PNGでもSVGでもOK
 
-<script>
-// --- 国家データ ---
-let nationData = {
-name:'プレイヤー国家', ideology:'民主主義', currency:'ToyCoin', currencyValue:1.0,
-taxRate:10, conscriptionRate:10, budget:10000,
-territories:[], armies:[], resources:{food:100,minerals:100,energy:100}, laws:[], diplomacy:[],
-research:[], market:{}, trade:[] 
-};
+    img.onload = () => ctx.drawImage(img,0,0,canvas.width,canvas.height);
 
-let aiNations = [
-{name:'AI国1', color:'#0000ff', territories:[], armies:[], resources:{food:100,minerals:100,energy:100}},
-{name:'AI国2', color:'#ff00ff', territories:[], armies:[], resources:{food:100,minerals:100,energy:100}}
-];
+    // Flood fill（バケツ塗り）
+    function floodFill(x, y, fillColor) {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
 
-const canvas = document.getElementById('overlay');
-const ctx = canvas.getContext('2d');
-const popup = document.getElementById('popup');
-const mapContainer = document.getElementById('map-container');
+      function getPixel(x, y) {
+        const i = (y * canvas.width + x) * 4;
+        return [data[i], data[i+1], data[i+2], data[i+3]];
+      }
+      function setPixel(x, y, color) {
+        const i = (y * canvas.width + x) * 4;
+        data[i] = color[0];
+        data[i+1] = color[1];
+        data[i+2] = color[2];
+        data[i+3] = 255;
+      }
+      function colorsMatch(c1, c2) {
+        return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2] && c1[3]===c2[3];
+      }
+      function isBorder(c) {
+        // 灰色 or 黒なら壁扱い
+        return (c[0]===128 && c[1]===128 && c[2]===128) || 
+               (c[0]===0 && c[1]===0 && c[2]===0);
+      }
 
-function updatePanel(){
-  document.getElementById('nation-name').value=nationData.name;
-  document.getElementById('nation-ideology').value=nationData.ideology;
-  document.getElementById('nation-currency').value=nationData.currency;
-  document.getElementById('currency-value').textContent=nationData.currencyValue.toFixed(2);
-  document.getElementById('budget').textContent=nationData.budget;
-  document.getElementById('conscription-value').textContent=nationData.conscriptionRate+'%';
-  document.getElementById('tax-value').textContent=nationData.taxRate+'%';
-  
-  const armyList=document.getElementById('army-list');
-  armyList.innerHTML='';
-  nationData.armies.forEach((army,i)=>{armyList.innerHTML+=`<li>軍隊${i+1} ${army.x},${army.y}</li>`});
-  
-  const resourceList=document.getElementById('resource-list');
-  resourceList.innerHTML='';
-  for(let key in nationData.resources){resourceList.innerHTML+=`<li>${key}: ${nationData.resources[key]}</li>`;}
-  
-  const researchList=document.getElementById('research-list');
-  researchList.innerHTML='';
-  nationData.research.forEach(r=>researchList.innerHTML+=`<li>${r}</li>`);
-  
-  const aiList=document.getElementById('ai-list');
-  aiList.innerHTML='';
-  aiNations.forEach(ai=>aiList.innerHTML+=`<li>${ai.name} 予算:${ai.resources.energy*10}</li>`);
-}
+      const startColor = getPixel(x, y);
+      if (isBorder(startColor)) return;
 
-// --- マップクリックで領土塗り ---
-canvas.addEventListener('click', (e)=>{
-  const x=e.offsetX, y=e.offsetY;
-  const imgData=ctx.getImageData(x,y,1,1).data;
-  const [r,g,b,a]=imgData;
-  if(a===0 || (r===128&&g===128&&b===128)||(r===0&&g===0&&b===0)) return;
-  const color = prompt("この領土を塗る色を入力してください", "#00ff00");
-  if(!color) return;
-  floodFill(ctx,x,y,color);
-  nationData.territories.push({x,y,color});
-  updatePanel();
-});
+      const targetColor = fillColor.match(/\w\w/g).map(v=>parseInt(v,16));
+      targetColor.push(255);
 
-// --- 簡易floodFill ---
-function floodFill(ctx,x,y,fillColor){
-  const w=ctx.canvas.width,h=ctx.canvas.height;
-  const img=ctx.getImageData(0,0,w,h), data=img.data;
-  const stack=[[x,y]];
-  const startPos=(y*w+x)*4, startColor=[data[startPos],data[startPos+1],data[startPos+2],data[startPos+3]];
-  function matchColor(pos){for(let i=0;i<3;i++){if(data[pos+i]!==startColor[i]) return false;} return true;}
-  function setColor(pos,color){const c=hexToRgb(color); data[pos]=c.r; data[pos+1]=c.g; data[pos+2]=c.b; data[pos+3]=255;}
-  while(stack.length>0){
-    const [cx,cy]=stack.pop();
-    const pos=(cy*w+cx)*4;
-    if(!matchColor(pos)) continue;
-    setColor(pos,fillColor);
-    if(cx>0) stack.push([cx-1,cy]); if(cx<w-1) stack.push([cx+1,cy]);
-    if(cy>0) stack.push([cx,cy-1]); if(cy<h-1) stack.push([cx,cy+1]);
-  }
-  ctx.putImageData(img,0,0);
-}
+      const stack = [[x,y]];
+      while (stack.length) {
+        const [cx, cy] = stack.pop();
+        if (cx<0 || cy<0 || cx>=canvas.width || cy>=canvas.height) continue;
+        const c = getPixel(cx, cy);
+        if (isBorder(c) || colorsMatch(c, targetColor)) continue;
 
-function hexToRgb(hex){if(hex[0]==='#') hex=hex.slice(1); if(hex.length===3) hex=hex.split('').map(x=>x+x).join('');
-const num=parseInt(hex,16); return {r:(num>>16)&255,g:(num>>8)&255,b:num&255};}
+        setPixel(cx, cy, targetColor);
+        stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+      }
 
-// --- サイドパネル操作 ---
-document.getElementById('nation-name').addEventListener('input', e=>nationData.name=e.target.value);
-document.getElementById('nation-ideology').addEventListener('input', e=>nationData.ideology=e.target.value);
-document.getElementById('nation-currency').addEventListener('input', e=>nationData.currency=e.target.value);
-document.getElementById('conscription-rate').addEventListener('input', e=>{nationData.conscriptionRate=parseInt(e.target.value);updatePanel();});
-document.getElementById('tax-rate').addEventListener('input', e=>{nationData.taxRate=parseInt(e.target.value);updatePanel();});
+      ctx.putImageData(imageData, 0, 0);
+    }
 
-// --- 軍隊配置 ---
-document.getElementById('add-army').addEventListener('click', ()=>{
-  const x=parseInt(prompt("配置X座標")); const y=parseInt(prompt("配置Y座標"));
-  if(isNaN(x)||isNaN(y)) return;
-  nationData.armies.push({x,y,element:createArmyElement(x,y,'army')});
-  updatePanel();
-});
+    // クリックで塗る
+    canvas.addEventListener("click", e=>{
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor(e.clientX - rect.left);
+      const y = Math.floor(e.clientY - rect.top);
+      const fillColor = document.getElementById("colorPicker").value;
+      floodFill(x, y, fillColor);
+    });
 
-// --- 軍隊要素作成 ---
-function createArmyElement(x,y,className){
-  const div=document.createElement('div');
-  div.className=className;
-  div.style.left=x+'px'; div.style.top=y+'px';
-  mapContainer.appendChild(div); return div;
-}
-
-// --- 軍隊移動アニメーション ---
-function moveArmy(army,tx,ty){
-  const speed=1;
-  function step(){ 
-    const dx=tx-army.x, dy=ty-army.y;
-    const dist=Math.sqrt(dx*dx+dy*dy);
-    if(dist<1) return;
-    army.x+=dx/dist*speed; army.y+=dy/dist*speed;
-    army.element.style.left=army.x+'px'; army.element.style.top=army.y+'px';
-    requestAnimationFrame(step);
-  }
-  step();
-}
-
-// --- AI国家行動 ---
-function aiAction(){
-  aiNations.forEach(ai=>{
-    // ランダムで領土塗り
-    const x=Math.floor(Math.random()*canvas.width), y=Math.floor(Math.random()*canvas.height);
-    floodFill(ctx,x,y,ai.color);
-    ai.territories.push({x,y,color:ai.color});
-    // ランダム軍隊追加
-    const ax=Math.floor(Math.random()*canvas.width), ay=Math.floor(Math.random()*canvas.height);
-    ai.armies.push({x:ax,y:ay,element:createArmyElement(ax,ay,'ai-army')});
-  });
-  updatePanel();
-}
-
-// --- 通貨変動/予算更新 ---
-function economicUpdate(){
-  nationData.currencyValue = 1 + Math.random()*0.1 - 0.05; // 乱数変動
-  nationData.budget += nationData.taxRate*10; 
-  nationData.resources.food +=5; nationData.resources.minerals +=5; nationData.resources.energy+=5;
-  updatePanel();
-}
-
-// --- 自動ループ ---
-setInterval(aiAction,5000);
-setInterval(economicUpdate,3000);
-
-updatePanel();
-</script>
-
+    // 簡易セーブ/ロード
+    function saveGame(){
+      const state = {
+        nation: document.getElementById("nationName").value,
+        ideology: document.getElementById("ideology").value,
+        currency: document.getElementById("currency").value
+      };
+      localStorage.setItem("saveData", JSON.stringify(state));
+      alert("セーブしました");
+    }
+    function loadGame(){
+      const state = JSON.parse(localStorage.getItem("saveData")||"{}");
+      if(state.nation) document.getElementById("nationName").value = state.nation;
+      if(state.ideology) document.getElementById("ideology").value = state.ideology;
+      if(state.currency) document.getElementById("currency").value = state.currency;
+      alert("ロードしました");
+    }
+  </script>
 </body>
 </html>
