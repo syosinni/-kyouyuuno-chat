@@ -1,112 +1,245 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>ToyLAND</title>
-  <style>
-    body { display:flex; }
-    #mapCanvas { border:1px solid black; cursor:crosshair; }
-    #panel { margin-left:20px; }
-  </style>
+<meta charset="utf-8" />
+<title>バケツ塗り（灰色境界対応）デモ</title>
+<style>
+  body{font-family:system-ui,Segoe UI,Roboto,Helvetica,Arial;margin:0;display:flex;height:100vh}
+  #left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#eef}
+  #controls{width:340px;padding:12px;background:#fafafa;border-left:1px solid #ddd;box-sizing:border-box}
+  canvas{border:1px solid #333;max-width:95%;height:auto;display:block}
+  label{display:block;margin:8px 0;font-size:14px}
+  input[type="range"]{width:100%}
+  .small{font-size:12px;color:#666}
+  button{padding:8px 10px;margin-top:8px;width:100%}
+</style>
 </head>
 <body>
-  <canvas id="mapCanvas" width="800" height="600"></canvas>
-
-  <div id="panel">
-    <h2>国家情報</h2>
-    <label>国名: <input id="nationName" value="プレイヤー国家"></label><br>
-    <label>主義: 
-      <select id="ideology">
-        <option>民主主義</option>
-        <option>共産主義</option>
-        <option>独裁</option>
-      </select>
-    </label><br>
-    <label>通貨: <input id="currency" value="ToyCoin"></label><br>
-    <label>色: <input type="color" id="colorPicker" value="#ff0000"></label><br>
-    <button onclick="saveGame()">セーブ</button>
-    <button onclick="loadGame()">ロード</button>
+  <div id="left">
+    <canvas id="mapCanvas" width="1200" height="600"></canvas>
+    <div class="small">クリックでバケツ塗り（境界は黒 / 灰系）。閾値（Tolerance）で「近い灰色」も壁扱いします。</div>
   </div>
 
-  <script>
-    const canvas = document.getElementById("mapCanvas");
-    const ctx = canvas.getContext("2d");
-    const img = new Image();
-    img.src = "https://kyouyuuno-to.f5.si/img/0001.png"; // PNGでもSVGでもOK
+  <div id="controls">
+    <h3>塗り設定</h3>
+    <label>塗り色: <input type="color" id="fillColor" value="#ff5500"></label>
+    <label>境界の閾値（Tolerance）: <input id="tol" type="range" min="0" max="80" value="30"> <span id="tolVal">30</span></label>
+    <div class="small">※閾値が大きいほど「似た色」も境界として認識します（アンチエイリアス対策）。</div>
 
-    img.onload = () => ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    <h3 style="margin-top:12px">境界色の一覧（編集可能）</h3>
+    <div class="small">通常は黒(#000000)、中間灰(#808080)、明るめ灰(#cecece) を使います。</div>
+    <label>境界色1: <input type="text" id="b0" value="#000000"></label>
+    <label>境界色2: <input type="text" id="b1" value="#808080"></label>
+    <label>境界色3: <input type="text" id="b2" value="#cecece"></label>
+    <button id="reloadBtn">地図再読み込み</button>
+    <button id="saveBtn">セーブ（JSON ダウンロード）</button>
+    <button id="loadBtn">ロード（JSON 読込）</button>
+    <div style="margin-top:12px">
+      <div class="small">デバッグ: クリックしたピクセルの色</div>
+      <div id="pixInfo" class="small"></div>
+    </div>
+    <div style="margin-top:12px" class="small">注意: SVGを外部ドメインから読み込む場合、同一オリジンであるかCORSヘッダが必要です。`getImageData` が例外になるとバケツ塗りは動きません。</div>
+  </div>
 
-    // Flood fill（バケツ塗り）
-    function floodFill(x, y, fillColor) {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
+<script>
+// ====== 設定 ======
+const IMAGE_URL = 'https://kyouyuuno-to.f5.si/img/0001.svg'; // 指定URL（そのまま使う）
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d', { willReadFrequently: true });
+const fillColorEl = document.getElementById('fillColor');
+const tolEl = document.getElementById('tol');
+const tolVal = document.getElementById('tolVal');
+const pixInfo = document.getElementById('pixInfo');
+const reloadBtn = document.getElementById('reloadBtn');
+const saveBtn = document.getElementById('saveBtn');
+const loadBtn = document.getElementById('loadBtn');
 
-      function getPixel(x, y) {
-        const i = (y * canvas.width + x) * 4;
-        return [data[i], data[i+1], data[i+2], data[i+3]];
-      }
-      function setPixel(x, y, color) {
-        const i = (y * canvas.width + x) * 4;
-        data[i] = color[0];
-        data[i+1] = color[1];
-        data[i+2] = color[2];
-        data[i+3] = 255;
-      }
-      function colorsMatch(c1, c2) {
-        return c1[0]===c2[0] && c1[1]===c2[1] && c1[2]===c2[2] && c1[3]===c2[3];
-      }
-      function isBorder(c) {
-        // 灰色 or 黒なら壁扱い
-        return (c[0]===128 && c[1]===128 && c[2]===128) || 
-               (c[0]===0 && c[1]===0 && c[2]===0);
-      }
+// 境界色入力
+function getBoundaryColorsFromInputs(){
+  return [document.getElementById('b0').value, document.getElementById('b1').value, document.getElementById('b2').value].map(hexToRgb);
+}
 
-      const startColor = getPixel(x, y);
-      if (isBorder(startColor)) return;
+// 初期閾値表示
+tolVal.textContent = tolEl.value;
+tolEl.addEventListener('input', ()=> tolVal.textContent = tolEl.value);
 
-      const targetColor = fillColor.match(/\w\w/g).map(v=>parseInt(v,16));
-      targetColor.push(255);
+// ====== 画像読み込み ======
+const img = new Image();
+img.crossOrigin = 'anonymous'; // same-origin or CORS-enabled server required
+img.src = IMAGE_URL;
+let imageLoaded = false;
+img.onload = () => {
+  // キャンバスサイズを画像に合わせる（SVGの場合、naturalWidth 等が使えることがある）
+  const w = img.naturalWidth || 1200;
+  const h = img.naturalHeight || Math.round(w * 0.5);
+  canvas.width = Math.min(w, 1600); // 適当に制限して表示
+  canvas.height = Math.min(h, 900);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  imageLoaded = true;
+};
+img.onerror = (e) => {
+  alert('画像の読み込みに失敗しました。CORSやURLを確認してください。');
+  console.error(e);
+};
 
-      const stack = [[x,y]];
-      while (stack.length) {
-        const [cx, cy] = stack.pop();
-        if (cx<0 || cy<0 || cx>=canvas.width || cy>=canvas.height) continue;
-        const c = getPixel(cx, cy);
-        if (isBorder(c) || colorsMatch(c, targetColor)) continue;
+// ====== ユーティリティ ======
+function hexToRgb(hex){
+  if(!hex) return {r:0,g:0,b:0};
+  if(hex[0]==='#') hex = hex.slice(1);
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const n = parseInt(hex,16);
+  return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+}
+function colorDist2(c1,c2){
+  const dr=c1[0]-c2[0], dg=c1[1]-c2[1], db=c1[2]-c2[2];
+  return dr*dr + dg*dg + db*db;
+}
+function getPixel(data, w, x, y){
+  const i = (y*w + x)*4;
+  return [data[i], data[i+1], data[i+2], data[i+3]];
+}
+function setPixel(data, w, x, y, rgb){
+  const i = (y*w + x)*4;
+  data[i]=rgb[0]; data[i+1]=rgb[1]; data[i+2]=rgb[2]; data[i+3]=255;
+}
 
-        setPixel(cx, cy, targetColor);
-        stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
-      }
+// ====== Flood Fill（閾値対応・単純スタック + visited） ======
+function floodFillAt(startX, startY, fillHex){
+  if(!imageLoaded){ alert('画像読み込みを待ってください'); return; }
 
-      ctx.putImageData(imageData, 0, 0);
+  const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const data = imgData.data;
+  const w = imgData.width, h = imgData.height;
+  const tol = parseInt(tolEl.value, 10);
+  const tol2 = tol * tol;
+  const boundaryCols = getBoundaryColorsFromInputs().map(c => [c.r,c.g,c.b]);
+
+  // 閾値内で「境界色」とみなす
+  const isBoundary = (r,g,b) => {
+    for(const bc of boundaryCols){
+      if(colorDist2([r,g,b], bc) <= tol2) return true;
     }
+    return false;
+  };
 
-    // クリックで塗る
-    canvas.addEventListener("click", e=>{
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.floor(e.clientX - rect.left);
-      const y = Math.floor(e.clientY - rect.top);
-      const fillColor = document.getElementById("colorPicker").value;
-      floodFill(x, y, fillColor);
-    });
+  // 透明領域は塗らない（背景外など）
+  const inBounds = (x,y) => x>=0 && y>=0 && x<w && y<h;
 
-    // 簡易セーブ/ロード
-    function saveGame(){
-      const state = {
-        nation: document.getElementById("nationName").value,
-        ideology: document.getElementById("ideology").value,
-        currency: document.getElementById("currency").value
-      };
-      localStorage.setItem("saveData", JSON.stringify(state));
-      alert("セーブしました");
-    }
-    function loadGame(){
-      const state = JSON.parse(localStorage.getItem("saveData")||"{}");
-      if(state.nation) document.getElementById("nationName").value = state.nation;
-      if(state.ideology) document.getElementById("ideology").value = state.ideology;
-      if(state.currency) document.getElementById("currency").value = state.currency;
-      alert("ロードしました");
-    }
-  </script>
+  // start pixel check
+  if(!inBounds(startX, startY)) return;
+  const start = getPixel(data,w,startX,startY);
+  if(start[3]===0){ /* 透明 */ return; }
+  if(isBoundary(start[0], start[1], start[2])){ /* 境界上 */ return; }
+
+  // fill color rgba
+  const f = hexToRgb(fillHex);
+  const fillRgb = [f.r,f.g,f.b];
+
+  // If start pixel already same as fill color (allow some tolerance), skip
+  const sameAsFill = (r,g,b) => colorDist2([r,g,b], fillRgb) <= (tol/4)*(tol/4); // tiny tolerance
+  if(sameAsFill(start[0], start[1], start[2])) return;
+
+  const visited = new Uint8Array(w*h);
+  const stack = [[startX,startY]];
+  while(stack.length){
+    const [cx,cy] = stack.pop();
+    if(!inBounds(cx,cy)) continue;
+    const idx = cy*w + cx;
+    if(visited[idx]) continue;
+    const px = getPixel(data,w,cx,cy);
+    if(px[3]===0) continue; // transparent
+    if(isBoundary(px[0], px[1], px[2])) continue;
+    // paint
+    setPixel(data,w,cx,cy, fillRgb);
+    visited[idx]=1;
+    // neighbours
+    stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+}
+
+// ====== クリック処理（デバッグ表示あり） ======
+canvas.addEventListener('click', (ev)=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor(ev.clientX - rect.left);
+  const y = Math.floor(ev.clientY - rect.top);
+  try {
+    const id = ctx.getImageData(x,y,1,1);
+    const px = id.data;
+    pixInfo.textContent = `(${x},${y}) rgb(${px[0]},${px[1]},${px[2]}) a:${px[3]}`;
+  } catch(e){
+    pixInfo.textContent = 'getImageData エラー（CORSでキャンバスが汚染されています）';
+    console.error(e);
+    return;
+  }
+  const color = fillColorEl.value;
+  floodFillAt(x,y,color);
+});
+
+// ====== 再読み込みボタン ======
+reloadBtn.addEventListener('click', ()=>{
+  if(!imageLoaded){ alert('まだ読み込み中です'); return; }
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  pixInfo.textContent = '再描画しました';
+});
+
+// ====== セーブ / ロード（canvasのDataURLをJSONに含める） ======
+saveBtn.addEventListener('click', ()=>{
+  const saveObj = {
+    timestamp: Date.now(),
+    canvasDataUrl: canvas.toDataURL(),
+    boundaryColors: [document.getElementById('b0').value, document.getElementById('b1').value, document.getElementById('b2').value],
+    tolerance: tolEl.value
+  };
+  const blob = new Blob([JSON.stringify(saveObj, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'map_save.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+loadBtn.addEventListener('click', ()=>{
+  const input = document.createElement('input'); input.type='file'; input.accept='.json';
+  input.onchange = e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = evt=>{
+      try{
+        const obj = JSON.parse(evt.target.result);
+        // restore boundary colors/tolerance
+        if(obj.boundaryColors){
+          document.getElementById('b0').value = obj.boundaryColors[0] || '#000000';
+          document.getElementById('b1').value = obj.boundaryColors[1] || '#808080';
+          document.getElementById('b2').value = obj.boundaryColors[2] || '#cecece';
+        }
+        if(obj.tolerance) tolEl.value = obj.tolerance, tolVal.textContent = obj.tolerance;
+        if(obj.canvasDataUrl){
+          const im = new Image();
+          im.onload = ()=> {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            ctx.drawImage(im,0,0,canvas.width,canvas.height);
+          };
+          im.src = obj.canvasDataUrl;
+        }
+        pixInfo.textContent = 'ロードしました';
+      }catch(err){
+        alert('ロードエラー: '+err);
+      }
+    };
+    reader.readAsText(f);
+  };
+  input.click();
+});
+
+// 最低限の初期描画（イメージがまだ来てなくてもOK）
+ctx.fillStyle = '#ffffff';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+
+</script>
 </body>
 </html>
