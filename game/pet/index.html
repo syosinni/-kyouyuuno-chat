@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>AIペット「もこりん」</title>
+  <style>
+    body {
+      background: #f6fafe;
+      font-family: "メイリオ", "Meiryo", sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .pet {
+      margin: 30px auto 10px;
+      width: 130px;
+      height: 130px;
+      border-radius: 40% 50%;
+      background: linear-gradient(135deg,#a6e3f7,#fff);
+      box-shadow: 0 8px 20px #a6e3f7 inset, 0 2px 8px #999;
+      position: relative;
+      display: inline-block;
+    }
+    .pet-eye {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #222;
+      border-radius: 50%;
+      top: 52px;
+    }
+    .pet-eye.left { left: 34px; }
+    .pet-eye.right { right: 34px; }
+    .pet-mouth {
+      position: absolute;
+      width: 36px;
+      height: 18px;
+      border-radius: 0 0 30px 30px;
+      background: #fff;
+      bottom: 32px;
+      left: 48px;
+      border-bottom: 3px solid #89c9ea;
+    }
+    .chat-box {
+      width: 330px; margin: 0 auto 16px; padding: 9px;
+      background: #fff;
+      border-radius:10px;
+      box-shadow: 0 2px 12px #dceafd;
+      min-height: 120px;
+    }
+    .user { text-align: right; color: #387fd4; }
+    .bot { text-align: left; color: #24a69a; }
+    .input-area {
+      margin: 16px auto; width: 330px;
+    }
+    input, button {
+      font-size: 1.1em;
+      padding: 6px;
+      border-radius:7px; border: 1px solid #d2eefb;
+      margin: 2px;
+    }
+    button { background:#e6f2fa;}
+  </style>
+</head>
+<body>
+  <div class="pet">
+    <div class="pet-eye left"></div>
+    <div class="pet-eye right"></div>
+    <div class="pet-mouth"></div>
+  </div>
+  <h2>こんにちは！ぼく「もこりん」🐾</h2>
+  <div class="chat-box" id="chat"></div>
+  <form class="input-area" onsubmit="return false;">
+    <input id="userInput" type="text" placeholder="話しかけてみてね" autocomplete="off" size="25">
+    <button onclick="chat()">送信</button>
+  </form>
+  <script>
+    // --- マルコフ連鎖（2階）モデル ---
+    let chain = {};
+    // --- 単語・文法メモ ---
+    let memo = JSON.parse(localStorage.getItem("mokorin_memo")||"{}");
+
+    // 初期文セット（ペット対話用基本文）
+    const defaultText = [
+      "おはようございます。",
+      "今日も元気？",
+      "ごはん食べたいな。",
+      "遊んでほしいな。",
+      "眠い気がするよ。",
+      "何をしてる？",
+      "一緒にがんばろう！",
+      "ありがとう。",
+      "だいすきだよ。",
+      "えへへ、なでてほしい。",
+      "ぼく、もこりんっていうよ。"
+    ];
+
+    // 初期組み立て
+    function learn(text) {
+      text = text.replace(/[。！？\n]/g, " ");
+      let words = text.split(/\s+/).filter(Boolean);
+      for (let i=0; i<words.length-2; i++) {
+        let key = words[i] + " " + words[i+1];
+        chain[key] = chain[key] || [];
+        chain[key].push(words[i+2]);
+      }
+    }
+    defaultText.forEach(learn);
+
+    // ユーザー対話履歴→学習
+    function learnFromHistory() {
+      let history = JSON.parse(localStorage.getItem("mokorin_history")||"[]");
+      history.forEach(learn);
+    }
+    learnFromHistory();
+
+    // マルコフ生成
+    function generate(seed) {
+      let seedWords = seed.split(/\s+/).filter(Boolean);
+      let w1 = seedWords[0]||Object.keys(chain)[0]?.split(" ")[0];
+      let w2 = seedWords[1]||Object.keys(chain)[0]?.split(" ")[1];
+      let result = [w1,w2];
+      for(let i=0;i<15;i++) {
+        let key = result[result.length-2]+" "+result[result.length-1];
+        let nexts = chain[key];
+        if(!nexts||nexts.length==0) break;
+        let next = nexts[Math.floor(Math.random()*nexts.length)];
+        result.push(next);
+      }
+      return result.join(" ")+"。";
+    }
+
+    // 基本文法辞書（超簡易）
+    const basicGram = {
+      "おはよう": "朝の挨拶", "こんにちは":"昼の挨拶", "こんばんは":"夜の挨拶",
+      "ありがとう": "感謝", "だいすき":"好意", "ごはん":"食事", "遊ぶ":"行動", "眠い":"状態"
+    };
+
+    // 受け答え
+    function chat() {
+      let input = document.getElementById("userInput").value.trim();
+      if(!input) return;
+      printChat("user", input);
+
+      // 保存履歴
+      let history = JSON.parse(localStorage.getItem("mokorin_history")||"[]");
+      history.push(input);
+      localStorage.setItem("mokorin_history",JSON.stringify(history));
+
+      // 分かる単語/文法・分からないもの判定
+      let unknowns = [];
+      let words = input.replace(/[。！？\n]/g, " ").split(/\s+/).filter(Boolean);
+      for(let w of words){
+        if(!basicGram[w] && !memo[w]){
+          unknowns.push(w);
+          memo[w] = "未学習"; // メモ保存
+        }
+      }
+      localStorage.setItem("mokorin_memo",JSON.stringify(memo));
+
+      // 学習
+      learn(input);
+
+      // 応答生成
+      let reply = "";
+      if(unknowns.length > 0){
+        reply = "「"+unknowns.join(", ")+"」はまだよく知らないみたい。今度調べてみるね。";
+      } else {
+        reply = generate(input);
+      }
+      printChat("bot", reply);
+      document.getElementById("userInput").value="";
+    }
+
+    // 画面表示
+    function printChat(type, text){
+      let box = document.getElementById("chat");
+      let div = document.createElement("div");
+      div.className = type;
+      div.textContent = (type=="user"?"あなた: ":"もこりん: ")+text;
+      box.appendChild(div);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    // 初回メッセージ
+    printChat("bot","こんにちは！ぼく、もこりん🐾　なんでも話しかけてね。");
+
+    // キーボード送信対応
+    document.getElementById("userInput").addEventListener("keydown", function(e){
+      if(e.key==="Enter") chat();
+    });
+  </script>
+</body>
+</html>
