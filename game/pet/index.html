@@ -47,19 +47,23 @@
       border-radius:10px;
       box-shadow: 0 2px 12px #dceafd;
       min-height: 120px;
+      max-height: 240px;
+      overflow-y: auto;
     }
     .user { text-align: right; color: #387fd4; }
     .bot { text-align: left; color: #24a69a; }
     .input-area {
       margin: 16px auto; width: 330px;
     }
-    input, button {
+    input, button, textarea {
       font-size: 1.1em;
       padding: 6px;
       border-radius:7px; border: 1px solid #d2eefb;
       margin: 2px;
     }
     button { background:#e6f2fa;}
+    .learn-form {background:#fffbe6; padding:7px 12px; border-radius:8px; margin:10px auto;}
+    .learn-form label {display:block; margin:6px 0 2px; color:#d28721;}
   </style>
 </head>
 <body>
@@ -70,10 +74,11 @@
   </div>
   <h2>こんにちは！ぼく「もこりん」🐾</h2>
   <div class="chat-box" id="chat"></div>
-  <form class="input-area" onsubmit="return false;">
+  <form class="input-area" onsubmit="return false;" id="inputForm">
     <input id="userInput" type="text" placeholder="話しかけてみてね" autocomplete="off" size="25">
     <button onclick="chat()">送信</button>
   </form>
+  <div id="learnArea"></div>
   <script>
     // --- マルコフ連鎖（2階）モデル ---
     let chain = {};
@@ -136,8 +141,14 @@
       "ありがとう": "感謝", "だいすき":"好意", "ごはん":"食事", "遊ぶ":"行動", "眠い":"状態"
     };
 
+    let pendingLearn = null; // 現在学習中単語
+
     // 受け答え
     function chat() {
+      if(pendingLearn) {
+        printChat("bot","「" + pendingLearn.word + "」について教えてくれる？下の黄色いフォームから入力してね。");
+        return;
+      }
       let input = document.getElementById("userInput").value.trim();
       if(!input) return;
       printChat("user", input);
@@ -151,23 +162,25 @@
       let unknowns = [];
       let words = input.replace(/[。！？\n]/g, " ").split(/\s+/).filter(Boolean);
       for(let w of words){
-        if(!basicGram[w] && !memo[w]){
-          unknowns.push(w);
-          memo[w] = "未学習"; // メモ保存
+        if(!basicGram[w] && (!memo[w]||memo[w]=="未学習")){
+          if(!unknowns.includes(w)) unknowns.push(w);
         }
       }
-      localStorage.setItem("mokorin_memo",JSON.stringify(memo));
 
       // 学習
       learn(input);
 
-      // 応答生成
-      let reply = "";
+      // 未学習あれば学習フォーム提示
       if(unknowns.length > 0){
-        reply = "「"+unknowns.join(", ")+"」はまだよく知らないみたい。今度調べてみるね。";
-      } else {
-        reply = generate(input);
+        pendingLearn = {word: unknowns[0]};
+        showLearnForm(unknowns[0]);
+        printChat("bot", "「" + unknowns[0] + "」はまだよく知らないみたい。意味と返し方を教えてくれる？");
+        document.getElementById("userInput").value="";
+        return;
       }
+
+      // 既知語のみ→通常マルコフ応答
+      let reply = generate(input);
       printChat("bot", reply);
       document.getElementById("userInput").value="";
     }
@@ -180,6 +193,84 @@
       div.textContent = (type=="user"?"あなた: ":"もこりん: ")+text;
       box.appendChild(div);
       box.scrollTop = box.scrollHeight;
+    }
+
+    // 学習フォームの表示
+    function showLearnForm(word){
+      let area = document.getElementById("learnArea");
+      area.innerHTML = `
+      <form class="learn-form" onsubmit="return false;" id="formLearn">
+        <label>「${word}」の意味を教えてください:</label>
+        <input type="text" id="wordMean" placeholder="意味を入力" maxlength="30"><br>
+        <label>こんなふうに返してほしい（候補１）:</label>
+        <input type="text" id="resp1" placeholder="例: すごいね！" maxlength="30"><br>
+        <label>候補２:</label>
+        <input type="text" id="resp2" placeholder="例: それは面白いね！" maxlength="30"><br>
+        <label>候補３:</label>
+        <input type="text" id="resp3" placeholder="例: もっと教えて！" maxlength="30"><br>
+        <button onclick="submitLearn()">保存する</button>
+      </form>
+      `;
+      document.getElementById("wordMean").focus();
+    }
+
+    // 学習フォームの保存
+    window.submitLearn = function(){
+      if(!pendingLearn) return;
+      let mean = document.getElementById("wordMean").value.trim();
+      let responses = [
+        document.getElementById("resp1").value.trim(),
+        document.getElementById("resp2").value.trim(),
+        document.getElementById("resp3").value.trim()
+      ].filter(Boolean);
+
+      if(!mean || responses.length==0) {
+        alert("意味と返答候補を最低1つ以上入力してください。");
+        return;
+      }
+
+      // 保存
+      memo[pendingLearn.word] = {
+        meaning: mean,
+        responses: responses
+      };
+      localStorage.setItem("mokorin_memo",JSON.stringify(memo));
+
+      printChat("bot","ありがとう！覚えたよ。次からは「"+pendingLearn.word+"」を話しても返せるよ。");
+
+      pendingLearn = null;
+      document.getElementById("learnArea").innerHTML = "";
+      document.getElementById("userInput").focus();
+    }
+
+    // 応答生成の改良（memo語対応）
+    function generate(seed) {
+      let words = seed.replace(/[。！？\n]/g, " ").split(/\s+/).filter(Boolean);
+      // 未学習語にmemoを使う
+      for(let w of words){
+        if(memo[w] && memo[w].responses && memo[w].responses.length>0){
+          // ランダム候補
+          let arr = memo[w].responses;
+          return arr[Math.floor(Math.random()*arr.length)] + "（「" + w + "」の意味: " + memo[w].meaning + "）";
+        }
+      }
+      // ふつうのマルコフ
+      return defaultGen(seed);
+    }
+    // 通常マルコフ応答
+    function defaultGen(seed){
+      let seedWords = seed.split(/\s+/).filter(Boolean);
+      let w1 = seedWords[0]||Object.keys(chain)[0]?.split(" ")[0];
+      let w2 = seedWords[1]||Object.keys(chain)[0]?.split(" ")[1];
+      let result = [w1,w2];
+      for(let i=0;i<15;i++) {
+        let key = result[result.length-2]+" "+result[result.length-1];
+        let nexts = chain[key];
+        if(!nexts||nexts.length==0) break;
+        let next = nexts[Math.floor(Math.random()*nexts.length)];
+        result.push(next);
+      }
+      return result.join(" ")+"。";
     }
 
     // 初回メッセージ
