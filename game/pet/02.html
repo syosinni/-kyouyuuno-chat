@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ともりん／もこりん（json共有・削除・インポート対応）</title>
+<style>
+body { background: #f6fafe; font-family:"メイリオ", "Meiryo", sans-serif; text-align: center; margin:0;}
+.topbar {background:#deedfc; padding:6px;}
+.avatar { width:130px; height:130px; border-radius:50%; object-fit:cover; box-shadow: 0 8px 20px #b6e3f7 inset, 0 2px 8px #999; display:inline-block;}
+#avatarDefault { width:130px; height:130px; display:inline-block; border-radius:50%; background:linear-gradient(135deg,#a6e3f7,#fff); position:relative;}
+#avatarDefault .eye { position:absolute; width:24px; height:24px; background:#222; border-radius:50%; top:52px;}
+#avatarDefault .eye.left { left:34px; }
+#avatarDefault .eye.right { right:34px; }
+#avatarDefault .mouth { position:absolute; width:36px; height:18px; border-radius:0 0 30px 30px; background:#fff; bottom:32px; left:48px;border-bottom:3px solid #89c9ea;}
+.input-area { margin:16px auto; width: 355px; }
+button { background:#e6f2fa; }
+.miniBtn {font-size:0.92em; margin:0 2px; }
+.chat-box { width: 350px; margin: 0 auto 16px; padding: 9px; background: #fff; border-radius:10px; box-shadow: 0 2px 12px #dceafd; min-height: 120px; max-height: 250px; overflow-y: auto; margin-top:7px;}
+.user { text-align: right; color: #387fd4; }
+.bot { text-align: left; color: #24a69a; position:relative;}
+.favbtn { display:inline-block; margin-left:8px; background:#ffe486; border-radius:7px; padding:2px 6px; border:0; font-size:1em; cursor:pointer;}
+.favbtn.active { background:#ffd46a;}
+</style>
+</head>
+<body>
+<div class="topbar">
+<b>友達AI「ともりん／もこりん」</b>
+ <button onclick="setupShow()" class="miniBtn">アイコン/名前設定</button>
+ <input type="file" id="memoFileInp" accept="application/json" onchange="memoImportFile(this)" style="display:inline-block;">
+ <button onclick="clearAll()" class="miniBtn" style="background:#ffc2b0;">キャラ&学習データ全消去</button>
+</div>
+<div style="margin:5px 0 10px 0;color:#5c69ab;">
+</div>
+<div id="setup" style="display:none;">
+  <label>AIの名前: <input type="text" id="friendName" value=""></label><br>
+  <label>アイコン画像: <input type="file" id="avatarFile" accept="image/*"></label><br>
+  <button onclick="setupSave()">保存</button>
+  <button onclick="setupHide()">キャンセル</button>
+</div>
+
+<div id="avatarZone">
+ <div id="avatarDefault">
+   <div class="eye left"></div>
+   <div class="eye right"></div>
+   <div class="mouth"></div>
+ </div>
+</div>
+<h2 id="aiNameH">もこりん🐾</h2>
+<div class="chat-box" id="chat"></div>
+<form class="input-area" onsubmit="return false;">
+  <input id="userInput" type="text" placeholder="話しかけてみてね" autocomplete="off" size="27">
+  <button onclick="chat()">送信</button>
+</form>
+<div id="learnArea"></div>
+
+<script>
+let chain = {};
+let memo = JSON.parse(localStorage.getItem("friend_memo")||"{}");
+let fav = JSON.parse(localStorage.getItem("friend_fav")||"{}");
+let friendName = localStorage.getItem("friend_name") || "もこりん";
+let avatarImg = localStorage.getItem("friend_avatar") || "";
+
+const defaultText = [
+  "おはようございます。","元気？","だいすきだよ。","ありがとう！","なでてほしい。"
+];
+function chainInit(){
+  chain = {}; defaultText.forEach(learn); learnFromHistory();
+}
+function learn(text) {
+  text = text.replace(/[。！？\n]/g, " ");
+  let words = text.split(/\s+/).filter(Boolean);
+  for (let i=0; i<words.length-2; i++) {
+    let key = words[i] + " " + words[i+1];
+    chain[key] = chain[key] || [];
+    chain[key].push(words[i+2]);
+  }
+}
+function learnFromHistory() {
+  let history = JSON.parse(localStorage.getItem("friend_history")||"[]");
+  history.forEach(learn);
+}
+chainInit();
+
+let pendingLearn = null;
+function chat() {
+  if(pendingLearn) {
+    printChat("bot",`「${pendingLearn.word}」について下の黄色フォームから教えてね。`);
+    return;
+  }
+  let input = document.getElementById("userInput").value.trim();
+  if(!input) return;
+  printChat("user", input);
+  let history = JSON.parse(localStorage.getItem("friend_history")||"[]");
+  history.push(input); localStorage.setItem("friend_history",JSON.stringify(history));
+  let unknowns = []; let words = input.replace(/[。！？\n]/g, " ").split(/\s+/).filter(Boolean);
+  for(let w of words){ if(!memo[w]||memo[w].responses===undefined)
+    if(!unknowns.includes(w)) unknowns.push(w); }
+  learn(input);
+  if(unknowns.length > 0){
+    pendingLearn = {word: unknowns[0]};
+    showLearnForm(unknowns[0]);
+    printChat("bot",`「${unknowns[0]}」はまだ知らないな…どんな風に返してほしい？候補を最大3つ教えてね！`);
+    document.getElementById("userInput").value=""; return;
+  }
+  let reply = generate(input, words);
+  printChat("bot", reply, words);
+  document.getElementById("userInput").value="";
+}
+function printChat(type, text, inputWords) {
+  let box = document.getElementById("chat");
+  let div = document.createElement("div");
+  div.className = type;
+  if(type=="user"){ div.textContent = "あなた: " + text; }
+  else{
+    div.textContent = friendName+": " + text;
+    let favBtn = document.createElement("button");
+    favBtn.className = "favbtn" + (fav[text]?" active":"");
+    favBtn.textContent = fav[text]?"★お気に入り":"☆お気に入り";
+    favBtn.onclick = function(){
+      if(fav[text]){ delete fav[text]; }
+      else{ fav[text]=true; }
+      localStorage.setItem("friend_fav",JSON.stringify(fav));
+      favBtn.textContent = fav[text]?"★お気に入り":"☆お気に入り";
+      favBtn.className = "favbtn" + (fav[text]?" active":"");
+    };
+    div.appendChild(favBtn);
+  }
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+function showLearnForm(word){
+  let area = document.getElementById("learnArea");
+  area.innerHTML = `
+  <form class="learn-form" onsubmit="return false;">
+    <label>返答候補1:<input type="text" id="resp1" maxlength="36"></label>
+    <label>返答候補2:<input type="text" id="resp2" maxlength="36"></label>
+    <label>返答候補3:<input type="text" id="resp3" maxlength="36"></label>
+    <button onclick="submitLearn()">保存</button>
+  </form>`;
+  document.getElementById("resp1").focus();
+}
+window.submitLearn = function(){
+  if(!pendingLearn) return;
+  let responses = [
+    document.getElementById("resp1").value.trim(),
+    document.getElementById("resp2").value.trim(),
+    document.getElementById("resp3").value.trim()
+  ].filter(Boolean);
+  if(responses.length===0) {
+    alert("候補を1つは入力してね。"); return;
+  }
+  memo[pendingLearn.word] = { responses: responses };
+  localStorage.setItem("friend_memo",JSON.stringify(memo));
+  printChat("bot",`ありがとう！「${pendingLearn.word}」を覚えたよ。`);
+  pendingLearn = null;
+  document.getElementById("learnArea").innerHTML = ""; document.getElementById("userInput").focus();
+}
+function generate(seed, words) {
+  for(let w of words){
+    if(memo[w] && memo[w].responses && memo[w].responses.length>0){
+      let arr = memo[w].responses, favs = arr.filter(x=>fav[x]);
+      if(favs.length>0) return favs[Math.floor(Math.random()*favs.length)];
+      return arr[Math.floor(Math.random()*arr.length)];
+    }
+  }
+  let seedWords = seed.split(/\s+/).filter(Boolean);
+  let w1 = seedWords[0]||Object.keys(chain)[0]?.split(" ")[0];
+  let w2 = seedWords[1]||Object.keys(chain)[0]?.split(" ")[1];
+  let result = [w1,w2];
+  for(let i=0;i<15;i++) {
+    let key = result[result.length-2]+" "+result[result.length-1], nexts = chain[key];
+    if(!nexts||nexts.length==0) break;
+    let next = nexts[Math.floor(Math.random()*nexts.length)];
+    result.push(next);
+  }
+  return result.join(" ")+"。";
+}
+function setupShow(){
+  document.getElementById("setup").style.display="block";
+  document.getElementById("friendName").value=friendName;
+}
+function setupHide(){ document.getElementById("setup").style.display="none"; }
+function setupSave(){
+  let name = document.getElementById("friendName").value.trim();
+  friendName = name?name:"もこりん"; localStorage.setItem("friend_name",friendName);
+  document.getElementById("aiNameH").textContent = friendName;
+  setupHide();
+  let file = document.getElementById("avatarFile").files[0];
+  if(file){
+    let reader = new FileReader();
+    reader.onload = function(e){
+      avatarImg = e.target.result;
+      localStorage.setItem("friend_avatar", avatarImg); avatarRender();
+    }; reader.readAsDataURL(file);
+  }else{
+    avatarImg=""; localStorage.removeItem("friend_avatar"); avatarRender();
+  }
+}
+function avatarRender(){
+  let zone = document.getElementById("avatarZone");
+  if(avatarImg){
+    zone.innerHTML='<img class="avatar" src="'+avatarImg+'">';
+  }else{
+    zone.innerHTML=`<div id="avatarDefault">
+      <div class="eye left"></div>
+      <div class="eye right"></div>
+      <div class="mouth"></div>
+    </div>`;
+  }
+}
+// --- ファイルからjsonインポート ---
+function memoImportFile(inp){
+  let file = inp.files[0];
+  if(!file) return;
+  let r = new FileReader();
+  r.onload = function(e){
+    try{
+      let obj = JSON.parse(e.target.result);
+      memo = obj;
+      localStorage.setItem("friend_memo",JSON.stringify(memo));
+      alert("インポートしました！");
+    }catch(e){alert("jsonが正しくありません");}
+  }
+  r.readAsText(file, "utf-8");
+  inp.value="";
+}
+// キャラ削除警告＋一括リセット
+function clearAll(){
+  if(confirm("AIのアイコン/名前・学習記録・お気に入りも全て消去し復元できません。本当に削除しますか？")){
+    localStorage.removeItem("friend_memo");
+    localStorage.removeItem("friend_fav");
+    localStorage.removeItem("friend_avatar");
+    localStorage.removeItem("friend_name");
+    localStorage.removeItem("friend_history");
+    memo = {};
+    fav = {};
+    friendName = "もこりん";
+    avatarImg = "";
+    chainInit();
+    document.getElementById("chat").innerHTML="";
+    document.getElementById("aiNameH").textContent = friendName + "🐾";
+    avatarRender();
+    document.getElementById("userInput").value="";
+    alert("すべてリセットしました！");
+  }
+}
+
+// 初期
+avatarRender();
+document.getElementById("aiNameH").textContent = friendName+"🐾";
+printChat("bot","こんにちは！ぼく、もこりん🐾　なんでも話しかけてね。");
+document.getElementById("userInput").addEventListener("keydown", function(e){if(e.key==="Enter") chat();});
+</script>
+</body>
+</html>
