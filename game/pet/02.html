@@ -3,611 +3,721 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ともりん／もこりん - 単語・文法学習対応版</title>
+    <title>ともりん／もこりん - AI学習ゲーム（単語・文法対応）</title>
     <style>
+        /* CSS: オリジナルのデザインを参考に、清潔でフレンドリーなスタイルを設定 */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
+            background: #f0f8ff; /* 薄い水色 */
             color: #333;
             margin: 0;
             padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-        .container {
-            display: flex;
-            max-width: 1200px;
-            width: 100%;
-        }
-        .ai-panel, .learning-panel {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin: 10px;
-        }
-        .ai-panel {
-            flex: 1;
-            min-width: 350px;
-        }
-        .learning-panel {
-            flex: 2;
-        }
-
-        /* AI Status */
-        .ai-status {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 20px;
-        }
-        #ai-icon {
-            font-size: 80px;
-            display: block;
-            margin-bottom: 10px;
-        }
-        #ai-name {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: #007bff;
-        }
-        .chat-window {
-            height: 300px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            overflow-y: scroll;
-            margin-bottom: 10px;
-            background-color: #f9f9f9;
-            border-radius: 8px;
-        }
-        .message {
-            margin-bottom: 8px;
-            padding: 6px 10px;
-            border-radius: 15px;
-            max-width: 80%;
-        }
-        .user-msg {
-            background-color: #007bff;
-            color: white;
-            margin-left: auto;
-            text-align: right;
-        }
-        .ai-msg {
-            background-color: #e2e6ea;
-            color: #333;
-            margin-right: auto;
         }
 
-        /* Input and Buttons */
-        input[type="text"], textarea {
-            width: calc(100% - 22px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        button {
+
+        /* キャラクター表示エリア */
+        #aiPetDisplay {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* アバターデフォルトデザイン (元のMHTMLを参考に) */
+        #avatarDefault {
+            width: 100px;
+            height: 100px;
+            display: inline-block;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgb(166, 227, 247), rgb(255, 255, 255));
+            position: relative;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 10px;
+        }
+
+        #avatarDefault .eye {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: rgb(34, 34, 34);
+            border-radius: 50%;
+            top: 40px;
+        }
+
+        #avatarDefault .eye.left { left: 25px; }
+        #avatarDefault .eye.right { right: 25px; }
+
+        #avatarDefault .mouth {
+            position: absolute;
+            width: 28px;
+            height: 14px;
+            border-radius: 0 0 30px 30px;
+            background: #fff;
+            bottom: 25px;
+            left: 36px;
+            border-bottom: 3px solid rgb(137, 201, 234);
+        }
+        
+        #aiAvatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #66b3e7;
+            margin-bottom: 10px;
+        }
+
+        #aiName {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-bottom: 15px;
+        }
+
+        /* 吹き出しスタイル */
+        #aiSpeech {
+            background: #e1f5fe;
+            border-radius: 10px;
             padding: 10px 15px;
-            background-color: #007bff;
+            margin: 10px 0 20px 0;
+            text-align: left;
+            position: relative;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        #aiSpeech::before {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 10px 10px 10px;
+            border-color: transparent transparent #e1f5fe transparent;
+            position: absolute;
+            top: -10px;
+            left: 50px;
+        }
+
+
+        /* 入力エリア */
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #userInput {
+            flex-grow: 1;
+            padding: 10px;
+            border: 2px solid #b3e5fc;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        button {
+            background: #81d4fa;
             color: white;
             border: none;
-            border-radius: 4px;
+            padding: 10px 15px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .mini-button {
-            padding: 5px 10px;
-            font-size: 0.8em;
-            margin-left: 5px;
-        }
-        .danger-btn {
-            background-color: #dc3545;
-        }
-        .danger-btn:hover {
-            background-color: #c82333;
-        }
-        .success-btn {
-            background-color: #28a745;
-        }
-        .success-btn:hover {
-            background-color: #1e7e34;
-        }
-        .info-btn {
-            background-color: #17a2b8;
-        }
-        .info-btn:hover {
-            background-color: #117a8b;
+            font-weight: bold;
+            transition: background 0.2s;
         }
 
-        /* Learning Panel Tabs */
+        button:hover {
+            background: #4fc3f7;
+        }
+
+        /* タブインターフェース */
         .tabs {
             display: flex;
             margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
         }
-        .tabs button {
-            flex: 1;
-            background-color: #e9ecef;
-            color: #495057;
+
+        .tab-btn {
+            flex-grow: 1;
+            padding: 10px;
+            background: #eee;
             border: none;
-            border-radius: 0;
-            padding: 12px;
-            margin-right: 2px;
-        }
-        .tabs button:last-child {
-            margin-right: 0;
-        }
-        .tabs button.active {
-            background-color: #007bff;
-            color: white;
-            border-radius: 4px 4px 0 0;
-        }
-        .tab-content {
-            border: 1px solid #ddd;
-            padding: 15px;
-            border-radius: 0 4px 4px 4px;
-            background-color: #f7f7f7;
-            margin-bottom: 20px;
-        }
-        .data-list {
-            max-height: 250px;
-            overflow-y: scroll;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-        }
-        .data-list div {
-            padding: 8px;
-            border-bottom: 1px dashed #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .data-list div:last-child {
-            border-bottom: none;
-        }
-        .save-status {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #28a745;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 8px 8px 0 0;
             font-weight: bold;
+            color: #555;
+        }
+
+        .tab-btn.active {
+            background: #fff;
+            border-bottom: 2px solid #81d4fa;
+            color: #4a90e2;
+        }
+
+        .tab-content {
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 0 0 10px 10px;
+            text-align: left;
+        }
+
+        .data-input-group {
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .data-input-group label {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #4a90e2;
+        }
+
+        .data-input-group input, .data-input-group textarea {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* JSON操作エリア */
+        .json-area {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed #ccc;
+        }
+
+        .json-area button {
+            margin-right: 10px;
+            padding: 8px 12px;
+        }
+        
+        .storage-status {
+            font-size: 0.8em;
+            color: green;
+            margin-top: 10px;
+            text-align: right;
+        }
+        
+        h3 {
+            color: #4a90e2;
+            border-bottom: 2px solid #b3e5fc;
+            padding-bottom: 5px;
+            margin-top: 0;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="ai-panel">
-        <h2>🤖 AI「ともりん／もこりん」</h2>
-        <div class="ai-status">
-            <span id="ai-icon">🤖</span>
-            <input type="text" id="ai-name" value="ともりん" onchange="updateCharacterName(this.value)" maxlength="10">
-            <p class="save-status" id="save-status">自動保存済み</p>
-        </div>
+    <div class="container">
+        <h1>ともりん／もこりん 💬</h1>
+        <p>AIに言葉、単語、文法を覚えさせるゲーム</p>
 
-        <h3>会話テスト</h3>
-        <div class="chat-window" id="chat-window">
-            <div class="message ai-msg">こんにちは！私に色々な言葉を教えてね。</div>
-        </div>
-        <div class="chat-input">
-            <input type="text" id="user-input" placeholder="メッセージを入力...">
-            <button onclick="sendMessage()">送信</button>
-        </div>
-        
-        <h3>システム機能</h3>
-        <p>
-            <button class="info-btn" onclick="document.getElementById('json-file').click()">JSONインポート</button>
-            <input type="file" id="json-file" accept=".json" style="display: none;" onchange="importJSON(event)">
-            <button class="info-btn" onclick="exportJSON()">JSONエクスポート</button>
-        </p>
-        <p>
-            <button class="danger-btn" onclick="resetData()">全データリセット</button>
-            <span style="font-size: 0.8em; margin-left: 10px;">(アイコン、名前、学習データすべて)</span>
-        </p>
-
-    </div>
-
-    <div class="learning-panel">
-        <h2>📖 学習データ管理</h2>
-        
-        <div class="tabs">
-            <button class="active" onclick="switchTab('dialogue')">文章学習 (対話)</button>
-            <button onclick="switchTab('vocabulary')">単語学習 (語彙)</button>
-            <button onclick="switchTab('grammar')">文法学習 (パターン)</button>
-        </div>
-
-        <div class="tab-content" id="dialogue-tab">
-            <h4>新しい文章を教える</h4>
-            <input type="text" id="dialogue-input" placeholder="質問文や入力文（例: こんにちわ）">
-            <input type="text" id="dialogue-output" placeholder="AIの返答（例: やあ、元気？）">
-            <button class="success-btn" onclick="addDialogue()">文章を記憶させる</button>
-
-            <h4>記憶済みの文章</h4>
-            <div class="data-list" id="dialogue-list"></div>
-        </div>
-
-        <div class="tab-content" id="vocabulary-tab" style="display: none;">
-            <h4>新しい単語と反応を教える</h4>
-            <input type="text" id="vocab-word" placeholder="覚えさせる単語（例: りんご）">
-            <input type="text" id="vocab-response" placeholder="反応/説明 (複数可、カンマ区切りで例: 果物,美味しい,好き)">
-            <button class="success-btn" onclick="addVocabulary()">単語を記憶させる</button>
-
-            <h4>記憶済みの単語</h4>
-            <div class="data-list" id="vocabulary-list"></div>
-        </div>
-
-        <div class="tab-content" id="grammar-tab" style="display: none;">
-            <h4>新しい文法パターンを教える</h4>
-            <p style="font-size: 0.9em; color: #555;">※パターン認識は「[キーワード]」をトリガーとします。</p>
-            <input type="text" id="grammar-pattern" placeholder="入力パターン（例: [名詞]は[形容詞]ですね）">
-            <input type="text" id="grammar-response" placeholder="返答パターン（例: 確かに[名詞]は[形容詞]だよね）">
-            <button class="success-btn" onclick="addGrammar()">文法パターンを記憶させる</button>
+        <div id="aiPetDisplay">
+            <div id="avatarContainer">
+                <div id="avatarDefault" class="default-avatar">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="mouth"></div>
+                </div>
+            </div>
             
-            <h4>記憶済みの文法パターン</h4>
-            <div class="data-list" id="grammar-list"></div>
+            <div id="aiName">ともりん</div>
+
+            <div id="aiSpeech">こんにちは！たくさん言葉を教えてね。</div>
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="メッセージを入力...">
+            <button onclick="handleChat()">送信</button>
+        </div>
+        
+        <div class="storage-status" id="saveStatus"></div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('learning', this)">💡学習</button>
+            <button class="tab-btn" onclick="showTab('settings', this)">⚙️設定・JSON</button>
         </div>
 
+        <div id="learning" class="tab-content">
+            <h3>学習データの登録</h3>
+            <div class="data-input-group">
+                <label for="learningType">学習タイプ:</label>
+                <select id="learningType" onchange="updateLearningInputs(this.value)">
+                    <option value="dialogue">1. 会話（文章と返答）</option>
+                    <option value="vocabulary">2. 単語（語彙と説明/反応）</option>
+                    <option value="grammar">3. 文法（パターンと返答構造）</option>
+                </select>
+            </div>
+
+            <div class="data-input-group">
+                <label id="inputLabel" for="inputData">入力（会話全体、単語、文法パターン例:「〜が好き」）</label>
+                <input type="text" id="inputData" placeholder="例: お腹空いた" required>
+            </div>
+
+            <div class="data-input-group">
+                <label id="outputLabel" for="outputData">出力・返答（AIの返事）</label>
+                <input type="text" id="outputData" placeholder="例: 何か食べる？" required>
+            </div>
+
+            <button onclick="addLearningData()">この内容を覚えさせる</button>
+            
+            <p style="margin-top: 15px; font-size: 0.9em; color: #555;">※「入力」と完全に一致するか、文法パターンに合致する場合にAIが反応します。</p>
+        </div>
+
+        <div id="settings" class="tab-content" style="display: none;">
+            <h3>キャラクター設定</h3>
+            <div class="data-input-group">
+                <label for="charNameInput">AIの名前変更:</label>
+                <input type="text" id="charNameInput" placeholder="新しい名前" oninput="changeCharacterName(this.value)">
+            </div>
+            <div class="data-input-group">
+                <label for="avatarFile">AIアイコン変更 (画像ファイル):</label>
+                <input type="file" id="avatarFile" accept="image/*" onchange="changeCharacterAvatar(event)">
+                <button style="background: #ef5350;" onclick="clearAvatar()">アイコンを初期化</button>
+            </div>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px dashed #ccc;">
+
+            <h3>JSONデータの共有・管理</h3>
+            <div class="json-area">
+                <p style="font-size: 0.9em;">AIの全学習データをJSONファイルとしてエクスポート・インポートできます。</p>
+                <button onclick="exportJSON()">学習データをJSONで保存</button>
+                <label for="importFile" style="background: #66bb6a; color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; display: inline-block; font-weight: bold;">
+                    学習データをJSONから読み込み
+                </label>
+                <input type="file" id="importFile" accept=".json" onchange="importJSON(event)" style="display: none;">
+                
+                <hr style="margin: 20px 0; border: 0; border-top: 1px dashed #ff9800;">
+                
+                <button style="background: #ef5350;" onclick="clearAllData()">⚠️ 全データ（設定・学習内容）を消去</button>
+                <p style="font-size: 0.8em; color: #ef5350;">※ローカルストレージに保存された内容もすべて消去され、初期状態に戻ります。</p>
+            </div>
+        </div>
     </div>
-</div>
 
-<script>
-    // --- データの初期設定と自動保存/読み込み ---
-    const STORAGE_KEY = 'tomorin_mokorin_v2_data';
-    let AI_DATA = {
-        name: 'ともりん',
-        icon: '🤖',
-        learning_data: {
-            dialogue: [],    // {input: string, output: string}
-            vocabulary: [],  // {word: string, responses: string[]}
-            grammar: []      // {pattern: string, response: string}
-        }
-    };
-
-    /** ローカルストレージにデータを自動保存する */
-    function saveData() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(AI_DATA));
-        const saveStatus = document.getElementById('save-status');
-        saveStatus.textContent = '自動保存済み (' + new Date().toLocaleTimeString() + ')';
-    }
-
-    /** ローカルストレージからデータを読み込む */
-    function loadData() {
-        const savedData = localStorage.getItem(STORAGE_KEY);
-        if (savedData) {
-            try {
-                const parsedData = JSON.parse(savedData);
-                // データの互換性を確保（新しいフィールドがない場合に初期化）
-                AI_DATA.name = parsedData.name || AI_DATA.name;
-                AI_DATA.icon = parsedData.icon || AI_DATA.icon;
-                AI_DATA.learning_data = {
-                    dialogue: parsedData.learning_data?.dialogue || [],
-                    vocabulary: parsedData.learning_data?.vocabulary || [],
-                    grammar: parsedData.learning_data?.grammar || []
-                };
-
-                // UIの更新
-                document.getElementById('ai-name').value = AI_DATA.name;
-                document.getElementById('ai-icon').textContent = AI_DATA.icon;
-                
-                renderAllDataLists();
-                console.log('データを読み込みました。');
-                return true;
-            } catch (e) {
-                console.error('保存されたデータの解析に失敗しました:', e);
-            }
-        }
-        renderAllDataLists();
-        return false;
-    }
-
-    // ウィンドウロード時にデータ読み込みを実行
-    window.onload = loadData;
-
-    // --- UI操作と学習データ追加 ---
-
-    /** キャラクター名を更新し、自動保存 */
-    function updateCharacterName(newName) {
-        AI_DATA.name = newName.trim() || '名無しAI';
-        document.getElementById('ai-name').value = AI_DATA.name;
-        saveData();
-    }
-
-    /** 全ての学習データリストを再描画する */
-    function renderAllDataLists() {
-        renderDialogueList();
-        renderVocabularyList();
-        renderGrammarList();
-    }
-
-    /** 文章学習リストの描画 */
-    function renderDialogueList() {
-        const list = document.getElementById('dialogue-list');
-        list.innerHTML = '';
-        AI_DATA.learning_data.dialogue.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <span>問: ${item.input} / 答: ${item.output}</span>
-                <button class="danger-btn mini-button" onclick="deleteEntry('dialogue', ${index})">削除</button>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    /** 単語学習リストの描画 */
-    function renderVocabularyList() {
-        const list = document.getElementById('vocabulary-list');
-        list.innerHTML = '';
-        AI_DATA.learning_data.vocabulary.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <span>**${item.word}** → ${item.responses.join(', ')}</span>
-                <button class="danger-btn mini-button" onclick="deleteEntry('vocabulary', ${index})">削除</button>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    /** 文法学習リストの描画 */
-    function renderGrammarList() {
-        const list = document.getElementById('grammar-list');
-        list.innerHTML = '';
-        AI_DATA.learning_data.grammar.forEach((item, index) => {
-            const div = document.createElement('div');
-            div.innerHTML = `
-                <span>I: ${item.pattern} / O: ${item.response}</span>
-                <button class="danger-btn mini-button" onclick="deleteEntry('grammar', ${index})">削除</button>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    /** データ追加：文章学習 */
-    function addDialogue() {
-        const input = document.getElementById('dialogue-input').value.trim();
-        const output = document.getElementById('dialogue-output').value.trim();
-        if (input && output) {
-            AI_DATA.learning_data.dialogue.unshift({ input, output });
-            document.getElementById('dialogue-input').value = '';
-            document.getElementById('dialogue-output').value = '';
-            renderDialogueList();
-            saveData();
-        } else {
-            alert('入力と返答の両方を入力してください。');
-        }
-    }
-
-    /** データ追加：単語学習 */
-    function addVocabulary() {
-        const word = document.getElementById('vocab-word').value.trim();
-        const responseStr = document.getElementById('vocab-response').value.trim();
-        if (word && responseStr) {
-            const responses = responseStr.split(',').map(r => r.trim()).filter(r => r.length > 0);
-            AI_DATA.learning_data.vocabulary.unshift({ word, responses });
-            document.getElementById('vocab-word').value = '';
-            document.getElementById('vocab-response').value = '';
-            renderVocabularyList();
-            saveData();
-        } else {
-            alert('単語と反応の両方を入力してください。');
-        }
-    }
-
-    /** データ追加：文法学習 */
-    function addGrammar() {
-        const pattern = document.getElementById('grammar-pattern').value.trim();
-        const response = document.getElementById('grammar-response').value.trim();
-        if (pattern && response) {
-            AI_DATA.learning_data.grammar.unshift({ pattern, response });
-            document.getElementById('grammar-pattern').value = '';
-            document.getElementById('grammar-response').value = '';
-            renderGrammarList();
-            saveData();
-        } else {
-            alert('入力パターンと返答パターンを入力してください。');
-        }
-    }
-
-    /** データ削除 */
-    function deleteEntry(type, index) {
-        if (confirm('この学習データを削除してもよろしいですか？')) {
-            AI_DATA.learning_data[type].splice(index, 1);
-            renderAllDataLists();
-            saveData();
-        }
-    }
-
-    /** タブ切り替え */
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.tabs button').forEach(el => el.classList.remove('active'));
-
-        document.getElementById(tabId + '-tab').style.display = 'block';
-        event.target.classList.add('active');
-    }
-
-    // --- AI応答ロジック ---
-
-    /** ユーザーのメッセージをチャットウィンドウに追加 */
-    function appendMessage(sender, text) {
-        const chatWindow = document.getElementById('chat-window');
-        const msg = document.createElement('div');
-        msg.classList.add('message');
-        msg.classList.add(sender === 'user' ? 'user-msg' : 'ai-msg');
-        msg.textContent = text;
-        chatWindow.appendChild(msg);
-        // 一番下までスクロール
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }
-
-    /** ユーザー入力の送信処理 */
-    function sendMessage() {
-        const inputField = document.getElementById('user-input');
-        const userInput = inputField.value.trim();
-        if (userInput === '') return;
-
-        appendMessage('user', userInput);
-        inputField.value = '';
-
-        // AI応答を非同期で実行
-        setTimeout(() => {
-            const aiReply = getAIResponse(userInput);
-            appendMessage('ai', aiReply);
-        }, 500);
-    }
-
-    /** AIの応答ロジック (優先順位順にチェック) */
-    function getAIResponse(input) {
-        // 1. 文章学習 (Dialogue) - 完全一致
-        const dialogueMatch = AI_DATA.learning_data.dialogue.find(item => item.input === input);
-        if (dialogueMatch) {
-            return dialogueMatch.output;
-        }
-
-        // 2. 単語学習 (Vocabulary) - キーワード抽出
-        for (const item of AI_DATA.learning_data.vocabulary) {
-            if (input.includes(item.word)) {
-                const responses = item.responses;
-                // 覚えた複数の反応からランダムに選択
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-                return randomResponse;
-            }
-        }
-        
-        // 3. 文法学習 (Grammar) - パターンマッチ (簡易版: 最初のパターンに合うかをチェック)
-        // [キーワード]を抽出するシンプルなパターンマッチング
-        for (const item of AI_DATA.learning_data.grammar) {
-            const patternParts = item.pattern.split(/\[.*?\]/); // パターンを区切り文字で分割
-            const keywordTags = item.pattern.match(/\[.*?\]/g); // [キーワード]タグを抽出
-
-            let match = true;
-            let currentInput = input;
-            const extractedKeywords = {};
-
-            // 入力文がパターンに沿っているかを確認
-            for(let i = 0; i < patternParts.length; i++) {
-                const part = patternParts[i].trim();
-                
-                if (part === '') continue; // パターンの最初や最後がタグの場合
-
-                const partIndex = currentInput.indexOf(part);
-                if (partIndex === -1) {
-                    match = false;
-                    break;
-                }
-
-                // キーワード部分を抽出
-                if (i > 0 && keywordTags[i-1]) {
-                    const tag = keywordTags[i-1].replace(/\[|\]/g, ''); // [名詞] -> 名詞
-                    const keywordText = currentInput.substring(0, partIndex).trim();
-                    if(keywordText.length === 0) { // キーワード部分が空欄はNGとする (簡易)
-                        match = false;
-                        break;
-                    }
-                    extractedKeywords[tag] = keywordText;
-                }
-
-                // 入力文の残り部分を更新
-                currentInput = currentInput.substring(partIndex + part.length).trim();
-            }
-
-            // 最後のキーワード部分を抽出
-            if (match && keywordTags && currentInput.length > 0 && patternParts.length === keywordTags.length + 1) {
-                const tag = keywordTags[keywordTags.length - 1].replace(/\[|\]/g, '');
-                extractedKeywords[tag] = currentInput;
-            }
-
-            if (match) {
-                let reply = item.response;
-                // 返答パターンに抽出したキーワードを埋め込む
-                for (const tag in extractedKeywords) {
-                    const regex = new RegExp('\\[ *' + tag + ' *\\]', 'g'); // [名詞]を置換
-                    reply = reply.replace(regex, extractedKeywords[tag]);
-                }
-                return reply;
-            }
-        }
-
-
-        // 4. デフォルト応答
-        return ['なるほどね。それはどういう意味？','もっと具体的に教えてくれる？','ごめん、その言葉はまだ覚えてないみたい。'].sort(() => 0.5 - Math.random())[0];
-    }
-
-    // --- JSONエクスポート/インポート機能 ---
-
-    /** 学習データ全体をJSONファイルとしてダウンロード（エクスポート） */
-    function exportJSON() {
-        const dataStr = JSON.stringify(AI_DATA, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-
-        const exportFileName = `${AI_DATA.name}_learning_data.json`;
-
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileName);
-        linkElement.click();
-    }
-
-    /** JSONファイルを読み込み、データを更新（インポート） */
-    function importJSON(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const importedData = JSON.parse(e.target.result);
-                if (importedData.learning_data) {
-                    if (confirm('インポートしたデータで現在のAIのデータ（名前と学習内容）を上書きしてもよろしいですか？')) {
-                        // データを上書き
-                        AI_DATA = {
-                            name: importedData.name || AI_DATA.name,
-                            icon: importedData.icon || AI_DATA.icon,
-                            learning_data: {
-                                dialogue: importedData.learning_data.dialogue || [],
-                                vocabulary: importedData.learning_data.vocabulary || [],
-                                grammar: importedData.learning_data.grammar || []
-                            }
-                        };
-                        
-                        // UIとローカルストレージを更新
-                        document.getElementById('ai-name').value = AI_DATA.name;
-                        document.getElementById('ai-icon').textContent = AI_DATA.icon;
-                        renderAllDataLists();
-                        saveData();
-                        alert('データのインポートが完了しました！');
-                    }
-                } else {
-                    alert('エラー: JSONファイルの形式が正しくありません。');
-                }
-            } catch (error) {
-                alert('エラー: JSONファイルを読み込めませんでした。');
-                console.error(error);
+    <script>
+        // データ構造の定義と初期データ
+        const defaultData = {
+            character: {
+                name: "ともりん",
+                icon: "default", // 'default' or a base64 string
+            },
+            learning_data: {
+                dialogue_pairs: [
+                    { input: "こんにちは", output: "やっほー！" },
+                    { input: "ありがとう", output: "どういたしまして！" },
+                    { input: "おやすみ", output: "ゆっくり休んでね" },
+                ],
+                vocabulary: [
+                    { word: "りんご", response: "赤くて丸い果物だよね。美味しい！" },
+                    { word: "ゲーム", response: "得意だよ！一緒に遊ぼう！" },
+                ],
+                grammar_patterns: [
+                    { pattern: "〜が好き", response: "私も〜が好きだよ。" },
+                    { pattern: "〜は[形容詞]", response: "へー、〜は[形容詞]なんだね！" },
+                ]
             }
         };
-        reader.readAsText(file);
-    }
 
-    /** 全データのリセット */
-    function resetData() {
-        if (confirm('AIの名前、アイコン、そして全ての学習データを完全に消去し、リセットしてもよろしいですか？この操作は元に戻せません。')) {
-            localStorage.removeItem(STORAGE_KEY);
-            AI_DATA = {
-                name: 'ともりん',
-                icon: '🤖',
-                learning_data: { dialogue: [], vocabulary: [], grammar: [] }
-            };
-            document.getElementById('ai-name').value = 'ともりん';
-            document.getElementById('ai-icon').textContent = '🤖';
-            document.getElementById('chat-window').innerHTML = '<div class="message ai-msg">こんにちは！私に色々な言葉を教えてね。</div>';
-            renderAllDataLists();
-            alert('AIのデータがすべてリセットされました。');
+        let AIPet = {};
+        const LOCAL_STORAGE_KEY = 'AIPetDataV2'; // 旧データと区別するためにキーを変更
+
+        // =================================================================
+        // 1. ローカルディスク（Local Storage）を利用した自動保存と読み込み
+        // =================================================================
+
+        /**
+         * データをLocal Storageに自動保存する
+         */
+        function saveData() {
+            try {
+                // 学習データに変動があったら、保存ステータスを更新
+                const statusElement = document.getElementById('saveStatus');
+                statusElement.textContent = '💾 保存中...';
+
+                // JSON.stringifyでオブジェクトを文字列化して保存
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(AIPet.data));
+                
+                setTimeout(() => {
+                    statusElement.textContent = `✅ ${new Date().toLocaleTimeString()} に自動保存されました。`;
+                }, 500);
+
+            } catch (e) {
+                document.getElementById('saveStatus').textContent = '❌ データの保存に失敗しました。';
+                console.error("データの保存に失敗しました。", e);
+            }
         }
-    }
 
-</script>
+        /**
+         * Local Storageからデータを読み込み、UIを更新する
+         */
+        function loadData() {
+            const savedDataJSON = localStorage.getItem(LOCAL_STORAGE_KEY);
+            
+            if (savedDataJSON) {
+                AIPet.data = JSON.parse(savedDataJSON);
+                console.log("保存されたデータを読み込みました。");
+            } else {
+                // 既存のデータがない場合はデフォルトデータを使用 (ディープコピー)
+                AIPet.data = JSON.parse(JSON.stringify(defaultData)); 
+                console.log("デフォルトデータを設定しました。");
+            }
 
+            // 互換性確保: 新しい学習タイプが欠けていたら初期化
+            const ld = AIPet.data.learning_data;
+            ld.vocabulary = ld.vocabulary || [];
+            ld.grammar_patterns = ld.grammar_patterns || [];
+
+            updateUI();
+        }
+
+        /**
+         * 画面上の要素をデータに合わせて更新する
+         */
+        function updateUI() {
+            const char = AIPet.data.character;
+            
+            // 1. 名前を更新
+            document.getElementById('aiName').textContent = char.name;
+            document.getElementById('charNameInput').value = char.name;
+
+            // 2. アバターを更新
+            const avatarContainer = document.getElementById('avatarContainer');
+            avatarContainer.innerHTML = ''; // 一度クリア
+            
+            if (char.icon === 'default') {
+                // デフォルトアバターのHTMLを再挿入
+                avatarContainer.innerHTML = `
+                    <div id="avatarDefault" class="default-avatar">
+                        <div class="eye left"></div>
+                        <div class="eye right"></div>
+                        <div class="mouth"></div>
+                    </div>
+                `;
+            } else {
+                // カスタム画像を表示
+                const img = document.createElement('img');
+                img.id = 'aiAvatar';
+                img.src = char.icon;
+                avatarContainer.appendChild(img);
+            }
+        }
+
+
+        // =================================================================
+        // 2. 会話処理（単語・文法・文章の優先順位付け）
+        // =================================================================
+
+        /**
+         * ユーザーのチャットを処理し、AIの返答を生成する
+         */
+        function handleChat() {
+            const inputElement = document.getElementById('userInput');
+            const userInput = inputElement.value.trim();
+            inputElement.value = ''; // 入力欄をクリア
+
+            if (userInput === "") return;
+
+            let response = "うーん、その言葉はまだ知らないな…。教えてくれる？"; // デフォルトの返答
+
+            // 1. 会話ペア（完全一致）チェック (優先度: 高)
+            const dialogueMatch = AIPet.data.learning_data.dialogue_pairs.find(pair => pair.input === userInput);
+            if (dialogueMatch) {
+                response = dialogueMatch.output;
+            } 
+            
+            // 2. 単語（語彙）チェック (優先度: 中)
+            // 入力文に学習した単語が含まれているかを確認
+            else {
+                for (const item of AIPet.data.learning_data.vocabulary) {
+                    // 単語が入力文に含まれていればヒット
+                    if (userInput.includes(item.word)) {
+                        response = item.response;
+                        break;
+                    }
+                }
+            }
+
+            // 3. 文法パターンチェック (優先度: 低)
+            // 単語マッチもなかった場合にのみ実行
+            if (response === "うーん、その言葉はまだ知らないな…。教えてくれる？") {
+                for (const item of AIPet.data.learning_data.grammar_patterns) {
+                    const pattern = item.pattern;
+                    let responseTemplate = item.response;
+
+                    // パターンマッチングのシンプルな実装: プレースホルダーを検出・置換
+                    // 例: 入力「りんごが好き」, パターン「〜が好き」
+                    // 例: 入力「ともりんはかわいい」, パターン「〜は[形容詞]」
+                    
+                    let matchFound = false;
+                    let matchedValue = '';
+
+                    // パターンが「〜」で始まる場合
+                    if (pattern.startsWith('〜')) {
+                        const suffix = pattern.substring(1); // 例: 「が好き」
+                        if (userInput.endsWith(suffix)) {
+                            matchedValue = userInput.substring(0, userInput.length - suffix.length); // 例: 「りんご」
+                            response = responseTemplate.replace('〜', matchedValue).replace('[形容詞]', matchedValue); // 応答も置換
+                            matchFound = true;
+                        }
+                    } 
+                    
+                    // パターンが特定の構造を持つ場合 (例: [名詞]や[形容詞]のプレースホルダー)
+                    else if (pattern.includes('[')) {
+                        const regexString = pattern
+                            .replace(/\[名詞\]/g, '(.+?)')
+                            .replace(/\[動詞\]/g, '(.+?)')
+                            .replace(/\[形容詞\]/g, '(.+?)')
+                            .replace(/〜/g, '(.+?)'); // 〜もマッチング対象に追加
+                        
+                        const regex = new RegExp(`^${regexString}$`);
+                        const matches = userInput.match(regex);
+                        
+                        if (matches) {
+                            // マッチした値を使って応答を構築
+                            let currentResponse = responseTemplate;
+                            let placeholderIndex = 1;
+                            
+                            // [名詞], [動詞], [形容詞], 〜 のプレースホルダーを順に置換
+                            currentResponse = currentResponse.replace(/\[名詞\]|\[動詞\]|\[形容詞\]|〜/g, (match) => {
+                                // 検出された要素（matches[1], matches[2]など）で置き換え
+                                return matches[placeholderIndex++] || match; 
+                            });
+
+                            response = currentResponse;
+                            matchFound = true;
+                        }
+                    }
+
+                    if (matchFound) {
+                        break;
+                    }
+                }
+            }
+
+            // 4. AIの応答を表示
+            document.getElementById('aiSpeech').textContent = response;
+        }
+
+        /**
+         * 学習データを追加する
+         */
+        function addLearningData() {
+            const type = document.getElementById('learningType').value;
+            const input = document.getElementById('inputData').value.trim();
+            const output = document.getElementById('outputData').value.trim();
+
+            if (!input || !output) {
+                alert("入力と返答の両方を入力してください。");
+                return;
+            }
+
+            const ld = AIPet.data.learning_data;
+            const newData = { input: input, output: output };
+
+            if (type === 'dialogue') {
+                // 会話ペア（文章）
+                ld.dialogue_pairs.push(newData);
+            } else if (type === 'vocabulary') {
+                // 単語（語彙）
+                ld.vocabulary.push({ word: input, response: output });
+            } else if (type === 'grammar') {
+                // 文法（パターン）
+                ld.grammar_patterns.push({ pattern: input, response: output });
+            }
+
+            // 入力欄をクリア
+            document.getElementById('inputData').value = '';
+            document.getElementById('outputData').value = '';
+            
+            saveData();
+            document.getElementById('aiSpeech').textContent = `「${input}」と「${output}」を新しく覚えたよ！`;
+        }
+
+        // =================================================================
+        // 3. 設定・JSON操作
+        // =================================================================
+
+        /**
+         * タブ切り替え
+         */
+        function showTab(tabId, element) {
+            // 全てのタブコンテンツを非表示にし、ボタンのアクティブ状態を解除
+            document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            // 選択されたタブコンテンツを表示し、ボタンをアクティブに
+            document.getElementById(tabId).style.display = 'block';
+            element.classList.add('active');
+            
+            // 学習タブの入力欄を初期化
+            if (tabId === 'learning') {
+                updateLearningInputs(document.getElementById('learningType').value);
+            }
+        }
+        
+        /**
+         * 学習タイプに合わせて入力ラベルを更新
+         */
+        function updateLearningInputs(type) {
+            const inputLabel = document.getElementById('inputLabel');
+            const outputLabel = document.getElementById('outputLabel');
+            const inputElement = document.getElementById('inputData');
+            
+            if (type === 'dialogue') {
+                inputLabel.textContent = "入力（会話全体）";
+                outputLabel.textContent = "出力・返答（AIの返事）";
+                inputElement.placeholder = "例: お腹空いた";
+            } else if (type === 'vocabulary') {
+                inputLabel.textContent = "入力（単語・キーワード）";
+                outputLabel.textContent = "出力・返答（意味や反応）";
+                inputElement.placeholder = "例: りんご";
+            } else if (type === 'grammar') {
+                inputLabel.textContent = "入力（文法パターン例）";
+                outputLabel.textContent = "出力・返答（パターンに合わせた構造）";
+                inputElement.placeholder = "例: 〜は[形容詞]";
+            }
+        }
+
+        /**
+         * キャラクター名を変更する
+         */
+        function changeCharacterName(name) {
+            AIPet.data.character.name = name;
+            updateUI();
+            saveData();
+        }
+
+        /**
+         * アバター画像をファイルから読み込み、base64で保存する
+         */
+        function changeCharacterAvatar(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // 画像データをBase64形式で保存
+                AIPet.data.character.icon = e.target.result;
+                updateUI();
+                saveData();
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        /**
+         * アイコンをデフォルトに戻す
+         */
+        function clearAvatar() {
+            AIPet.data.character.icon = 'default';
+            document.getElementById('avatarFile').value = ''; // ファイル選択をクリア
+            updateUI();
+            saveData();
+            document.getElementById('aiSpeech').textContent = "アイコンをデフォルトに戻したよ！";
+        }
+
+        /**
+         * JSONファイルをダウンロード（エクスポート）する
+         */
+        function exportJSON() {
+            const dataStr = JSON.stringify(AIPet.data, null, 2); // 2スペースインデントで整形
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            const filename = AIPet.data.character.name + '_AI_data.json';
+            a.download = filename;
+            a.href = url;
+            
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            document.getElementById('aiSpeech').textContent = "学習データをJSONファイルとして保存したよ！";
+        }
+
+        /**
+         * JSONファイルを読み込み（インポート）する
+         * 🚨 旧形式のJSONデータにも対応
+         */
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    let newLearningData = importedData.learning_data;
+                    
+                    // --- 互換性チェックとデータマッピング ---
+                    if (!importedData.learning_data && importedData.character) {
+                        // **旧形式のJSONデータ構造を想定**
+                        // 旧JSONは learning_dataキーがなく、dialogue_pairsなどが直接オブジェクトに格納されている場合を想定
+                        newLearningData = {
+                            // 従来の会話データが存在すればそのまま使用
+                            dialogue_pairs: importedData.dialogue_pairs || [], 
+                            // 新しいデータは空で初期化
+                            vocabulary: [],
+                            grammar_patterns: []
+                        };
+                    } else if (newLearningData) {
+                         // **新形式のJSONデータ構造**
+                        // 欠けている新しいキーを安全に初期化
+                        newLearningData.vocabulary = newLearningData.vocabulary || [];
+                        newLearningData.grammar_patterns = newLearningData.grammar_patterns || [];
+                    } else {
+                        throw new Error("JSONファイルに必要な学習データ構造が見つかりません。");
+                    }
+                    // ------------------------------------
+
+                    // データを更新
+                    AIPet.data.character = importedData.character || defaultData.character;
+                    AIPet.data.learning_data = newLearningData;
+
+                    updateUI();
+                    saveData();
+                    document.getElementById('aiSpeech').textContent = "新しい学習データをJSONから読み込んだよ！AIの個性が変わったかも。";
+
+                } catch (error) {
+                    alert("JSONファイルの読み込みに失敗しました。ファイル形式を確認してください。\nエラー: " + error.message);
+                    console.error("JSON Import Error:", error);
+                } finally {
+                    // ファイル入力要素をリセット
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        /**
+         * 全てのデータ（Local Storage）を消去し、初期化する
+         */
+        function clearAllData() {
+            if (confirm("⚠️本当にキャラクター設定と全ての学習データを消去して初期化しますか？この操作は元に戻せません。")) {
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+                loadData(); // デフォルトデータで再ロード
+                document.getElementById('aiSpeech').textContent = "すべて初期化されました。また一から私を育ててね！";
+                alert("全てのデータが消去され、AIが初期状態に戻りました。");
+            }
+        }
+
+
+        // ページロード時に実行
+        window.onload = function() {
+            loadData();
+            showTab('learning', document.querySelector('.tab-btn.active'));
+        };
+    </script>
 </body>
 </html>
