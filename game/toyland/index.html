@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ToyLAND | 国連軍公式サイト</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;500;700&family=Noto+Sans+JP:wght@400;700&display=swap');
+  * {box-sizing: border-box;}
+  body {
+    margin: 0;
+    font-family: 'Noto Sans JP', sans-serif;
+    background-color: #0a0a0f;
+    color: #eaeaea;
+    scroll-behavior: smooth;
+  }
+  header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(15, 32, 39, 0.95);
+    backdrop-filter: blur(6px);
+    padding: 15px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #00bcd4;
+    z-index: 1000;
+  }
+  header h1 {
+    font-size: 1.5rem;
+    color: #00bcd4;
+    margin: 0;
+  }
+  nav a {
+    color: #eaeaea;
+    margin-left: 20px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s;
+  }
+  nav a:hover {
+    color: #00bcd4;
+  }
+  .hero {
+    background: url('https://images.unsplash.com/photo-1526045431048-2aa7c9e5a79f?auto=format&fit=crop&w=1950&q=80') center/cover no-repeat;
+    height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+  }
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 10, 15, 0.6);
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    animation: fadeIn 2s ease;
+  }
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translateY(30px);}
+    to {opacity: 1; transform: translateY(0);}
+  }
+  .hero h2 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+  .hero p {
+    font-size: 1.2rem;
+    color: #ccc;
+    margin-bottom: 40px;
+  }
+  .btn {
+    background: #00bcd4;
+    color: #fff;
+    padding: 12px 35px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+  }
+  .btn:hover {background: #0097a7;}
+  section {
+    padding: 100px 10%;
+    text-align: center;
+  }
+  section h3 {
+    font-size: 2rem;
+    color: #00bcd4;
+    margin-bottom: 25px;
+  }
+  section p {
+    font-size: 1.1rem;
+    color: #ccc;
+    line-height: 1.8;
+    max-width: 850px;
+    margin: 0 auto;
+  }
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+  }
+  .news-card {
+    background: #111;
+    border: 1px solid #00bcd440;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: 0.3s;
+  }
+  .news-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 15px #00bcd433;
+  }
+  .news-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+  }
+  .news-card .content {
+    padding: 15px;
+    text-align: left;
+  }
+  .news-card .content h4 {
+    color: #00bcd4;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+  }
+  .news-card .content p {
+    color: #bbb;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .country-search {
+    margin-top: 30px;
+  }
+  .country-search input {
+    padding: 10px 15px;
+    width: 260px;
+    border-radius: 20px;
+    border: 1px solid #00bcd4;
+    background: #0f2027;
+    color: #eaeaea;
+  }
+  .country-list {
+    margin-top: 30px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+  }
+  .country {
+    background: #111;
+    border: 1px solid #00bcd440;
+    padding: 10px 20px;
+    border-radius: 15px;
+    transition: 0.3s;
+  }
+  .country:hover {
+    background: #00bcd410;
+  }
+  footer {
+    background: #111;
+    color: #777;
+    padding: 20px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>United Nations Forces - ToyLAND Command</h1>
+  <nav>
+    <a href="#about">概要</a>
+    <a href="#world">世界観</a>
+    <a href="#news">ニュース</a>
+    <a href="#countries">国家一覧</a>
+    <a href="#program">プログラム</a>
+    <a href="#contact">お問い合わせ</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-content">
+    <h2>ようこそ、ToyLANDへ。</h2>
+    <p>国連軍が監督する多次元統合世界プロジェクト。</p>
+    <a href="#program" class="btn">国連自治国プログラムに申請</a>
+  </div>
+</section>
+
+<section id="about">
+  <h3>国連軍公式サイトについて</h3>
+  <p>
+    ToyLANDは、国際平和を再設計するためのシミュレーションゲームです。  
+    世界中の参加者が国家を運営し、外交・経済・軍事・倫理を通じて未来を構築します。  
+    国連軍はその監視・調停・介入を担う公式組織です。
+  </p>
+</section>
+
+<section id="world">
+  <h3>世界観</h3>
+  <p>
+    舞台は2025年、世界国民政府との戦いが終わり安定が訪れました。  
+    各自治国は旧文明を基に再建され、国連軍が秩序を維持します。  
+    テロ、反乱、環境異変など、世界の安定はあなたの行動次第です。
+  </p>
+</section>
+
+<section id="news">
+  <h3>国連軍ニュース</h3>
+  <div class="news-grid">
+    <div class="news-card">
+    </div>
+    <div class="news-card">
+      <img src="https://images.unsplash.com/photo-1549887534-3db1bd59dcca?auto=format&fit=crop&w=800&q=80">
+      <div class="content">
+        <h4>国連軍緊急即応部隊、運用開始</h4>
+        <p>世界、8箇所に方面本部と世界20箇所に拠点を作成しました。この部隊により即応性が必要な問題に対処します。</p>
+      </div>
+    </div>
+    <div class="news-card">
+      <img src="https://images.unsplash.com/photo-1535905748047-14b2415c96f4?auto=format&fit=crop&w=800&q=80">
+      <div class="content">
+        <h4>自治プログラムを開始しました</h4>
+        <p>国連軍自治監督局は本日より、五大陸自治管理システムを廃止して自治国家管理システムを採用しました。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="countries">
+  <h3>加盟国家一覧（最終更新日：2025年10月5日）</h3>
+  <div class="country-search">
+    <input type="text" id="searchInput" placeholder="国名で検索...">
+  </div>
+  <div class="country-list" id="countryList">
+    <div class="country">国連直接統治領</div>
+  </div>
+</section>
+
+<section id="program">
+  <h3>国連自治国プログラム</h3>
+  <p>
+    独自の国家を設立し、外交・経済・文化を運営できます。  
+    あなたの決定がToyLANDの歴史を動かします。  
+    <br><br>
+    <a href="play.html" class="btn">リアルタイム監視システムを閲覧する/a>
+  </p>
+</section>
+
+<section id="contact">
+  <h3>お問い合わせ</h3>
+  <p>国連軍国民生活センターへのお問い合わせは、以下のメールアドレスまでお願いいたします。<br>
+  📧 kyouyuuno-to@eripo.net</p>
+</section>
+
+<footer>
+   ©2025 United Nations Forces - ToyLAND Project , ©2025 kyouyuuno-to | All Rights Reserved.
+</footer>
+
+<script>
+  // 検索機能
+  const input = document.getElementById('searchInput');
+  const countries = document.querySelectorAll('.country');
+  input.addEventListener('keyup', () => {
+    const val = input.value.toLowerCase();
+    countries.forEach(c => {
+      c.style.display = c.textContent.toLowerCase().includes(val) ? 'inline-block' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>
