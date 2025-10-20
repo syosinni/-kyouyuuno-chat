@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<title>World State Simulator — 超強化版</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root{--ui-bg:#f6f7fb; --panel:#ffffff; --muted:#666;}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;display:flex;height:100vh;overflow:hidden;background:linear-gradient(#e9eefc,#f8fbff);}
+  #left{flex:1;display:flex;flex-direction:column;padding:10px;gap:8px}
+  #controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:var(--panel);padding:8px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+  input[type="text"], input[type="number"], select { padding:6px;border:1px solid #ddd;border-radius:6px }
+  button{padding:6px 10px;border-radius:6px;border:1px solid #ccc;background:#fff;cursor:pointer}
+  #canvasWrap{flex:1;display:flex;align-items:center;justify-content:center; position:relative}
+  canvas{background:#fff;border:1px solid #bbb;max-width:100%;height:auto;display:block}
+  #hud{position:absolute;left:12px;top:12px;background:rgba(255,255,255,0.9);padding:6px;border-radius:6px;font-size:13px}
+  #right{width:420px;border-left:1px solid #e1e6f0;background:var(--ui-bg);padding:10px;overflow:auto}
+  .panel{background:var(--panel);padding:8px;margin-bottom:10px;border-radius:8px;box-shadow:0 2px 6px rgba(8,18,40,0.04)}
+  .countryItem{padding:8px;border-radius:6px;border:1px solid #eee;margin-bottom:6px;display:flex;flex-direction:column;gap:6px}
+  .row{display:flex;gap:6px;align-items:center}
+  label.small{font-size:12px;color:var(--muted)}
+  .mini{font-size:12px;padding:4px 6px}
+  #diplomacyVis{height:140px;border:1px dashed #ddd;border-radius:6px;position:relative;overflow:hidden;background:#fff}
+  .node{position:absolute;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:12px}
+  .edge{position:absolute;pointer-events:none}
+  #log{height:120px;overflow:auto;background:#111;color:#9ff;padding:6px;border-radius:6px;font-family:monospace;font-size:12px}
+  .tradeArrow{position:absolute;pointer-events:none}
+  .troopMark{position:absolute;transform:translate(-50%,-50%);pointer-events:none}
+  footer{font-size:12px;color:#666;padding:6px;text-align:center}
+</style>
+</head>
+<body>
+  <div id="left">
+    <div id="controls" class="panel">
+      <label>色 <input id="colorPicker" type="color" value="#ff4444"></label>
+      <label>国名 <input id="countryName" type="text" placeholder="New nation"></label>
+      <label>主義 <input id="ideology" type="text" placeholder="例: 民主主義"></label>
+      <label>代表 <input id="leader" type="text" placeholder="Leader"></label>
+      <label>税率(0-100) <input id="taxRate" type="number" min="0" max="100" value="10" style="width:68px"></label>
+      <label>通貨名 <input id="currencyName" type="text" placeholder="コイン" style="width:80px"></label>
+      <button id="zoomIn">拡大</button>
+      <button id="zoomOut">縮小</button>
+      <button id="nextMonth">1 month →</button>
+      <div style="margin-left:auto">
+        <span id="timeDisplay">Year:0 Month:1</span>
+      </div>
+    </div>
+
+    <div id="canvasWrap" class="panel">
+      <div id="hud">左クリック: 塗り / 右クリック: 情報 / Shift+クリック: 兵配置(選択国のボタンを押した後)</div>
+      <canvas id="mapCanvas" width="1200" height="600"></canvas>
+      <!-- trade arrows + troop markers -->
+      <div id="visualLayer" style="position:absolute;inset:0;pointer-events:none"></div>
+    </div>
+  </div>
+
+  <div id="right">
+    <div class="panel">
+      <h3 style="margin:4px 0">国家メニュー</h3>
+      <div class="row">
+        <button id="createBtn">領域を塗って国作成/ステート追加</button>
+        <button id="placeTroopMode" class="mini">兵配置モード</button>
+        <button id="openMinistryBuilder" class="mini">省庁ビルダー</button>
+      </div>
+      <p class="small" style="margin:6px 0">兵配置モードONのとき、マップをクリックで指定国の兵を配置（自国/同盟のみ）</p>
+    </div>
+
+    <div class="panel">
+      <h4>外交視覚化</h4>
+      <div id="diplomacyVis"></div>
+      <p class="small">線の色：緑=同盟、灰=友好、赤=敵対</p>
+    </div>
+
+    <div class="panel">
+      <h4>国家リスト</h4>
+      <div id="countryList"></div>
+    </div>
+
+    <div class="panel">
+      <h4>市場 & 通貨</h4>
+      <div class="row">
+        <label>相場 (更新毎月)</label>
+        <button id="marketTick" class="mini">即時変動</button>
+      </div>
+      <div id="marketList"></div>
+      <p class="small">国家ごとに通貨名が設定できます。予算はその通貨で管理。</p>
+    </div>
+
+    <div class="panel">
+      <h4>ログ</h4>
+      <div id="log"></div>
+    </div>
+    <footer>作成: ChatGPT — 完全版（簡易シミュレーション）</footer>
+  </div>
+
+<script>
+/* ---------------------------
+  初期設定・アセット
+----------------------------*/
+const svgUrl = "https://kyouyuuno-to.f5.si/img/0001.svg"; // world svg
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+const visualLayer = document.getElementById('visualLayer');
+let mapImg = new Image();
+mapImg.crossOrigin="anonymous";
+mapImg.src = svgUrl;
+
+let scale = 1;
+let month = 1, year = 0;
+const resourceList = ["木材","石油","鉄鉱石","金","食料"];
+const logEl = document.getElementById('log');
+const diplomacyVis = document.getElementById('diplomacyVis');
+let troopPlacementMode = false;
+let activePlacementCountryIndex = null;
+
+/* default ministry templates */
+const ministryTemplates = [
+  {name:"財務省", effect:{budgetBonus:0.10}, desc:"税収や予算運用を改善"},
+  {name:"国防省", effect:{militaryBonus:0.10}, desc:"兵力戦闘力を上昇"},
+  {name:"外務省", effect:{diplomacyBonus:0.15}, desc:"外交交渉が有利に"},
+  {name:"農林水産省", effect:{foodBoost:0.12}, desc:"食料生産上昇"},
+  {name:"経産省", effect:{resourceBoost:0.12}, desc:"資源生産上昇"},
+  {name:"環境省", effect:{resourceBoost:0.06}, desc:"持続生産へ貢献"},
+  {name:"厚生省", effect:{popGrowth:0.02}, desc:"人口成長向上"},
+  {name:"文教省", effect:{education:0.05}, desc:"将来的な成長に寄与"},
+  {name:"運輸省", effect:{tradeBonus:0.05}, desc:"貿易効率向上"},
+  {name:"警察庁", effect:{internalSecurity:0.05}, desc:"内政安定"},
+  {name:"海洋省", effect:{navyBonus:0.08}, desc:"海上資源の効率化"},
+  {name:"原子力庁", effect:{energyBoost:0.10}, desc:"エネルギー関連の供給安定"},
+  {name:"情報省", effect:{techBoost:0.07}, desc:"技術発展を促進"},
+  {name:"観光庁", effect:{incomeBoost:0.05}, desc:"観光収入増加"},
+  {name:"文化省", effect:{culture:0.04}, desc:"国民幸福度に寄与"},
+  {name:"消費者庁", effect:{resourceBoost:0.05}, desc:"資源利用の効率化"},
+  {name:"総務省", effect:{adminBoost:0.05}, desc:"行政効率化"},
+  {name:"科学省", effect:{techBoost:0.10}, desc:"研究開発を支援"},
+  {name:"復興庁", effect:{budgetBoost:0.06}, desc:"災害対応で効率向上"},
+  {name:"宇宙庁", effect:{techBoost:0.09}, desc:"先端技術の発展"}
+];
+
+/* world state model */
+let countries = []; // each: {name,color,ideology,leader,taxRate,currency,budget,population,soldiers,resources,regions:[pixels],troops:[{x,y,ownerCount}],ministries:[],diplomacy:{otherName:status}}
+let market = {}; // resource -> price
+
+/* utils */
+function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+function fmt(n){ return n.toLocaleString(); }
+function log(s){ const li = document.createElement('div'); li.textContent = `[${year}/${month}] ${s}`; logEl.prepend(li); }
+
+/* load svg into canvas (draw as image) */
+mapImg.onload = ()=> { canvas.width = mapImg.width; canvas.height = mapImg.height; drawAll(); initializeMarket(); updateUI(); }
+mapImg.onerror = ()=> { alert("SVG読み込み失敗。CORS等を確認してね。") }
+
+/* ---------------------------
+  描画・ユーティリティ
+----------------------------*/
+function drawAll(){
+  ctx.setTransform(scale,0,0,scale,0,0);
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(mapImg,0,0);
+  // fill regions
+  countries.forEach(c=>{
+    c.regions.forEach(r=>{
+      fillRegionPixels(r.pixels, c.color);
+    });
+  });
+  // troops (draw last)
+  countries.forEach(c=>{
+    if(!c.troops) return;
+    c.troops.forEach(t=>{
+      ctx.beginPath();
+      ctx.fillStyle = "#000";
+      ctx.arc(t.x, t.y, 4, 0, Math.PI*2);
+      ctx.fill();
+      // little inner color to denote owner
+      ctx.beginPath();
+      ctx.fillStyle = shadeColor(c.color, -30);
+      ctx.arc(t.x, t.y, 2, 0, Math.PI*2);
+      ctx.fill();
+    });
+  });
+  drawDiplomacyVis();
+  drawMarket();
+}
+
+/* fill array of pixel coords into canvas (fast putImageData) */
+function fillRegionPixels(pixels, colorHex){
+  // We'll set individual pixels (ok for moderate sizes)
+  const img = ctx.getImageData(0,0,canvas.width,canvas.height);
+  const d = img.data;
+  const col = hexToRGBA(colorHex);
+  for(const p of pixels){
+    const idx = (p.x + p.y*canvas.width)*4;
+    d[idx]=col.r; d[idx+1]=col.g; d[idx+2]=col.b; d[idx+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+}
+
+/* simple hex→rgba */
+function hexToRGBA(hex){
+  const h = hex.replace('#','');
+  return {r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16)};
+}
+function shadeColor(hex, percent) {
+  const c = hex.replace('#','');
+  const R = parseInt(c.substring(0,2),16);
+  const G = parseInt(c.substring(2,4),16);
+  const B = parseInt(c.substring(4,6),16);
+  const t = percent<0?0:255;
+  const p = Math.abs(percent)/100;
+  const toHex = (v)=>('0'+Math.round((t - v)*p + v).toString(16)).slice(-2);
+  return '#'+ toHex(R) + toHex(G) + toHex(B);
+}
+
+/* ---------------------------
+  ピクセルFlood Fillを用いた領域取得
+----------------------------*/
+function getImageData(){
+  return ctx.getImageData(0,0,canvas.width,canvas.height);
+}
+function getPixelColorAt(x,y){
+  const img = getImageData();
+  const i = (x + y*canvas.width)*4;
+  return {r:img.data[i],g:img.data[i+1],b:img.data[i+2],a:img.data[i+3]};
+}
+function sameColor(c1,c2){
+  return c1.r===c2.r && c1.g===c2.g && c1.b===c2.b;
+}
+function floodRegionFrom(x,y){
+  const img = getImageData();
+  const W = canvas.width, H = canvas.height;
+  const data = img.data;
+  const i0 = (x + y*W)*4;
+  const target = {r:data[i0], g:data[i0+1], b:data[i0+2]};
+  // only fill white regions (as per original requirement)
+  if(!(target.r===255 && target.g===255 && target.b===255)) return [];
+  const stack = [[x,y]];
+  const visited = new Uint8Array(W*H);
+  const pixels = [];
+  while(stack.length){
+    const [cx,cy] = stack.pop();
+    if(cx<0||cy<0||cx>=W||cy>=H) continue;
+    const k = cx + cy*W;
+    if(visited[k]) continue;
+    const ii = k*4;
+    if(data[ii]===255 && data[ii+1]===255 && data[ii+2]===255){
+      visited[k]=1;
+      pixels.push({x:cx,y:cy});
+      stack.push([cx+1,cy],[cx-1,cy],[cx,cy+1],[cx,cy-1]);
+    }
+  }
+  return pixels;
+}
+
+/* ---------------------------
+  UI & State 管理
+----------------------------*/
+function updateUI(){
+  // countryList
+  const list = document.getElementById('countryList'); list.innerHTML='';
+  countries.forEach((c,idx)=>{
+    const el = document.createElement('div'); el.className='countryItem';
+    const resStr = Object.entries(c.resources).map(([k,v])=>`${k}:${v}`).join(' ');
+    const minStr = (c.ministries && c.ministries.length)? c.ministries.map(m=>`${m.name}(${m.minister})`).join(', '): 'なし';
+    el.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="width:28px;height:28px;border-radius:50%;background:${c.color};border:2px solid #fff"></div>
+          <div><strong>${c.name}</strong><div style="font-size:12px;color:#666">${c.ideology} / ${c.leader}</div></div>
+        </div>
+        <div style="text-align:right;font-size:12px">${c.currency||'CUR'} ${fmt(c.budget||0)}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+        <div class="mini">人口:${fmt(c.population)}</div>
+        <div class="mini">兵:${fmt(c.soldiers)}</div>
+        <div class="mini">配置:${(c.troops?c.troops.length:0)}</div>
+        <div class="mini">税率:${c.taxRate}%</div>
+        <div class="mini">外交:${c.diplomacyStatus||'中立'}</div>
+      </div>
+      <div style="margin-top:6px;font-size:13px">${resStr}</div>
+      <div style="margin-top:6px;display:flex;gap:6px">
+        <button data-idx="${idx}" class="editBtn mini">編集</button>
+        <button data-idx="${idx}" class="consBtn mini">徴兵</button>
+        <button data-idx="${idx}" class="troopPlaceBtn mini">兵配置</button>
+        <button data-idx="${idx}" class="tradeBtn mini">貿易</button>
+        <button data-idx="${idx}" class="dipBtn mini">外交</button>
+        <button data-idx="${idx}" class="ministryBtn mini">省庁</button>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+  document.getElementById('timeDisplay').textContent = `Year:${year} Month:${month}`;
+  drawAll();
+  drawMarket();
+}
+
+/* create or add state */
+document.getElementById('createBtn').addEventListener('click',()=>{
+  // simply instruct user: click map to select region then confirm
+  alert('塗りたい領域で左クリック→その白い領域が選ばれます。選んだ後、自動で国作成/ステート追加されます。');
+});
+
+/* map click handlers */
+canvas.addEventListener('click', (ev)=>{
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((ev.clientX - rect.left)/scale);
+  const y = Math.floor((ev.clientY - rect.top)/scale);
+
+  if(troopPlacementMode && activePlacementCountryIndex!==null){
+    // place troop if allowed
+    handleTroopPlacement(activePlacementCountryIndex, x, y);
+    return;
+  }
+
+  // normal: flood select region and create/add state
+  const pixels = floodRegionFrom(x,y);
+  if(!pixels || pixels.length===0){
+    // nothing selected
+    return;
+  }
+  // color chosen
+  const color = document.getElementById('colorPicker').value;
+  const name = document.getElementById('countryName').value.trim() || `Nation${countries.length+1}`;
+  const ideology = document.getElementById('ideology').value.trim() || '';
+  const leader = document.getElementById('leader').value.trim() || '';
+  let taxRate = parseInt(document.getElementById('taxRate').value) || 0;
+  if(taxRate<0) taxRate=0; if(taxRate>100) taxRate=100;
+  const currency = document.getElementById('currencyName').value.trim() || 'CUR';
+
+  // random pop + resources
+  const randPop = randInt(1_000_000, 50_000_000);
+  const newRes = {};
+  resourceList.forEach(r=> newRes[r] = randInt(100,1200));
+
+  // check exist by name
+  let country = countries.find(c=>c.name===name);
+  if(country){
+    country.regions.push({pixels});
+    country.population += randPop;
+    country.resources = {...country.resources, ...newRes};
+    country.taxRate = taxRate;
+    country.color = color;
+    country.currency = currency;
+    country.leader = leader; country.ideology = ideology;
+    log(`${name} に新しいステート追加。人口 +${fmt(randPop)}`);
+  } else {
+    country = {
+      name, color, ideology, leader, taxRate, currency,
+      population: randPop, soldiers:0, troops:[], budget: 0,
+      resources: newRes, regions:[{pixels}], ministries:[], diplomacy:{}, diplomacyStatus:'中立'
+    };
+    countries.push(country);
+    log(`新国家 ${name} を設立（人口 ${fmt(randPop)}）`);
+  }
+  updateUI();
+});
+
+/* right-click info */
+canvas.addEventListener('contextmenu', (ev)=>{
+  ev.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const x = Math.floor((ev.clientX - rect.left)/scale);
+  const y = Math.floor((ev.clientY - rect.top)/scale);
+  // find country containing pixel
+  let found = null;
+  for(const c of countries){
+    for(const r of c.regions){
+      if(r.pixels.some(p=>p.x===x && p.y===y)){ found = c; break;}
+    }
+    if(found) break;
+  }
+  if(found){
+    const resStr = Object.entries(found.resources).map(([k,v])=>`${k}:${v}`).join(' ');
+    alert(`国: ${found.name}\n主義: ${found.ideology}\n代表: ${found.leader}\n人口:${fmt(found.population)}\n兵:${fmt(found.soldiers)} 配置:${(found.troops?found.troops.length:0)}\n予算:${found.currency} ${fmt(found.budget||0)}\n税率:${found.taxRate}%\n外交:${found.diplomacyStatus||'中立'}\n資源:${resStr}\n省庁:${(found.ministries.length?found.ministries.map(m=>m.name+'('+m.minister+')').join(', '):'なし')}`);
+  } else {
+    alert('ここには国家情報はありません');
+  }
+});
+
+/* ---------------------------
+  兵配置・配置可否チェック
+----------------------------*/
+document.getElementById('placeTroopMode').addEventListener('click', ()=>{
+  troopPlacementMode = !troopPlacementMode;
+  activePlacementCountryIndex = troopPlacementMode ? 0 : null;
+  document.getElementById('placeTroopMode').style.background = troopPlacementMode ? '#e6ffe6' : '';
+  alert('兵配置モード: ON\n国家リストの「兵配置」ボタンで配置対象国を選択してから、マップをクリックして兵を配置してね（自国/同盟のみ）');
+});
+
+/* When user clicks troopPlaceBtn in list, set activePlacementCountryIndex */
+document.getElementById('countryList').addEventListener('click', (ev)=>{
+  const btn = ev.target;
+  const idx = parseInt(btn?.dataset?.idx);
+  if(!isNaN(idx)){
+    if(btn.classList.contains('troopPlaceBtn')) {
+      activePlacementCountryIndex = idx;
+      troopPlacementMode = true;
+      document.getElementById('placeTroopMode').style.background = '#e6ffe6';
+      alert(`${countries[idx].name} を配置対象にしました。マップをクリックして配置してください。`);
+    } else if(btn.classList.contains('consBtn')){
+      // conscription
+      const c = countries[idx];
+      const max = Math.floor(c.population*0.1);
+      let num = parseInt(prompt(`徴兵数を入力（最大 ${fmt(max)}）`, Math.min(1000,max)));
+      if(isNaN(num) || num<=0) return;
+      num = Math.min(num, max);
+      c.population -= num;
+      c.soldiers += num;
+      c.budget -= Math.floor(num * 0.2); //徴兵コスト
+      log(`${c.name} が徴兵 ${fmt(num)} 人（残り人口 ${fmt(c.population)}）`);
+      updateUI();
+    } else if(btn.classList.contains('editBtn')){
+      // edit basic
+      const c=countries[idx];
+      const newName = prompt('国名', c.name); if(newName) c.name=newName;
+      const newLeader = prompt('代表', c.leader); if(newLeader) c.leader=newLeader;
+      const newTax = parseInt(prompt('税率(0-100)%', c.taxRate)); if(!isNaN(newTax)){ c.taxRate = Math.max(0, Math.min(100,newTax)); }
+      const newCurrency = prompt('通貨名', c.currency); if(newCurrency) c.currency=newCurrency;
+      updateUI();
+    } else if(btn.classList.contains('tradeBtn')){
+      handleTradeDialog(idx);
+    } else if(btn.classList.contains('dipBtn')){
+      handleDiplomacyDialog(idx);
+    } else if(btn.classList.contains('ministryBtn')){
+      handleMinistryDialog(idx);
+    }
+  }
+});
+
+/* troop placement logic (click on map in troop mode) */
+function handleTroopPlacement(countryIdx, x, y){
+  const c = countries[countryIdx];
+  // find which country territory at (x,y)
+  let target = null;
+  for(const ct of countries){
+    for(const r of ct.regions){
+      if(r.pixels.some(p=>p.x===x && p.y===y)){ target = ct; break; }
+    }
+    if(target) break;
+  }
+  // allow placement if target is c (self) or alliance
+  const status = (target ? (target.name===c.name ? 'self' : (isAllied(c, target) ? 'ally' : 'other')) : 'other');
+  if(status==='other'){ alert('兵を置けるのは自国か同盟国の領土だけです'); return; }
+  // choose how many soldiers to place
+  const maxPlace = Math.min(c.soldiers, 1000);
+  if(maxPlace<=0){ alert('配置できる兵がいません'); return; }
+  let num = parseInt(prompt(`配置する兵数 (最大 ${fmt(maxPlace)})`, Math.min(10,maxPlace)));
+  if(isNaN(num) || num<=0) return;
+  num = Math.min(num, maxPlace);
+  // create troop marker
+  if(!c.troops) c.troops = [];
+  c.troops.push({x,y,count:num});
+  c.soldiers -= num;
+  log(`${c.name} が ${fmt(num)} 兵を配置（${target.name} 領内）`);
+  updateUI();
+}
+
+/* check alliance */
+function isAllied(a,b){
+  if(!a || !b) return false;
+  const st = a.diplomacy && a.diplomacy[b.name];
+  return st === '同盟' || st === 'ally' || st === '同盟国';
+}
+
+/* ---------------------------
+  貿易ダイアログ（視覚化含む）
+----------------------------*/
+function handleTradeDialog(idx){
+  const s = countries[idx];
+  const partnerName = prompt('貿易相手の国名を入力');
+  const partner = countries.find(c=>c.name === partnerName);
+  if(!partner){ alert('相手が見つかりません'); return; }
+  const resource = prompt(`資源名 (${resourceList.join(',')}) を入力`);
+  if(!resource || !s.resources[resource] || s.resources[resource] <= 0){ alert('資源不足'); return; }
+  let amount = parseInt(prompt('数量を入力', Math.min(100, s.resources[resource])));
+  if(isNaN(amount) || amount<=0) return;
+  amount = Math.min(amount, s.resources[resource]);
+  // price based on market
+  const price = Math.floor((market[resource] || 10) * amount);
+  // transfer
+  s.resources[resource] -= amount;
+  partner.resources[resource] = (partner.resources[resource] || 0) + amount;
+  s.budget = (s.budget||0) + price;
+  partner.budget = (partner.budget||0) - price;
+  log(`${s.name} が ${partner.name} に ${amount} ${resource} を売却（${fmt(price)} ${s.currency}）`);
+  // visualize trade arrow
+  visualizeTrade(s, partner, resource, amount);
+  updateUI();
+}
+
+function visualizeTrade(s, partner, resource, amount){
+  // pick a troop-like point in each country (centroid of first region)
+  const from = regionCentroid(s.regions[0]);
+  const to = regionCentroid(partner.regions[0]);
+  const id = 'trade-'+Date.now();
+  const arrow = document.createElement('div');
+  arrow.className = 'tradeArrow';
+  arrow.style.left = (from.x) + 'px';
+  arrow.style.top = (from.y) + 'px';
+  arrow.style.transition = 'all 1.2s linear';
+  arrow.style.zIndex = 2000;
+  arrow.innerHTML = `<svg width="60" height="20" style="overflow:visible"><path d="M0 10 L50 10" stroke="#0a74ff" stroke-width="3" stroke-linecap="round" marker-end="url(#m)" /></svg>`;
+  visualLayer.appendChild(arrow);
+  // animate to target
+  requestAnimationFrame(()=>{
+    arrow.style.left = (to.x) + 'px';
+    arrow.style.top = (to.y) + 'px';
+  });
+  setTimeout(()=> arrow.remove(), 1500);
+}
+
+/* compute centroid of a region (pixels list) */
+function regionCentroid(region){
+  if(!region || !region.pixels || region.pixels.length===0) return {x:canvas.width/2, y:canvas.height/2};
+  let sx=0, sy=0;
+  for(const p of region.pixels){ sx+=p.x; sy+=p.y; }
+  return {x: sx/region.pixels.length, y: sy/region.pixels.length};
+}
+
+/* ---------------------------
+  外交ダイアログ
+----------------------------*/
+function handleDiplomacyDialog(idx){
+  const s = countries[idx];
+  const targetName = prompt('外交相手の国名');
+  const target = countries.find(c=>c.name===targetName);
+  if(!target){ alert('相手がいません'); return; }
+  const choice = prompt('状態を入力: 友好 / 同盟 / 敵対 / 中立', '友好');
+  s.diplomacy = s.diplomacy || {};
+  s.diplomacy[target.name] = choice;
+  // reciprocal? for simplicity, set status on both sides as well
+  target.diplomacy = target.diplomacy || {};
+  if(choice === '同盟' || choice === '友好') {
+    target.diplomacy[s.name] = '友好';
+    s.diplomacy[target.name] = choice;
+  } else {
+    target.diplomacy[s.name] = choice;
+  }
+  log(`${s.name} と ${target.name} の外交を ${choice} に設定`);
+  updateUI();
+}
+
+/* draw diplomacy visualization (simple node graph) */
+function drawDiplomacyVis(){
+  diplomacyVis.innerHTML = '';
+  const W = diplomacyVis.clientWidth, H = diplomacyVis.clientHeight;
+  if(countries.length===0) return;
+  // place nodes around circle
+  const n = countries.length;
+  const cx = W/2, cy = H/2, r = Math.min(cx,cy)-40;
+  const positions = [];
+  countries.forEach((c,i)=>{
+    const angle = (i / n) * Math.PI*2 - Math.PI/2;
+    const x = cx + Math.cos(angle)*r;
+    const y = cy + Math.sin(angle)*r;
+    positions.push({x,y});
+    const node = document.createElement('div');
+    node.className='node';
+    node.style.left = (x-18)+'px'; node.style.top = (y-18)+'px';
+    node.style.background = c.color;
+    node.textContent = c.name.slice(0,3);
+    diplomacyVis.appendChild(node);
+  });
+  // draw edges
+  // for each pair, draw line according to diplomacy
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      const a = countries[i], b = countries[j];
+      const statusA = a.diplomacy && a.diplomacy[b.name];
+      const statusB = b.diplomacy && b.diplomacy[a.name];
+      // decide edge status: if either enemy -> red, elif mutual 同盟 -> green, elif at least friend -> gray, else none
+      let edgeColor = null;
+      if(statusA === '敵対' || statusB === '敵対') edgeColor = '#ff4d4d';
+      else if(statusA === '同盟' && statusB === '同盟') edgeColor = '#26a65b';
+      else if(statusA || statusB) edgeColor = '#888';
+      if(!edgeColor) continue;
+      // create svg line
+      const x1=positions[i].x, y1=positions[i].y, x2=positions[j].x, y2=positions[j].y;
+      const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.setAttribute('class','edge');
+      svg.style.position='absolute'; svg.style.left=0; svg.style.top=0; svg.style.width='100%'; svg.style.height='100%';
+      svg.innerHTML = `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${edgeColor}" stroke-width="2" stroke-linecap="round" />`;
+      diplomacyVis.appendChild(svg);
+    }
+  }
+}
+
+/* ---------------------------
+  Market & Currency
+----------------------------*/
+function initializeMarket(){
+  resourceList.forEach(r => { market[r] = randInt(5,30); });
+}
+function drawMarket(){
+  const el = document.getElementById('marketList');
+  el.innerHTML = '';
+  for(const r of resourceList){
+    const p = market[r];
+    const div = document.createElement('div');
+    div.innerHTML = `<strong>${r}</strong> : ${p} (単価)`;
+    el.appendChild(div);
+  }
+}
+document.getElementById('marketTick').addEventListener('click', ()=>{ randomizeMarket(); drawMarket(); log('市場が即時変動しました'); });
+
+/* random market fluctuation */
+function randomizeMarket(){
+  for(const r of resourceList){
+    const change = randInt(-3,6);
+    market[r] = Math.max(1, market[r] + change);
+  }
+}
+
+/* ---------------------------
+  Ministry builder (自由作成 + テンプレ)
+----------------------------*/
+document.getElementById('openMinistryBuilder').addEventListener('click', ()=>{
+  // quick builder: choose template or custom
+  const choose = prompt(`テンプレ or 自作?\nテンプレ一覧:\n${ministryTemplates.map(t=>t.name).join(', ')}\n入力: テンプレ名 か "自作"`);
+  if(!choose) return;
+  if(choose === '自作'){
+    const name = prompt('省庁名を入力');
+    if(!name) return;
+    // simple effect inputs for demo
+    const budgetBonus = parseFloat(prompt('予算ボーナス(例:0.05=+5%)', '0')) || 0;
+    const resourceBoost = parseFloat(prompt('資源生産ボーナス(例:0.1)', '0')) || 0;
+    const minister = prompt('大臣の名前を設定(空可)');
+    const tpl = {name, effect:{budgetBonus, resourceBoost}, minister};
+    // store global template so user can add from country pages
+    ministryTemplates.push(tpl);
+    alert('独自テンプレ作成完了：' + name);
+  } else {
+    alert('テンプレは国家の省庁ボタンから追加できます。');
+  }
+});
+
+/* handle ministry per country */
+function handleMinistryDialog(idx){
+  const c = countries[idx];
+  let menu = '省庁を追加/削除します。\nテンプレから選択:\n';
+  menu += ministryTemplates.map(t=>t.name).join(', ');
+  const choice = prompt(menu);
+  if(!choice) return;
+  const tpl = ministryTemplates.find(t=>t.name===choice);
+  if(!tpl){ alert('テンプレが見つかりません'); return; }
+  const minister = prompt('大臣名を入力', tpl.minister || '');
+  if(!c.ministries) c.ministries = [];
+  c.ministries.push({...tpl, minister});
+  applyMinistriesEffects(c);
+  log(`${c.name} に ${tpl.name}（大臣:${minister}）を任命`);
+  updateUI();
+}
+
+/* apply ministries effects to country (recompute modifiers) */
+function applyMinistriesEffects(country){
+  // reset temp modifiers
+  country._modifiers = {budgetBonus:0, resourceBoost:0, popGrowth:0, militaryBonus:0, tradeBonus:0};
+  if(!country.ministries) return;
+  for(const m of country.ministries){
+    const e = m.effect || {};
+    for(const k in e){
+      country._modifiers[k] = (country._modifiers[k] || 0) + e[k];
+    }
+  }
+}
+
+/* ---------------------------
+  Time progression: month tick
+----------------------------*/
+document.getElementById('nextMonth').addEventListener('click', ()=>{ monthTick(); });
+
+function monthTick(){
+  month++; if(month>12){ month=1; year++; }
+  randomizeMarket();
+  for(const c of countries){
+    // apply ministries first
+    applyMinistriesEffects(c);
+    // population growth (base 1% + ministries)
+    const basePopGrowth = Math.floor(c.population * 0.01);
+    const extraPop = Math.floor(c.population * (c._modifiers.popGrowth || 0));
+    c.population += (basePopGrowth + extraPop);
+    // resource generation per month, influenced by resourceBoost
+    for(const r of resourceList){
+      const base = randInt(30,150);
+      const bonus = Math.floor(base * (c._modifiers.resourceBoost || 0));
+      c.resources[r] = (c.resources[r] || 0) + base + bonus;
+    }
+    // tax income -> budget (taxRate% * population * factor) and budgetBonus
+    const taxIncome = Math.floor(c.population * (c.taxRate/100) * (1 + (c._modifiers.budgetBonus||0)) * 0.01);
+    c.budget = (c.budget || 0) + taxIncome;
+    // auto market sell: sell small portion of excess resources automatically
+    autoMarketSell(c);
+    // simple combat resolution if troops of different countries are close
+    resolveBattles(c);
+  }
+  updateUI();
+  log('1か月経過しました。市場と国が更新されました。');
+}
+
+/* auto sell logic: sells 5% of any resource above threshold */
+function autoMarketSell(country){
+  for(const r of resourceList){
+    const amt = country.resources[r] || 0;
+    const threshold = 500;
+    if(amt > threshold){
+      const sell = Math.floor(amt * 0.05);
+      const price = (market[r] || 10) * sell;
+      country.resources[r] -= sell;
+      country.budget = (country.budget || 0) + price;
+      log(`${country.name} が自動売却 ${sell} ${r}（収入 ${fmt(price)} ${country.currency}）`);
+      // visualize small trade to "market center"
+      // skip visualization heavy lifting for many sells
+    }
+  }
+}
+
+/* ---------------------------
+  Battle system (simplified) + animation
+----------------------------*/
+const animations = []; // list of visual animation objects
+
+function resolveBattles(country){
+  if(!country.troops) return;
+  for(const t of [...country.troops]){
+    // find nearby enemy troops (within distance)
+    for(const other of countries){
+      if(other === country) continue;
+      if(!other.troops) continue;
+      for(const ot of other.troops){
+        if(Math.hypot(ot.x - t.x, ot.y - t.y) < 8){
+          // engage battle between owner counts (t.count vs ot.count)
+          const aPower = t.count * (1 + (country._modifiers.militaryBonus||0));
+          const bPower = ot.count * (1 + (other._modifiers.militaryBonus||0));
+          // animate clash
+          startBattleAnimation({x:t.x,y:t.y,colorA:country.color, colorB:other.color});
+          if(aPower > bPower){
+            // A wins: reduce B soldiers, remove B troop marker
+            const lossB = Math.floor(ot.count * 0.6);
+            other.soldiers = Math.max(0, other.soldiers - lossB);
+            // remove ot marker
+            other.troops = other.troops.filter(x=>x !== ot);
+            log(`${country.name} が ${other.name} に勝利（敵兵 -${fmt(lossB)}）`);
+          } else if (aPower < bPower){
+            const lossA = Math.floor(t.count * 0.6);
+            country.soldiers = Math.max(0, country.soldiers - lossA);
+            country.troops = country.troops.filter(x=>x !== t);
+            log(`${other.name} が ${country.name} に勝利（兵 -${fmt(lossA)}）`);
+          } else {
+            // draw: both lose some
+            const la = Math.floor(t.count * 0.4);
+            const lb = Math.floor(ot.count * 0.4);
+            country.soldiers = Math.max(0, country.soldiers - la);
+            other.soldiers = Math.max(0, other.soldiers - lb);
+            country.troops = country.troops.filter(x=>x !== t);
+            other.troops = other.troops.filter(x=>x !== ot);
+            log(`${country.name} と ${other.name} が消耗戦で互角の結果`);
+          }
+          // after processing, break out to avoid double processing
+        }
+      }
+    }
+  }
+  // start animations tick
+  processAnimations();
+}
+
+/* battle animation: simple expanding circles at location */
+function startBattleAnimation(opt){
+  const obj = {
+    x: opt.x, y: opt.y, colorA: opt.colorA, colorB: opt.colorB, life: 0, max: 24
+  };
+  animations.push(obj);
+  if(animations.length===1) requestAnimationFrame(animate);
+}
+function animate(){
+  // draw on visualLayer (overlay)
+  const ctxv = getVisualContext();
+  ctxv.clearRect(0,0,visualLayer.clientWidth, visualLayer.clientHeight);
+  for(let i=animations.length-1;i>=0;i--){
+    const a = animations[i];
+    a.life++;
+    const t = a.life / a.max;
+    // draw two circles
+    ctxv.beginPath();
+    ctxv.strokeStyle = a.colorA; ctxv.lineWidth = 2;
+    ctxv.arc(a.x, a.y, 6 + t*20, 0, Math.PI*2); ctxv.stroke();
+    ctxv.beginPath();
+    ctxv.strokeStyle = a.colorB; ctxv.lineWidth = 2;
+    ctxv.arc(a.x, a.y, 10 + t*22, 0, Math.PI*2); ctxv.stroke();
+    if(a.life > a.max) animations.splice(i,1);
+  }
+  if(animations.length>0) requestAnimationFrame(animate);
+}
+function getVisualContext(){
+  // create canvas inside visualLayer for animation
+  let cv = visualLayer.querySelector('canvas.anim');
+  if(!cv){ cv = document.createElement('canvas'); cv.className='anim'; cv.width = canvas.width; cv.height = canvas.height; cv.style.position='absolute'; cv.style.left='0'; cv.style.top='0'; visualLayer.appendChild(cv); }
+  const ctxv = cv.getContext('2d');
+  ctxv.clearRect(0,0,cv.width,cv.height);
+  return ctxv;
+}
+
+/* process small queued animations (trade arrows etc) - placeholder */
+function processAnimations(){ /* animations handled above */ }
+
+/* ---------------------------
+  Market auto / periodic
+----------------------------*/
+function monthlyMarketEffects(){
+  // might change supply/demand based on total resources
+  // kept simple: small random walk
+  for(const r of resourceList) market[r] = Math.max(1, market[r] + randInt(-2,4));
+}
+
+/* ---------------------------
+  Helpers: edit dialogs for ministry, diplomacy, trade
+----------------------------*/
+function handleMinistryDialog(idx){
+  handleMinistryDialog; // not used
+}
+function handleDiplomacyDialog(idx){
+  handleDiplomacyDialog; // placeholder (already used above)
+}
+
+/* ---------------------------
+  Initialize & helper
+----------------------------*/
+function initializeMarket(){
+  for(const r of resourceList) market[r] = randInt(6,28);
+}
+initializeMarket();
+
+/* ---------------------------
+  Small UI hooks: market draw etc
+----------------------------*/
+function drawMarket(){
+  // draws inside marketList
+  const el = document.getElementById('marketList');
+  el.innerHTML = '';
+  for(const r of resourceList){
+    const div = document.createElement('div');
+    div.style.display='flex'; div.style.justifyContent='space-between'; div.style.padding='4px 0';
+    div.innerHTML = `<div>${r}</div><div style="font-weight:700">${market[r]}</div>`;
+    el.appendChild(div);
+  }
+}
+
+/* ---------------------------
+  Utility: shade color previously defined
+----------------------------*/
+function hexToNum(hex){ return parseInt(hex.replace('#',''),16); }
+
+/* finally, initial UI */
+updateUI();
+log('シミュレーター起動');
+</script>
+</body>
+</html>
