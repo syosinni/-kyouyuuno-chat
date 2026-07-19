@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>CORS突破テスト</title>
+</head>
+<body>
+    <h2>学校のフィルターすり抜けテスト</h2>
+    <button onclick="tryScrape()">YouTubeのデータを引っ張る</button>
+    <pre id="result">ここに結果が出るよ...</pre>
+
+    <script>
+    async function tryScrape() {
+        const logArea = document.getElementById('result');
+        logArea.innerText = "通信中...";
+
+        // 1. YouTubeのURLを学校のフィルターにバレないように「%3A%2F%2F」みたいに変換する
+        const targetUrl = encodeURIComponent("https://www.youtube.com");
+        
+        // 2. CORS-Anywhereとは別の、URLを隠して送れるプロキシサービス（allorigins）を使ってみる
+        const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
+
+        try {
+            const response = await fetch(proxyUrl);
+            if (!response.ok) throw new Error('通信エラーが発生しました');
+            
+            const data = await response.json();
+            
+            // 成功したら、取得したHTMLの最初の200文字を表示してみる
+            logArea.innerText = "成功したよ！中身の一部：\n\n" + data.contents.substring(0, 200);
+        } catch (error) {
+            logArea.innerText = "やっぱり弾かれた... エラー内容:\n" + error.message;
+        }
+    }
+    </script>
+</body>
+</html>
